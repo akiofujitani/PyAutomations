@@ -1,0 +1,17 @@
+{
+    "path" : "C:/Users/Calculo/OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA/Documentos/Development/Warranty_Date_Analysis/Data_Extracted",
+    "path_done" : "C:/Users/Calculo/OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA/Documentos/Development/Warranty_Date_Analysis/Data_Extracted/Done",
+    "tag_split" : "DT.PEDIDO",
+    "tag_filter" : [
+        "CAIXA",
+        "PED. CLIENTE",
+        "ENVELOPE",
+        "PRIORIDADE",
+        "DT.PRAZO CLIENTE",
+        "DIAS ATRASO",
+        "NF. RETORNO",
+        "STATUS",
+        "DT.ULT.ETAPA"
+        
+    ]
+}

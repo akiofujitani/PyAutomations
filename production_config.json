@@ -1,0 +1,36 @@
+{
+    "path_list" : [
+        "C:/LMS/HOST_EXPORT/VCA/read_app",
+        "Y:/LMS/Export/Backup"
+    ],
+    "tags_list" : [
+        "JOB",
+        "_ENTRYDATE",
+        "CLIENT",
+        "LNAM",
+        "LDNAM",
+        "SPH",
+        "CYL",
+        "AX",
+        "ADD",
+        "CLIENT",
+        "LIND",
+        "INSPRPRVA",
+        "INSPRPRVM",
+        "_CUSTOMER",
+        "CTHNA",
+        "CTHNP",
+        "_XCALC",
+        "MBASE",
+        "GBASE",
+        "GCROS",
+        "FRNT"
+    ],
+    "sheets_name" : "PRODUCTION",
+    "sheets_id" : "1QHozuTGKXeqeB1RQ3Zt927d6_ovpON1llOUBGzF35w8",
+    "sheets_date_pos" : "B:B",
+    "minimum_date" : "31/12/2021",
+    "extension" : "vca",
+    "date_tag_list" : ["_ENTRYDATE"],
+    "sort_date" : "_ENTRYDATE"
+}

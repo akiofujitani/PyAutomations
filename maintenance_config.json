@@ -1,0 +1,16 @@
+{
+    "volpe_upload" : {
+        "upload" : "C:/Users/Calculo/OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA/Documentos/Development/Maintenance_Auto/OS_upload",
+        "error" : "C:/Users/Calculo/OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA/Documentos/Development/Maintenance_Auto/OS_error",
+        "done" : "C:/Users/Calculo/OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA/Documentos/Development/Maintenance_Auto/OS_Done",
+        "extension" : "pdf"
+    },
+    "split_ocr" : {
+        "raw" : "C:/Users/Calculo/OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA/Documentos/Development/Maintenance_Auto/pdf",
+        "error" : "C:/Users/Calculo/OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA/Documentos/Development/Maintenance_Auto/error",
+        "rename" : "C:/Users/Calculo/OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA/Documentos/Development/Maintenance_Auto/OS_rename",
+        "ready" : "C:/Users/Calculo/OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA/Documentos/Development/Maintenance_Auto/OS_upload",
+        "done" : "C:/Users/Calculo/OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA/Documentos/Development/Maintenance_Auto/Originals",
+        "extension" : "pdf"
+    }
+}
