@@ -3,6 +3,9 @@ from ntpath import join
 
 
 def file_list(path=str, file_extention=str):
+    if not os.path.exists(path):
+        os.mkdir(path)
+        print(f'Directory {path} created')
     return [file for file in os.listdir(path) if file.lower().endswith(f'.{file_extention.lower()}')]
 
 
@@ -100,6 +103,7 @@ def file_move_copy(path_from, path_to, file_name, copy=bool):
     try:
         move_copy = 'copied' if copy == True else 'moved'
         print(f'From {path_from} \nto {path_to} \nfile {file_name} {move_copy}')
+        check_create_dir(path_to)
         new_file_name = file_name_check(path_to, file_name)
         if copy == True:
             return shutil.copy(join(path_from, file_name), join(path_to, new_file_name))
@@ -158,9 +162,12 @@ def fileMoveRename(source, destin, source_name, destin_name):
     return
 
 
-def creatDir(path, dir_name):
-    if not os.path.exists(join(path, dir_name)):
-        os.mkdir(join(path, dir_name))
+def creatDir(path, dir_name=None):
+    full_path = path
+    if not dir_name == None:
+        full_path = join(path, dir_name)
+    if not os.path.exists(full_path):
+        os.mkdir(full_path)
         print(f'Directory "{dir_name}" created.')
     return
 

@@ -1,4 +1,4 @@
-import pyautogui, win_handler, keyboard, tkinter, datetime
+import pyautogui, win_handler, keyboard, tkinter, datetime, file_handler
 from time import sleep
 from ocr_text_reader import return_text
 from ntpath import join
@@ -291,9 +291,6 @@ def volpe_back_to_main(question=False):
     return
 
 
-
-
-
 def volpe_load_report(start_date=datetime.datetime, 
             date_end=datetime.datetime,
             tab_name=str,
@@ -355,7 +352,7 @@ def volpe_save_report(file_name, save_path, reference=None, load_report_path='Im
     '''
     pyautogui.moveTo(10, 10)
     if not reference == None:
-        reference_pos = win_handler.image_search(reference, path=load_report_path, confidence_value=0.95)
+        reference_pos = win_handler.image_search(reference, path=load_report_path, confidence_value=0.8)
     else:
         reference_pos = win_handler.get_window_size()
     win_handler.icon_click('Icon_save.png', region_value=(region_definer(reference_pos.left - 15, reference_pos.top - 15) if reference_pos else ''))
@@ -368,6 +365,7 @@ def volpe_save_report(file_name, save_path, reference=None, load_report_path='Im
     save_as_window = win_handler.image_search('Title_Save_as.png')
     if save_as_window:
         file_full_path = join(save_path, file_name)
+        file_handler.check_create_dir(save_path)
         pyautogui.write(file_full_path)
         sleep(0.5)
         pyautogui.press(['tab', 'tab'])

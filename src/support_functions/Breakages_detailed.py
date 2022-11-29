@@ -55,7 +55,7 @@ def volpe_save_report(file_name, save_path):
         sleep(0.5)
     pyautogui.press('enter')
     sleep(1)
-    save_as_window = win_handler.image_search('Title_Save_as.png')
+    save_as_window = win_handler.image_search('Title_Save_as.png', confidence_value=0.7)
     if save_as_window:
         file_full_path = join(save_path, file_name)
         pyautogui.write(file_full_path)
@@ -96,7 +96,7 @@ def volpe_load_report(start_date=datetime.datetime,
     try:
         erp_volpe_handler.volpe_tab_select(tab_name, path=load_report_path)
         date_from = win_handler.image_search(date_from_image, path=load_report_path, confidence_value=0.95)
-        win_handler.click_field(date_from, date_from_pos, distanceX=25)
+        win_handler.click_field(date_from, date_from_pos, distance=25)
         sleep(0.3)
         pyautogui.click()
         sleep(0.3)
@@ -105,7 +105,7 @@ def volpe_load_report(start_date=datetime.datetime,
         pyautogui.write(datetime.datetime.strftime(start_date, '%d%m%Y'))
         sleep(0.5)
         date_until = win_handler.image_search(date_until_image, path=load_report_path, confidence_value=0.95)
-        win_handler.click_field(date_until, date_until_pos, distanceX=25)
+        win_handler.click_field(date_until, date_until_pos, distance=25)
         sleep(0.3)
         pyautogui.hotkey('ctrl', 'a')
         sleep(0.3)
@@ -188,7 +188,7 @@ def breakage_date_hour(values_dict=dict):
 if __name__ == '__main__':
         # volpe_back_to_main()
     try:
-        config = json_config.load_json_config('config_volpe.json')
+        config = json_config.load_json_config('C:/Users/fausto.akio/Documents/Repots/config_volpe.json')
     except:
         print('Could not load config file')
         exit()

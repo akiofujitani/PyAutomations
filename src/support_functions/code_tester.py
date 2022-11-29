@@ -59,16 +59,12 @@
 # '''
 
 
-from subprocess import Popen
+import pyautogui
 
-filename = './src/support_functions/edging_configuration.py'
-while True:
-    print("\nStarting " + filename)
-    p = Popen("python " + filename, shell=True)
-    p.wait()
+image = pyautogui.locateOnScreen(r'C:\Users\fausto.akio\Documents\Development\PyAutomations\src\support_functions\Images\Exclamation_mark.png')
 
 
-
+print(image)
 # def convert_to_date(data_dict=list, date_format=str, date_format_out=str, *args):
 #     updated_data_dict = []
 #     for data in data_dict:

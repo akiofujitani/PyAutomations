@@ -50,14 +50,15 @@ PIP upgrade all
 PIP install list
 
 '''
-
+# pip install pywin32
+# pip install pyautogui
+# pip install screeninfo
 # pip install PyPDF2
 # pip install mss
 # pip install pytesseract
 # pip install pdf2image
 # pip install opencv-python
-# pip install pyautogui
-# pip install screeninfo
-# pip install win32gui # Getting errors
+
+
 # pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlibs
 # pip install pygsheets

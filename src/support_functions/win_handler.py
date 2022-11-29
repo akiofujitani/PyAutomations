@@ -87,7 +87,7 @@ def image_path_fix(path=str):
         return f'{path}/'
 
 
-def image_search(image_name=str, confidence_value=0.9, region=None, full_path=constants.SCRIPT_DIR, path='images/'):
+def image_search(image_name=str, confidence_value=0.7, region=None, full_path=constants.SCRIPT_DIR, path='images/'):
     '''
     Search image base on its name and path
     uses the confidence values starting at... going down through each pass.
