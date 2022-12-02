@@ -189,11 +189,15 @@ def machine_productivity_expand_all():
     sleep(2)
     try:
         sheet_pos = win_handler.image_search('Sheet_header.png', path='Images/Machine_productivity')
-        selected_pos = win_handler.image_search('Volpe_Table_selected.png', region=(erp_volpe_handler.region_definer(sheet_pos.left - 15, sheet_pos.top)))
+        selected_pos = win_handler.image_search('Volpe_Table_selected.png', confidence_value=0.8, region=(erp_volpe_handler.region_definer(sheet_pos.left - 15, sheet_pos.top)))
         win_handler.click_field(selected_pos, 'Front')
         sleep(0.5)
-        expand_all(sheet_pos)
-        expand_all(sheet_pos)
+        try:
+            expand_all(sheet_pos)
+            expand_all(sheet_pos)
+        except Exception as error:
+            if 'ImageNotFound: Volpe_Table_selected.png' not in error[0]:
+                raise Exception('Error expanding table')
         print('Expand all done')
         return
     except Exception as error:
@@ -454,7 +458,7 @@ def complete_date_in_list(status_dict):
 
 if __name__ == '__main__':
     try:
-        config = json_config.load_json_config('config_volpe.json')
+        config = json_config.load_json_config('C:/Users/fausto.akio/Documents/Reports/config_volpe.json')
     except:
         print('Could not load config file')
         exit()
@@ -500,7 +504,7 @@ if __name__ == '__main__':
             if not start_date.date() == datetime.datetime.now().date():
                 error_counter = 0
                 try:
-                    # erp_volpe_handler.volpe_back_to_main()
+                    erp_volpe_handler.volpe_back_to_main()
                     erp_volpe_handler.volpe_load_tab('Tab_lab', 'Icon_Prod_Unit.png')
                     erp_volpe_handler.volpe_open_window('Icon_Productivity_machine.png', 'Title_Machine_productivity.png')
                     type_selector('Machine_productivity.png', 'Images/Machine_productivity', *type_list)

@@ -173,6 +173,17 @@ def column_to_list(sheets_values, column_number=0):
     return values_list
 
 
+def list_to_dict_with_key(dict_list, key):
+    dict_temp = {}
+
+    for dict_values in dict_list:
+        key_value = dict_values.pop(key)
+        if key_value in dict_temp.keys():
+            dict_temp[key_value] = dict_temp[key_value] + [dict_values]
+        else:
+            dict_temp[key_value] = [dict_values]
+    return dict_temp
+
 
 if __name__ == '__main__':
     try:

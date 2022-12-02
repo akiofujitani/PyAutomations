@@ -59,12 +59,6 @@
 # '''
 
 
-import pyautogui
-
-image = pyautogui.locateOnScreen(r'C:\Users\fausto.akio\Documents\Development\PyAutomations\src\support_functions\Images\Exclamation_mark.png')
-
-
-print(image)
 # def convert_to_date(data_dict=list, date_format=str, date_format_out=str, *args):
 #     updated_data_dict = []
 #     for data in data_dict:
@@ -91,3 +85,9 @@ print(image)
 # print("restart now")
 # python = sys.executable
 # os.execl(python, python, sys.argv[0])
+
+import platform
+
+print(platform.version())
+print(platform.system())
+print(platform.release())
