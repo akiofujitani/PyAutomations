@@ -40,56 +40,104 @@ def VCAtoObject(VCAFileContent):
     return dataValue
 
 
-def VCAtoDict(VCAFileCOntent):
+def convert_add_to_list(values_old, new_values):
+    if not type(values_old) == list:
+        return [values_old] + [new_values]
+    else:
+        return values_old + [new_values]
+
+
+def VCA_to_dict(VCA_file_contents):
+    data_value = {}
     try:
-        tempList = []
-        dataValue = {}
-        counter = 0
-        valueSplit = ''
-        for line in VCAFileCOntent:
+        for line in VCA_file_contents:
             line = line.replace('\n', '').replace('\t', '')
             if len(line) > 0:
-                tagAndValue = line.split('=')
-                if ';' in tagAndValue[1]:
-                    valueSplit = tagAndValue[1].split(';')
-                if counter:
-                    radiusList = radiusList + valueSplit
-                    counter += 1
-                if counter == 37:
-                    counter = 0
-                    if 'TRCFMT' in dataValue.keys():
-                        dataValue['TRCFMT'].update({tempList[3]: tempList})
-                        dataValue['R'].update({tempList[3]: radiusList})
+                tag_and_value = line.split('=')
+                if ';' not in tag_and_value[1]:
+                    if tag_and_value[0] in data_value.keys():
+                        data_value[tag_and_value[0]] = convert_add_to_list(data_value[tag_and_value[0]], tag_and_value[1])
                     else:
-                        dataValue['TRCFMT'] = {tempList[3] : tempList}
-                        dataValue['R'] = {tempList[3] : radiusList}
-                if 'TRCFMT' in tagAndValue[0]:
-                    tempList = valueSplit
-                    counter += 1
-                    radiusList = []
-                elif ';' in tagAndValue[1] and tagAndValue[1].count(';') == 1:
-                    if tagAndValue[0] in dataValue.keys():
-                        tempValue = dataValue[tagAndValue[0]]
-                        if 'R' in dataValue[tagAndValue[0]].keys():
-                            num = 1
+                        data_value[tag_and_value[0]] = tag_and_value[1]
+                else:
+                    values_splited = tag_and_value[1].split(';')
+                    if len(values_splited) == 2:
+                        if tag_and_value[0] in data_value.keys():
+                            data_value[tag_and_value[0]] = convert_add_to_list(data_value[tag_and_value[0]], {'R' : values_splited[0], 'L' : values_splited[1]})
                         else:
-                            num = len(dataValue[tagAndValue[0]])
-                        dataValue[tagAndValue[0]] = {num : tempValue}
-                        dataValue[tagAndValue[0]].update({(num + 1) : {'R' : valueSplit[0], 'L' : valueSplit[1]}})
-                    else:
-                        dataValue[tagAndValue[0]] = {'R' : valueSplit[0], 'L' : valueSplit[1]}
-                elif tagAndValue[1].count(';') == 0:
-                    if tagAndValue[0] in dataValue.keys():
-                        tempValue = dataValue[tagAndValue[0]]
-                        dataValue[tagAndValue[0]] = {1 : tempValue}
-                        dataValue[tagAndValue[0]].update({2 : tagAndValue[1]})
-                    else:
-                        dataValue[tagAndValue[0]] = tagAndValue[1]
-        print(f'Terminated tag convertion of {dataValue["JOB"]}')
-        return dataValue
+                            data_value[tag_and_value[0]] = {'R' : values_splited[0], 'L' : values_splited[1]}
+                    if tag_and_value[0] == 'TRCFMT':
+                        counter = round(int(values_splited[1]) / 10)
+                        temp_values = {}
+                        temp_values['TRCFMT'] = values_splited
+                        radius_list = []
+                    if tag_and_value[0] == 'R':
+                        radius_list = radius_list + values_splited
+                        counter -= 1
+                        if counter == 0:
+                            temp_values['R'] = radius_list
+                            if 'TRCFMT' in data_value.keys():
+                                data_value['TRCFMT'].update({temp_values['TRCFMT'][3] : temp_values})
+                            else:
+                                data_value['TRCFMT'] = {temp_values['TRCFMT'][3] : temp_values}
+        return data_value
     except Exception as error:
-        print(f'Could not read VCA contents {error}')
-        raise Exception('VCA reading error')
+        print(f'Erro ocurred in {error}')
+        raise Exception(f'Erro in {error}')
+                
+
+
+
+# def VCAtoDict(VCAFileCOntent):
+#     try:
+#         tempList = []
+#         dataValue = {}
+#         counter = 0
+#         valueSplit = ''
+#         for line in VCAFileCOntent:
+#             line = line.replace('\n', '').replace('\t', '')
+#             if len(line) > 0:
+#                 tagAndValue = line.split('=')
+#                 if ';' in tagAndValue[1]:
+#                     valueSplit = tagAndValue[1].split(';')
+#                 if counter:
+#                     radiusList = radiusList + valueSplit
+#                     counter += 1
+#                 if counter == 37:
+#                     counter = 0
+#                     if 'TRCFMT' in dataValue.keys():
+#                         dataValue['TRCFMT'].update({tempList[3]: tempList})
+#                         dataValue['R'].update({tempList[3]: radiusList})
+#                     else:
+#                         dataValue['TRCFMT'] = {tempList[3] : tempList}
+#                         dataValue['R'] = {tempList[3] : radiusList}
+#                 if 'TRCFMT' in tagAndValue[0]:
+#                     tempList = valueSplit
+#                     counter += 1
+#                     radiusList = []
+#                 elif ';' in tagAndValue[1] and tagAndValue[1].count(';') == 1:
+#                     if tagAndValue[0] in dataValue.keys():
+#                         tempValue = dataValue[tagAndValue[0]]
+#                         if 'R' in dataValue[tagAndValue[0]].keys():
+#                             num = 1
+#                         else:
+#                             num = len(dataValue[tagAndValue[0]])
+#                         dataValue[tagAndValue[0]] = {num : tempValue}
+#                         dataValue[tagAndValue[0]].update({(num + 1) : {'R' : valueSplit[0], 'L' : valueSplit[1]}})
+#                     else:
+#                         dataValue[tagAndValue[0]] = {'R' : valueSplit[0], 'L' : valueSplit[1]}
+#                 elif tagAndValue[1].count(';') == 0:
+#                     if tagAndValue[0] in dataValue.keys():
+#                         tempValue = dataValue[tagAndValue[0]]
+#                         dataValue[tagAndValue[0]] = {1 : tempValue}
+#                         dataValue[tagAndValue[0]].update({2 : tagAndValue[1]})
+#                     else:
+#                         dataValue[tagAndValue[0]] = tagAndValue[1]
+#         print(f'Terminated tag convertion of {dataValue["JOB"]}')
+#         return dataValue
+#     except Exception as error:
+#         print(f'Could not read VCA contents {error}')
+#         raise Exception('VCA reading error')
 
 
 # check and deativate > file_handler.listFilesInDirSubDir is simpler and works almost the same way getting the same input
