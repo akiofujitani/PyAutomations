@@ -165,6 +165,22 @@ def data_update_values(sheets_name=str, range=str, values=list, sheets_id=SPREAD
     return sheets_API.update_values(creds, sheets_id, sheets_name_range, 'USER_ENTERED', values)
 
 
+def data_update_value(sheets_name=str, range=str, value=list, sheets_id=SPREADSHEET_ID):
+    sheets_name_range = f'{sheets_name}!{range}'
+    try:
+        sheets_value = sheets_API.get_values(creds, sheets_id, sheets_name_range)
+        print(f'{sheets_name_range} found')
+        sheets_API.update_values(creds, sheets_id, sheets_name_range, 'USER_ENTERED', value)
+        if 'values' in sheets_value.keys():
+            print(f'{sheets_value["values"][0]} overwritten by {value} in {sheets_name} at {range}')
+        else:
+            print(f'{value} inserted in {sheets_name} at {range}')
+        return
+    except Exception as error:
+        print(error)
+        raise error
+
+
 def column_to_list(sheets_values, column_number=0):
     values_list = []
     for row in sheets_values['values']:
@@ -183,6 +199,16 @@ def list_to_dict_with_key(dict_list, key):
         else:
             dict_temp[key_value] = [dict_values]
     return dict_temp
+
+
+def convert_number_to_letter(column_int):
+    start_index = 1   #  it can start either at 0 or at 1
+    letter = ''
+    while column_int > 25 + start_index:   
+        letter += chr(65 + int((column_int-start_index)/26) - 1)
+        column_int = column_int - (int((column_int-start_index)/26))*26
+    letter += chr(65 - start_index + (int(column_int)))
+    return letter
 
 
 if __name__ == '__main__':

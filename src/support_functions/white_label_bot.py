@@ -70,8 +70,7 @@ def insert_white_label_values(description=str, code=str, engraving=str):
         pyautogui.press('tab')
         sleep(0.3)
         pyautogui.write(engraving)
-        #Test purpuses...
-        win_handler.icon_click('Button_cancel.png')
+        win_handler.icon_click('Button_Ok.png')
         sleep(0.5)
         pyautogui.press('s')
         sleep(0.3)
@@ -100,29 +99,42 @@ def description_shorten_swap(base_descr, shorten_list):
     return base_descr
 
 
-def create_white_label_description(white_label, shorten_list, swap_list, config):
+def description_validator(product_description, base_description):
+    description_validator = base_description.split(' ')
+    for word in product_description.split(' '):
+        if word in description_validator:
+            description_validator.remove(word)
+            if len(description_validator) == 0 and 'SLIM' not in product_description:
+                return True
+    return False
+
+
+def create_white_label_description(white_label, shorten_list, swap_list, done_list, config):
     try:
         code_value = ''
         last_code_value = 'old'
         header_pos = win_handler.image_search('Product_sheet_header.png', path='Images/Registry')
         descr_pos = win_handler.image_search('Header_descr.png', path='Images/Registry')
         code_pos = win_handler.image_search('Header_code.png', path='Images/Registry')
+        type_pos = win_handler.image_search('Header_type.png', path='Images/Registry')
         selected_pos = win_handler.image_search('Volpe_Table_selected.png', region=(erp_volpe_handler.region_definer(header_pos.left - 15, header_pos.top, 200)))
         code_value = erp_volpe_handler.ctrl_d(code_pos.left + 35, selected_pos.top + 4)
         while not code_value == last_code_value: 
             base_descr = erp_volpe_handler.ctrl_d(descr_pos.left + 15, selected_pos.top + 4)
+            base_type = erp_volpe_handler.ctrl_d(type_pos.left + 15, selected_pos.top + 4)
             base_descr_shorten = description_shorten_swap(base_descr, shorten_list)
             if white_label['CODE'] in swap_list.keys():
                 base_descr_shorten = description_shorten_swap(base_descr_shorten, swap_list[white_label['CODE']])
             white_label_name = base_descr_shorten.replace(white_label['BASE'].strip(), white_label['DESCRIPTION'].strip())
             sleep(0.3)
-            open_white_label_descr()
-            insert_white_label_values(white_label_name,
-                                    white_label['CODE'], 
-                                    white_label['ENG'])
-            data_communication.data_append_values(config['done_list']['sheets_name'], 
-                                    config['done_list']['sheets_pos'], 
-                                    [[code_value, base_descr, white_label['CODE'], white_label['BASE']]], config['done_list']['sheets_id'])
+            if base_type == white_label['TYPE'] and white_label_name not in done_list:
+                open_white_label_descr()
+                insert_white_label_values(white_label_name,
+                                        white_label['CODE'], 
+                                        white_label['ENG'])
+                data_communication.data_append_values(config['done_list']['sheets_name'], 
+                                        config['done_list']['sheets_pos'], 
+                                        [[code_value, base_descr, white_label_name, white_label['CODE'], white_label['BASE']]], config['done_list']['sheets_id'])
             last_code_value = code_value
             keyboard.press_and_release('down')
             sleep(0.3)
@@ -149,6 +161,8 @@ if __name__ == '__main__':
     sheets_pos_descr = config['descriptions']['sheets_pos']
     sheets_name_swap = config['descriptions_swap']['sheets_name']
     sheets_pos_swap = config['descriptions_swap']['sheets_pos']
+    sheets_done_name = config['done_list']['sheets_name']
+    sheets_done_pos = config['done_list']['sheets_pos']
 
     # Get last uploaded date
 
@@ -165,14 +179,23 @@ if __name__ == '__main__':
     # erp_volpe_handler.volpe_load_tab('Tab_Reg', 'Icon_Logins_web.png')
     # erp_volpe_handler.volpe_open_window('Icon_Products.png', 'Products.png', path='Images/Registry')
 
-    white_label_list = data_communication.matrix_into_dict(white_label_data['values'], 'BASE', 'DESCRIPTION', 'ENG', 'CUSTOMER', 'CODE', 'BRANCH', 'DETAILS_NAMING', 'STATUS')
+    white_label_list = data_communication.matrix_into_dict(white_label_data['values'], 'BASE', 'TYPE', 'DESCRIPTION', 'ENG', 'CUSTOMER', 'CODE', 'DETAILS_NAMING', 'STATUS','BRANCH')
     shorten_list = data_communication.matrix_into_dict(description_shorten['values'], 'DESCRIPTION', 'SHORTEN')
     swap_list = data_communication.list_to_dict_with_key(data_communication.matrix_into_dict(description_swap['values'], 'CUSTOMER_CODE', 'DESCRIPTION', 'SWAP'), 'CUSTOMER_CODE')
 
-    for white_label in white_label_list:
-        if not white_label['STATUS'].upper() == 'DONE':
-            registry_load_by_description(white_label['BASE'])
-            create_white_label_description(white_label, shorten_list, swap_list, config)
-            print('Not done')
-            print('')
-    print('Done')
+    try:
+        for i in range(len(white_label_list)):
+            white_label = white_label_list[i]
+            if not white_label['STATUS'].upper() == 'DONE':
+                try:
+                    done_list_data = data_communication.get_values(sheets_done_name, sheets_done_pos, sheets_id)
+                    white_label_done_list = data_communication.matrix_into_dict(done_list_data['values'], 'CODE', 'DESCRIPTION', 'WHITE_LABEL', 'CUSTOMER_CODE', 'FAMILY')
+                except Exception as error:
+                    print(f'Error {error}')
+                    raise error
+                registry_load_by_description(white_label['BASE'])
+                create_white_label_description(white_label, shorten_list, swap_list, [white_label['WHITE_LABEL'] for white_label in white_label_done_list], config)
+                data_communication.data_update_value(sheets_name, f'H{i + 2}', [['DONE']], sheets_id)
+        print('Done')
+    except KeyboardInterrupt:
+        print('Script interrupted')
