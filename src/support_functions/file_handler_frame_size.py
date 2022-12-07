@@ -53,10 +53,20 @@ def shape_xy_resize(x_y_dict_list, hbox, vbox):
 
 def radius_recalc(shape_xy_resized, angle_count_convert=360):
     shape_in_angle = {}
-    angle_unit = 360 / len(shape_xy_resized)
+    angle = 0
 
     while len(shape_in_angle.keys()) < angle_count_convert:
+        angle += 1
         for i in range(len(shape_xy_resized)):
-            angle_a = angle_unit * (i + 1)
-
+            x_y_values_a = shape_xy_resized[i]
+            values_b_number = i if len(shape_xy_resized) < i else 0
+            x_y_values_b = shape_xy_resized[values_b_number + 1]
+            angle_a = math.atan(x_y_values_a['y'] / x_y_values_a['x'])
+            angle_b = math.atan(x_y_values_b['y'] / x_y_values_b['x'])
+            angle_diff = abs(abs(angle_a) - abs(angle_b))
+            if angle_diff < 1:
+                x_y_values_b = shape_xy_resized[values_b_number + 2]
+                angle_b = math.atan(x_y_values_b['y'] / x_y_values_b['x'])
+                angle_diff = abs(abs(angle_a) - abs(angle_b))
+            
 
