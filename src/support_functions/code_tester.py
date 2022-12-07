@@ -58,7 +58,10 @@
 # }
 # '''
 
-import math
+test_list = [unit + 10 for unit in range(20)]
 
-angle = math.atan(0 / 2)
-print(math.degrees(angle))
+for i in range(len(test_list)):
+    print(i)
+    print(test_list[i])
+
+    
