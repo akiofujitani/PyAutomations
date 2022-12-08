@@ -1,4 +1,4 @@
-import datetime, heat_map_classes, win_handler, erp_volpe_handler, pyautogui, keyboard, file_handler, data_communication, json_config, os
+import datetime, heat_map_classes, win_handler, erp_volpe_handler, pyautogui, keyboard, file_handler, data_communication, json_config, os, collections
 from ntpath import join
 from time import sleep
 
@@ -11,44 +11,11 @@ from time import sleep
 ================================================================================================================
 '''
 
-# def get_productivity(start_date=datetime.datetime, end_date=datetime.datetime, type_list=list, output_path=str, name_pattern=str):
-#     '''
-#     Volpe automation to extract machine productivity by date
-#     Extracts data for each day in the defined interval
-#     '''
-#     try:
-#         date_diff = end_date - start_date
-#         type_selector('Machine_productivity.png', 'Images/Machine_productivity', *type_list)
-#         date = start_date
-#         error_counter = 0
-#         for _ in range(date_diff.days + 1):
-#             try:
-#                 sleep(1)
-#                 load_report(date, date)
-#                 win_handler.loading_wait('Sheet_header.png', path='Images/Machine_productivity')
-#                 machine_productivity_expand_all()
-#                 sleep(1)
-#                 save_productivity(f'{name_pattern}{datetime.datetime.strftime(date, "%Y%m%d")}', output_path)
-#                 date = date + datetime.timedelta(days=1)
-#             except Exception as error:
-#                 print(f'Error loading {datetime.datetime.strftime(date, "%Y%m%d")} \nError: {error}')
-#                 if error_counter >= 3:
-#                     raise Exception(f'Too many errors: {error}')
-#                 error_counter += 1
-#                 erp_volpe_handler.volpe_back_to_main()
-#                 erp_volpe_handler.volpe_tab_select('Tab_Lab')
-#                 win_handler.loading_wait('Icon_Prod_Unit.png')
-#                 sleep(0.3)
-#                 win_handler.icon_click('Icon_Productivity_machine.png')
-#                 sleep(0.3)
-#                 type_selector('Machine_productivity.png', 'Images/Machine_productivity', *type_list)
-#         return
-#     except Exception as error:
-#         print(f'get_productivity error in {error}')
-#         raise error
 
-
-def type_selector(window_name, path, *args):
+def type_selector(window_name, path, *args) -> None:
+    '''
+    Select production type, will be moved to erp_volpe_hadler
+    '''
     try:
         win_pos = win_handler.image_search(window_name, path=path)
         sleep(0.5)
@@ -81,81 +48,6 @@ def type_selector(window_name, path, *args):
     except Exception as error:
         print(f'Error selecting type {error}')
         raise error
-
-
-# def load_report(date_start=datetime.datetime, date_end=datetime.datetime):
-#     '''
-#     Volpe automation to load machine productivity report by date
-#     '''
-#     try:
-#         win_pos = win_handler.image_search('Machine_productivity.png', path='Images/Machine_productivity')
-#         sleep(0.5)
-#         try:    
-#             win_handler.icon_click('Volpe_Maximize.png', confidence_value=0.7, region_value=(erp_volpe_handler.region_definer(win_pos.left - 15, win_pos.top - 15)))
-#             sleep(0.5)
-#         except:
-#             print('Window already maximized')
-#         erp_volpe_handler.volpe_tab_select('Report_options', path='Images/Machine_productivity')
-#         date_from = win_handler.image_search('Date_from.png', path='Images/Machine_productivity')
-#         win_handler.click_field(date_from, 'Front')
-#         sleep(0.5)
-#         pyautogui.click()
-#         sleep(0.5)
-#         pyautogui.hotkey('ctrl', 'a')
-#         sleep(0.5)
-#         pyautogui.write(datetime.datetime.strftime(date_start, '%d%m%Y'))
-#         sleep(0.5)
-#         date_from = win_handler.image_search('Date_until.png', path='Images/Machine_productivity')
-#         win_handler.click_field(date_from, 'Front')
-#         sleep(0.5)
-#         pyautogui.hotkey('ctrl', 'a')
-#         sleep(0.5)
-#         pyautogui.write(datetime.datetime.strftime(date_end, '%d%m%Y'))
-#         sleep(0.5)
-#         win_handler.icon_click('Procced.png', path='Images/Machine_productivity')
-#         return
-#     except Exception as image_search_error:
-#         print(f'{image_search_error}')
-#         raise Exception(f'load_report error {image_search_error}')
-
-
-# def save_productivity(file_name, save_path):
-#     '''
-#     Volpe automation
-#     Save productivity values to file name and path arguments
-#     '''
-#     pyautogui.moveTo(10, 10)
-#     win_handler.icon_click('Icon_save.png', path='Images/Machine_productivity')
-#     sleep(0.5)
-#     for _ in range(5):
-#         keyboard.press_and_release('Down')
-#         sleep(0.5)
-#     pyautogui.press('enter')
-#     sleep(1)
-#     save_as_window = win_handler.image_search('Save_as.png', path='Images/Save_as')
-#     if save_as_window:
-#         file_full_path = join(save_path, file_name)
-#         pyautogui.write(file_full_path)
-#         sleep(0.5)
-#         pyautogui.press(['tab', 'tab'])
-#         sleep(0.5)
-#         pyautogui.press('enter')
-#         sleep(1)
-#         msg_win_list = ['Question_mark.png', 'Exclamation_mark.png']
-#         for i in range(3):
-#             for image in msg_win_list:
-#                 try:
-#                     sleep(0.3)
-#                     win_handler.image_search(image)
-#                     sleep(0.3)
-#                     if image == 'Exclamation_mark.png':
-#                         win_handler.icon_click('Yes_button.png')
-#                     if image == 'Question_mark.png':
-#                         win_handler.icon_click('No_button.png')
-#                 except Exception as error:
-#                     print(f'Image not found {error}')
-#         sleep(0.5)
-#     return
 
 
 def expand_all(sheet_pos):
@@ -282,7 +174,7 @@ def machine_with_date(date, machine):
     return machine_dict
 
 
-def organized_values_to_simples_dict(organized_values):
+def organized_values_to_simples_dict(organized_values=dict):
     '''
     Create list of simplified dictionaries to csv conversion
     '''
@@ -317,7 +209,7 @@ def done_file_move(path=str, done_path=str, extension=str):
     return
 
 
-def simple_dict_by_status(productivity_dict):
+def simple_dict_by_status(productivity_dict=dict):
     '''
     Converts machine productivity dictionary by status to date
     '''
@@ -424,6 +316,9 @@ def define_start_date(date_1, date_2):
 
 
 def complete_date_in_list(status_dict):
+    '''
+    Get status values and complete missing dates.
+    '''
     temp_list = {}
     for status in status_dict.keys():
         date_list = [datetime.datetime.strptime(date['DATE'], '%d/%m/%Y') for date in status_dict[status]]

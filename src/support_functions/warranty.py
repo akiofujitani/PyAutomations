@@ -106,7 +106,7 @@ def volpe_load_report(start_date=datetime.datetime,
                             path=load_report_path, 
                             confidence_value=0.95,
                             region=(erp_volpe_handler.region_definer(reference_pos.left - 15, reference_pos.top - 15)) if reference_pos else '')
-        win_handler.click_field(date_from, date_from_pos, distanceX=25)
+        win_handler.click_field(date_from, date_from_pos, distance=25)
         sleep(0.3)
         pyautogui.click()
         sleep(0.3)
@@ -117,7 +117,7 @@ def volpe_load_report(start_date=datetime.datetime,
         date_until = win_handler.image_search(date_until_image, 
                             path=load_report_path, 
                             confidence_value=0.95, region=(erp_volpe_handler.region_definer(reference_pos.left - 15, reference_pos.top - 15)) if reference_pos else '')
-        win_handler.click_field(date_until, date_until_pos, distanceX=25)
+        win_handler.click_field(date_until, date_until_pos, distance=25)
         sleep(0.3)
         pyautogui.hotkey('ctrl', 'a')
         sleep(0.3)
@@ -188,7 +188,7 @@ def warranty_add_quantity(warranty_list):
 if __name__ == '__main__':
         # volpe_back_to_main()
     try:
-        config = json_config.load_json_config('config_volpe.json')
+        config = json_config.load_json_config('C:/Users/fausto.akio/Documents/Reports/config_volpe.json')
     except:
         print('Could not load config file')
         exit()
