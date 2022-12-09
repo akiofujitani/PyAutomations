@@ -58,10 +58,87 @@
 # }
 # '''
 
-test_list = [unit + 10 for unit in range(20)]
+import tkinter
+import tkinter.ttk
 
-for i in range(len(test_list)):
-    print(i)
-    print(test_list[i])
 
     
+
+if __name__ == '__main__':
+    # Create window
+    window = tkinter.Tk()
+
+    window.title('Test fuck the name')
+    window.geometry('500x200')
+
+    #Create label with text
+
+    label = tkinter.Label(window, text='Please enter your name and click in the Button OK', font=('Arial', 10))
+    label.grid(column=0, row=0)
+
+    # Create text input field
+
+    text = tkinter.Entry(window, width=30)
+    text.grid(column=0, row=1)
+    text.focus()
+
+    label_2 = tkinter.Label(window, font=('Arial Bold', 20))
+    label_2.grid(column=0, row=3)
+
+    # Create text input field disabled
+
+    text_2 = tkinter.Entry(window,width=30, state='disabled')
+    text_2.grid(column=0, row=4)
+
+    # Button click action
+
+    def click_button_ok():
+        text_value = f'Fuck you {text.get()}'
+        label_2.configure(text=text_value)
+
+
+    def combo_box_get():
+        text_value = f'Value from combobox {combo_box.get()}'
+        print(text_value)
+        text_2.configure(state='normal')
+        text_2.delete(0, tkinter.END)
+        text_2.insert(0, text_value)
+        text_2.configure(state='disabled')
+
+
+    # Create button
+
+    Button = tkinter.Button(window, text='Ok', command=click_button_ok, width=5)
+    Button.grid(column=1, row=1)
+
+    Button_2 = tkinter.Button(window, text='Second Button', command=combo_box_get, bg='red', fg='white')
+    Button_2.grid(column=1, row=2)
+
+    # Create combobox
+
+    combo_box = tkinter.ttk.Combobox(window, width=10)
+    combo_box['values'] = (1, 2, 3, 4, 5, 'Text')
+    combo_box.current(5)
+    combo_box.grid(column=1, row=3)
+
+    # Check button
+
+    check_button_state = tkinter.BooleanVar()
+    check_button_state.set(False)
+    check_button = tkinter.ttk.Checkbutton(window, text='Choose', variable=check_button_state)
+
+    check_button.grid(column=1, row=4)
+
+
+    # Radio Button
+
+    radio_button_1 = tkinter.ttk.Radiobutton(window, text=f'Radio 1', value=0)
+    radio_button_2 = tkinter.ttk.Radiobutton(window, text=f'Radio 2', value=0)
+    radio_button_3 = tkinter.ttk.Radiobutton(window, text=f'Radio 3', value=0)
+    radio_button_4 = tkinter.ttk.Radiobutton(window, text=f'Radio 4', value=0)
+
+
+    # Run GUI
+
+    window.mainloop()
+        

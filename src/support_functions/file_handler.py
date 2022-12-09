@@ -2,14 +2,20 @@ import csv, os, shutil, datetime, time, chardet
 from ntpath import join
 
 
-def file_list(path=str, file_extention=str):
+def file_list(path=str, file_extention=str) -> list:
+    '''
+    List files ended with choosen extension inside one directory
+    '''
     if not os.path.exists(path):
         os.mkdir(path)
         print(f'Directory {path} created')
     return [file for file in os.listdir(path) if file.lower().endswith(f'.{file_extention.lower()}')]
 
 
-def listFilesInDirSubDir(pathRoot, extention):
+def listFilesInDirSubDir(pathRoot=str, extention=str) -> list:
+    '''
+    List files ended with choosen extension inside all directories inside the path
+    '''
     fileList = []
     for root, dir, files in os.walk(pathRoot):
         for file in files:
@@ -19,11 +25,20 @@ def listFilesInDirSubDir(pathRoot, extention):
     return fileList
 
 
-def fileListFullPath(path, file_extention):
+def fileListFullPath(path, file_extention) -> list:
+    '''
+    List files returning the full path list ended with choosen extension inside one directory
+    '''    
+    if not os.path.exists(path):
+        os.mkdir(path)
+        print(f'Directory {path} created')    
     return [os.path.join(path, file) for file in os.listdir(path) if file.lower().endswith(f'.{file_extention.lower()}')]
 
 
-def csv_reader(file_path, case_upper, delimeter_char, encoding='utf-8'):
+def __csv_reader(file_path, case_upper, delimeter_char, encoding='utf-8'):
+    '''
+    Auxiliary method for CSVtoList
+    '''
     with open(file_path, encoding=encoding) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=delimeter_char, quoting=csv.QUOTE_NONE)
         header = []
@@ -42,23 +57,30 @@ def csv_reader(file_path, case_upper, delimeter_char, encoding='utf-8'):
     return csv_contents
 
 
-def CSVtoList(filePath, case_upper=True, delimeter_char='\t'):
+def CSVtoList(filePath, case_upper=True, delimeter_char='\t') -> list:
+    '''
+    Get csv file, ready and convert it to list
+    '''
     try:
-        csv_contents = csv_reader(filePath, case_upper, delimeter_char)
+        csv_contents = __csv_reader(filePath, case_upper, delimeter_char)
     except Exception as error:
         print(error)
         try:
             try:
-                csv_contents = csv_reader(filePath, case_upper, delimeter_char, encoding='cp1252')
+                csv_contents = __csv_reader(filePath, case_upper, delimeter_char, encoding='cp1252')
             except:
-                encoding = detect_encode(filePath)
-                csv_contents = csv_reader(filePath, case_upper, delimeter_char, encoding=encoding)
+                encoding = __detect_encode(filePath)
+                csv_contents = __csv_reader(filePath, case_upper, delimeter_char, encoding=encoding)
         except:
             raise Exception('Could not read file contents')        
     return csv_contents
 
 
-def detect_encode(file_path):
+def __detect_encode(file_path):
+    '''
+    Auxiliary method for CSVoList
+    Try to detect the encoding type
+    '''
     with open(file_path, 'rb') as rawdata:
         result = chardet.detect(rawdata.read(100000))
     return result['encoding']

@@ -1,4 +1,4 @@
-import subprocess
+import subprocess, pyscreeze
 from ntpath import join
 from time import sleep
 import pyautogui, screeninfo, constants, os
@@ -116,7 +116,7 @@ def image_search(image_name=str, confidence_value=0.7, region=None, full_path=co
         raise Exception(f'Image_search exception {error.__class}')
 
 
-def icon_click(icon_name = str, confidence_value = 0.8, region_value=None, path='Images/'):
+def icon_click(icon_name=str, confidence_value=0.8, region_value=None, path='Images/'):
     '''
     Normal Icon click
     Finds the icon image and click in its center    
@@ -134,7 +134,7 @@ def icon_click(icon_name = str, confidence_value = 0.8, region_value=None, path=
         raise error
 
 
-def tab_select(tab_name = str, confidence_value=0.9999999, confidence_reduction_step = 0.0000003):
+def tab_select(tab_name=str, confidence_value=0.9999999, confidence_reduction_step=0.0000003):
     '''
     tab searck and selection
     confidence values are still not completed tested
@@ -211,7 +211,7 @@ def click_volpe(pos, time=0.2):
     return
 
 
-def click_field(field_pos, click_pos='Front', distance=20):
+def click_field(field_pos=pyscreeze.Box, click_pos='Front', distance=20):
     '''
     text field title position
     click_pos = Front, Back, Bellow, Above
@@ -247,7 +247,7 @@ def region_definer(raw_x, raw_y, width=None, height=None):
     '''
     windows_size = get_window_size()
     start = translate_xy_pos(raw_x, raw_y)
-    return (start.x, start.y, windows_size.width if not width else width, windows_size.height if not height else height)
+    return pyscreeze.Box(start.x, start.y, windows_size.width if not width else width, windows_size.height if not height else height)
 
 
 if __name__ == '__main__':
