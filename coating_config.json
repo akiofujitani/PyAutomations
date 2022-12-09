@@ -1,0 +1,30 @@
+{        
+    "sheets_id" : "1JBWphl6w6r8f5cdU3Kh3sgC55jhKpCZjh7FEJc5waAY",
+    "product_codes" : {
+        "sheets_name" : "PRODUCT_CODES",
+        "sheets_pos" : "A2:D"
+    },
+    "done_list" : {
+        "sheets_name" : "DONE_LIST",
+        "sheets_pos" : "A2:B"       
+    },
+    "feature_list" : {
+        "sheets_name" : "FEATURE_LIST",
+        "sheets_pos" : "A2:A"
+    },
+    "coating" : {
+        "sheets_name" : "COATING",
+        "sheets_pos" : "A2:H"        
+    },
+    "tint_list" : {
+        "sheets_name" : "TINT_LIST",
+        "sheets_pos" : "A2:C"         
+    },
+    "index_tint_and_tintcoat" : {
+        "sheets_name" : "INDEX_TINT_AND_TINTCOAT",
+        "sheets_pos" : "A2:D"         
+    },
+    "parameters" : {
+        "number_tries" : 3
+    }
+}

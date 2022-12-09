@@ -1,7 +1,7 @@
 import datetime, heat_map_classes, win_handler, erp_volpe_handler, pyautogui, keyboard, file_handler, data_communication, json_config, os, collections
 from ntpath import join
 from time import sleep
-
+import tkinter.messagebox
 
 '''
 ================================================================================================================
@@ -470,4 +470,6 @@ if __name__ == '__main__':
                     print('Done')
                 except Exception as error:
                     print(f'Error {error} ocurred')
+                except KeyboardInterrupt:
+                    tkinter.messagebox.showinfo('PyAutomation', 'Script interrupted by user.')
 

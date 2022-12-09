@@ -201,6 +201,17 @@ def list_to_dict_with_key(dict_list, key):
     return dict_temp
 
 
+def list_to_dict_key_and_list(values_list, key_index) -> dict:
+    dict_temp = {}
+
+    for values in values_list:
+        key_name = values.pop(key_index)
+        dict_temp[key_name] = [values for values in values if values != '']
+    return dict_temp
+
+    
+
+
 def convert_number_to_letter(column_int):
     start_index = 1   #  it can start either at 0 or at 1
     letter = ''

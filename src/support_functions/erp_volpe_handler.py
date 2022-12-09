@@ -412,6 +412,23 @@ def message_box_confirm(check_count=3, yes_button=True):
     return
 
 
+def load_product_code(code=str, field_pos='Bellow', distance=15, field_name=str, consult_button=str, path=str):
+    try:
+        product_pos = win_handler.image_search(field_name, path=path)
+        win_handler.click_field(product_pos, field_pos, distance)
+        sleep(0.3)
+        pyautogui.click()
+        sleep(0.3)
+        pyautogui.hotkey('ctrl', 'a')
+        sleep(0.5)
+        pyautogui.write(code)
+        sleep(0.3)
+        win_handler.icon_click(consult_button, path=path)
+        return
+    except Exception as error:
+        raise Exception(f'Load product code {error}')
+
+
 if __name__ == '__main__':
     try:
         win_handler.activate_window('Volpe')
