@@ -51,6 +51,16 @@ def shape_xy_resize(x_y_dict_list, hbox, vbox):
     return shape_xy_resized
 
 
+def atan_to_360(angle, x, y):
+    if x > 0 and y > 0:
+        angle_converter = 0
+    if x < 0 and y > 0 or x < 0 and y < 0:
+        angle_converter = 180
+    if x > 0 and y < 0:
+        angle_converter = 360
+    return angle + angle_converter
+
+
 def radius_recalc(shape_xy_resized, angle_count_convert=360):
     shape_in_angle = {}
     angle = 0
@@ -68,5 +78,20 @@ def radius_recalc(shape_xy_resized, angle_count_convert=360):
                 x_y_values_b = shape_xy_resized[values_b_number + 2]
                 angle_b = math.atan(x_y_values_b['y'] / x_y_values_b['x'])
                 angle_diff = abs(abs(angle_a) - abs(angle_b))
-            
-
+            if angle > angle_a and angle < angle_b:
+                length_a = math.sqrt(x_y_values_a['x'] ** 2 + x_y_values_a['y'] ** 2)
+                length_b = math.sqrt(x_y_values_b['x'] ** 2 + x_y_values_b['y'] ** 2)
+                length_a_to_b = math.sqrt((length_a ** 2 + length_b ** 2) - (2 * length_a * length_b) * math.cos(angle_diff))
+                angle_a_to_b = math.acos((length_a ** 2 + length_a_to_b ** 2) - (length_b ** 2 / length_a * length_a_to_b * 2))
+                angle_resize_diff_a = abs(abs(angle_a) - abs(angle))
+                angle_resize_diff_b = abs(abs(angle_b) - abs(angle))
+                lengh_angle_diff = ''
+                lenght = ''
+                if angle_resize_diff_a > angle_resize_diff_b:
+                    lengh_angle_diff = math.sqrt((length_a ** 2 + length_b ** 2) - 2 * length_a * length_b * math.cos(angle_resize_diff_a))
+                    length = round(math.sqrt(length_a ** 2 + lengh_angle_diff ** 2) - 2 * length_a * lengh_angle_diff * math.cos(angle_a_to_b))
+                else:
+                    lengh_angle_diff = math.sqrt((length_a ** 2 + length_b ** 2) - 2 * length_a * length_b * math.cos(angle_resize_diff_b))
+                    length = round(math.sqrt(length_b ** 2 + lengh_angle_diff ** 2) - 2 * length_b * lengh_angle_diff * math.cos(angle_a_to_b))
+            shape_in_angle[angle] = length
+    return shape_in_angle
