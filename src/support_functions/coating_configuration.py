@@ -48,59 +48,8 @@ def frame_type_checker(ocr_text, frame_type_list):
     return False
 
 
-def list_delete_edging_config(product, config):
-    edging_index = edging_index_type(product['DESCRIPTION'], config['index_type'])
-    try:
-        win_pos = win_handler.image_search('Configuration_edging.png', path='Images/Edging_Config')
-        header_pos = win_handler.image_search('sheet_header.png', region=(erp_volpe_handler.region_definer(win_pos.left - 15, win_pos.top)), path='Images/Edging_Config/')
-        code_pos = win_handler.image_search('header_code.png', region=(erp_volpe_handler.region_definer(win_pos.left - 15, win_pos.top)), path='Images/Edging_Config/')
-        type_edging_header_pos = win_handler.image_search('header_montagem.png', region=(erp_volpe_handler.region_definer(win_pos.left - 15, win_pos.top)), path='Images/Edging_Config/')
-        frame_header_pos = win_handler.image_search('header_arm.png', region=(erp_volpe_handler.region_definer(win_pos.left - 15, win_pos.top)), path='Images/Edging_Config/')
-        line_pos = win_handler.image_search('Volpe_Table_selected.png', region=(erp_volpe_handler.region_definer(header_pos.left - 15, header_pos.top)))       
-        
-        code = erp_volpe_handler.ctrl_d(code_pos.left + 15, line_pos.top + 3)
-        while True:
-            line_text = ''
-            try:
-                line_text = erp_volpe_handler.get_text_square(line_pos.left + line_pos.width, line_pos.top, header_pos.width, line_pos.height + 2)
-                # line_text = f'{erp_volpe_handler.ctrl_d(type_edging_header_pos.left + 100, line_pos.top + 3)} {erp_volpe_handler.ctrl_d(frame_header_pos.left + 100, line_pos.top + 3)}'
-                if 'CORTE REMOTO SURF' in line_text:
-                    raise Exception('Text main part not visible')
-                if len(line_text) <= 30:
-                    raise Exception('Text incomplete')
-            except Exception as error:
-                print(f'OCR Error {error}')
-                line_text = f'{erp_volpe_handler.ctrl_d(type_edging_header_pos.left + 100, line_pos.top + 3)} {erp_volpe_handler.ctrl_d(frame_header_pos.left + 100, line_pos.top + 3)}'
-            line_text = line_text.replace('É', 'E')
-            if edging_index not in line_text:
-                # edging_type = erp_volpe_handler.ctrl_d(type_edging_header_pos.left + 100, line_pos.top + 3)
-                # if edging_index not in edging_type.replace('É', 'E'):
-                delete_line()      
-            else:
-                if 'CORTE REMOTO' in line_text and frame_type_checker(line_text, config['remote_edging']['exclude']): 
-                    delete_line()
-                    # else:
-                    #     keyboard.press_and_release('down')
-                    #     sleep(0.3)                        
-                else:
-                    keyboard.press_and_release('down')
-                    sleep(0.5)
-            old_code = code
-            line_pos = win_handler.image_search('Volpe_Table_selected.png', region=(erp_volpe_handler.region_definer(header_pos.left - 25, header_pos.top)))
-            sleep(0.3)
-            code = erp_volpe_handler.ctrl_d(code_pos.left + 30, line_pos.top + 3)
-            if old_code == code:
-                keyboard.press_and_release('down')
-                sleep(0.5)
-                line_pos = win_handler.image_search('Volpe_Table_selected.png', region=(erp_volpe_handler.region_definer(header_pos.left - 25, header_pos.top)))
-                sleep(0.3)
-                code = erp_volpe_handler.ctrl_d(code_pos.left + 30, line_pos.top + 3)
-                if old_code == code:
-                    break
-        return
-    except Exception as error:
-        print(f'List delete error {error}')
-        raise error
+def delete_duplicates(ocurrences_list) -> None:
+    pass
 
 
 def wait_time(seconds=int):
@@ -111,6 +60,42 @@ def wait_time(seconds=int):
         sleep(1.0)
     print('Waiting done')
     return
+
+
+def get_coating(family=str, coating_by_family=dict, default_name='DEFAULT') -> list:
+    if family not in coating_by_family.keys():
+        return default_name, coating_by_family[default_name]
+    else:
+        return family, coating_by_family[family]
+
+
+def define_tint_coating(product_name=str, index_tint_coat=dict, index_value_swap={'POLY' : '1.59'}) -> list:
+    for key in index_value_swap.keys():
+        if key in product_name:
+            product_name = product_name.replace(key, index_value_swap[key])
+        for index in index_tint_coat.keys():
+            if index in product_name:
+                return index_tint_coat[index]
+    return
+
+
+def get_lens_tint(product_name=str, feature_list=list) -> bool:
+    for feature in feature_list:
+        if feature in product_name:
+            return False
+    return True
+
+
+'''
+==========================================================================================================================================
+
+
+            MAIN            MAIN            MAIN            MAIN            MAIN            MAIN            MAIN            MAIN
+
+
+==========================================================================================================================================
+'''
+
 
 
 if __name__ == '__main__':
@@ -180,11 +165,19 @@ if __name__ == '__main__':
 
             for product in codes_list:
                 if not product['CODE'] in list(done_product['CODE'] for done_product in done_list):
+                    product_coating_list = []
+                    family_type, product_coating_list = get_coating(product['FAMILY'], coating_list)
+                    if get_lens_tint(product['DESCRIPTION'], feature_list):
+                        product_coating_list = product_coating_list + define_tint_coating(product['DESCRIPTION'], index_tint_coat)
+                        product_coating_list = product_coating_list + [tint['CODE'] for tint in tint_list if tint['TYPE'] == family_type]
+                    print(product_coating_list)
                     erp_volpe_handler.load_product_code(product['CODE'], 
                                     field_name='Product.png', 
                                     consult_button='Button_Consult.png', 
                                     path='Images/Coating_Config/')
-                    list_delete_edging_config(product, config)
+                    file_name = f'{config["parameters"]["file_name_pattern"]}{product["CODE"]}'
+                    erp_volpe_handler.volpe_save_report(file_name, config['parameters']['report_path'])
+                    current_coating_list = file_handler.CSVtoList(join(config['parameters']['report_path'], f'{file_name}.txt'))
                     print('Done')
                     now_datetime = datetime.datetime.now()
                     data_communication.data_append_values(sheets_name_done, 

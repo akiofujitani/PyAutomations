@@ -61,8 +61,9 @@ def CSVtoList(filePath, case_upper=True, delimeter_char='\t') -> list:
     '''
     Get csv file, ready and convert it to list
     '''
+    file_path = os.path.normpath(filePath)
     try:
-        csv_contents = __csv_reader(filePath, case_upper, delimeter_char)
+        csv_contents = __csv_reader(file_path, case_upper, delimeter_char)
     except Exception as error:
         print(error)
         try:

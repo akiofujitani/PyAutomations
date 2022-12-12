@@ -1,4 +1,4 @@
-import pyautogui, win_handler, keyboard, tkinter, datetime, file_handler
+import pyautogui, win_handler, keyboard, tkinter, datetime, file_handler, os
 from time import sleep
 from ocr_text_reader import return_text
 from ntpath import join
@@ -364,7 +364,7 @@ def volpe_save_report(file_name, save_path, reference=None, load_report_path='Im
     sleep(1)
     save_as_window = win_handler.image_search('Title_Save_as.png')
     if save_as_window:
-        file_full_path = join(save_path, file_name)
+        file_full_path = join(os.path.normpath(save_path), file_name)
         file_handler.check_create_dir(save_path)
         pyautogui.write(file_full_path)
         sleep(0.5)
