@@ -10,7 +10,6 @@ from time import sleep
 ==================================================================================================================================
 '''
 
-
 def edging_index_type(product_description, type_list):
     print(product_description)
     for type in type_list:
@@ -47,6 +46,30 @@ def frame_type_checker(ocr_text, frame_type_list):
             return True
     return False
 
+
+def __get_feature(product_name=str, feature_list=list) -> str:
+    for feature in feature_list:
+        if feature in product_name:
+            return feature
+    return
+
+
+def __get_family(product_family=str, family_list=list) -> str:
+    if product_family not in family_list:
+        return 'DEFAULT'
+    for family in family_list:
+        if family == product_family:
+            return family
+
+
+def __get_tint_list(product_family=str, tint_list=list) -> list:
+    if product_family not in [tint['TYPE'] for tint in tint_list]:
+        raise Exception('Family not found')
+    return [tint for tint in tint_list if tint['TYPE'] == product_family]
+
+
+def __tint_coating_by_product(product):
+    pass
 
 def list_delete_edging_config(product, config):
     edging_index = edging_index_type(product['DESCRIPTION'], config['index_type'])
@@ -111,6 +134,18 @@ def wait_time(seconds=int):
         sleep(1.0)
     print('Waiting done')
     return
+
+
+'''
+==================================================================================================================================
+
+
+            Main         Main        Main        Main       Main         Main           Main            Main            Main
+
+
+==================================================================================================================================
+'''
+
 
 
 if __name__ == '__main__':
@@ -180,21 +215,30 @@ if __name__ == '__main__':
 
             for product in codes_list:
                 if not product['CODE'] in list(done_product['CODE'] for done_product in done_list):
+                    '''
+                    list coating and tinting for current product (may have slight changes later)
+                                        '''
                     erp_volpe_handler.load_product_code(product['CODE'], 
                                     field_name='Product.png', 
                                     consult_button='Button_Consult.png', 
                                     path='Images/Coating_Config/')
-                    list_delete_edging_config(product, config)
-                    print('Done')
-                    now_datetime = datetime.datetime.now()
-                    data_communication.data_append_values(sheets_name_done, 
-                                        sheets_pos_done, 
-                                        [[product['CODE'], 
-                                        product['DESCRIPTION'], 
-                                        now_datetime.strftime('%d/%m/%Y'), 
-                                        now_datetime.strftime('%H:%M:%S')]], 
-                                        sheets_id)
-                    print(f'{product["DESCRIPTION"]} done')
+                    '''
+                    save current list if it exists
+                        automation
+                    read saved current list
+                    move or delete read file
+                    proccess values
+                    delete duplacate values in current list
+                        automation
+                    compare lists
+                    add missing values
+                        automation
+                            insert window
+                            select product
+                            select coating and tintings
+                            execute
+                    insert code and product at done_list
+                    '''
             print('Done')
         except Exception as error:
             print(f'Error {error}')
