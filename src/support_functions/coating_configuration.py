@@ -10,7 +10,6 @@ from time import sleep
 ==================================================================================================================================
 '''
 
-
 def edging_index_type(product_description, type_list):
     print(product_description)
     for type in type_list:
@@ -175,9 +174,7 @@ if __name__ == '__main__':
                                     field_name='Product.png', 
                                     consult_button='Button_Consult.png', 
                                     path='Images/Coating_Config/')
-                    file_name = f'{config["parameters"]["file_name_pattern"]}{product["CODE"]}'
-                    erp_volpe_handler.volpe_save_report(file_name, config['parameters']['report_path'])
-                    current_coating_list = file_handler.CSVtoList(join(config['parameters']['report_path'], f'{file_name}.txt'))
+                    list_delete_edging_config(product, config)
                     print('Done')
                     now_datetime = datetime.datetime.now()
                     data_communication.data_append_values(sheets_name_done, 
