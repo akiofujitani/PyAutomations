@@ -57,10 +57,9 @@
 #     }
 # }
 # '''
+string_value = '100945221213161250'
 
-<<<<<<< HEAD
-index_value_swap={'POLY' : '1.59'}
-print(index_value_swap.keys())
-=======
-print('Test')
->>>>>>> 5f773a5473a931875fc4f0b2cb776e3864f52473
+string_value_2 = '1000282220602144419'
+
+print(len(string_value))
+print(len(string_value_2))
