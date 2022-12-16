@@ -7,6 +7,7 @@ from PIL import Image, ImageDraw
 
 
 Point = namedtuple('Point', 'x y')
+Frame_Box = namedtuple('Frame_Box', 'hbox vbox')
 
 
 def __volpe_points_corrector(shape_data_points):
@@ -18,9 +19,8 @@ def __volpe_points_corrector(shape_data_points):
     return temp_shape_data
 
 
-def shape_to_xy(shape_points):
+def __shape_to_xy(shape_points):
     try:
-        shape_points = __volpe_points_corrector(shape_points)
         x_y_dict_list = []
         angle_unit = 360 / len(shape_points)
         angle_value = angle_unit
@@ -36,9 +36,9 @@ def shape_to_xy(shape_points):
 
 
 def __xy_shape_size(x_y_dict_list):
-    frame_size = {}
-    frame_size['hor'] = abs(min([angle.x for angle in x_y_dict_list])) + abs(max([angle.x for angle in x_y_dict_list]))
-    frame_size['ver'] = abs(min([angle.y for angle in x_y_dict_list])) + abs(max([angle.y for angle in x_y_dict_list]))
+    angle_x_list = [angle.x for angle in x_y_dict_list]
+    angle_y_list = [angle.y for angle in x_y_dict_list]
+    frame_size = Frame_Box(abs(min(angle_x_list)) + abs(max(angle_x_list)), abs(min(angle_y_list)) + abs(max(angle_y_list)))
     return frame_size
 
 
@@ -49,13 +49,13 @@ def shape_xy_resize(x_y_dict_list=list, hbox=str, vbox=str):
         vbox = int(vbox)
     except TypeError:
         raise Exception('Type error')
-    hbox = frame_size['hor'] if hbox == 0 else int(hbox) * 100
-    vbox = frame_size['ver'] if vbox == 0 else int(vbox) * 100
+    hbox = frame_size.hbox if hbox == 0 else int(hbox) * 100
+    vbox = frame_size.vbox if vbox == 0 else int(vbox) * 100
 
-    x_frame_diff = (frame_size['hor'] - hbox) * -1
-    y_frame_diff = (frame_size['ver'] - vbox) * -1
-    x_scale_factor = (frame_size['hor'] + x_frame_diff) / frame_size['hor']
-    y_scale_factor = (frame_size['ver'] + y_frame_diff) / frame_size['ver']
+    x_frame_diff = (frame_size.hbox - hbox) * -1
+    y_frame_diff = (frame_size.vbox - vbox) * -1
+    x_scale_factor = (frame_size.hbox + x_frame_diff) / frame_size.hbox
+    y_scale_factor = (frame_size.vbox + y_frame_diff) / frame_size.vbox
     shape_xy_resized = []
     for x_y_value in x_y_dict_list:
         shape_xy_resized.append(Point(x_y_value.x * x_scale_factor, x_y_value.y * y_scale_factor))
@@ -159,7 +159,32 @@ def radius_recalc(shape_xy_resized=list, angle_count_convert=360) -> dict:
 
 def shape_mirror(shape_in_radius=dict) -> dict:
     mirrored_shape = {}
+    first_angle = shape_in_radius.keys()[0]
+    full_turn = len(shape_in_radius)
+    half_turn = full_turn / 2
 
+    for angle, radius in shape_in_radius.items():
+        mirrored_radius = 0
+        if angle >= first_angle and angle <= half_turn:
+            mirrored_radius = shape_in_radius[half_turn - angle]
+        else:
+            mirrored_radius = shape_in_radius[full_turn - (half_turn - angle)]
+        mirrored_shape[angle] = mirrored_radius
+    return mirrored_shape
+
+
+def frame_resize(shape_data=list, vbox=int, hbox=int) -> dict:
+    shape_data_corrected = __volpe_points_corrector(shape_data)
+    shape_to_xy = __shape_to_xy(shape_data_corrected)
+    frame_size = __xy_shape_size(shape_to_xy)
+    if abs(frame_size.hbox - int(hbox)) < 1.0 and abs(frame_size.vbox - int(vbox)) < 1.0 and len(shape_data_corrected) == 360:
+        shape_in_radius = {}
+        for angle, radius in enumerate(shape_data_corrected, 1):
+            shape_in_radius[angle] = radius
+        return shape_in_radius
+    shape_resized_xy = shape_xy_resize(shape_to_xy, vbox, hbox)    
+    shape_in_radius = radius_recalc(shape_resized_xy)
+    return shape_in_radius
 
 
 
@@ -210,7 +235,7 @@ def draw_points(points_dict=dict, width=600, height=400, scale=15):
     draw = ImageDraw.Draw(image)
     center_x = width/ 2
     center_y = height / 2
-    point_xy = shape_to_xy(points_dict.values())
+    point_xy = __shape_to_xy(points_dict.values())
     coordinates = [(center_x + (points.x / scale), center_y - (points.y / scale)) for points in point_xy]
     draw.point(coordinates, fill='black')
     image.show()

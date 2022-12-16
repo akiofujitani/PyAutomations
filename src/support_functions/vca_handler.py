@@ -92,6 +92,7 @@ def dict_do_VCA(job_data=dict):
         vca_contents = vca_contents + __to_string(key, value)
     return vca_contents
 
+
 def __divide_list_chunks(values_list=list, chunk_size=10):
     values_list = list(values_list)
     new_list = [values_list[i:i + chunk_size] for i in range(0, len(values_list), chunk_size)]
