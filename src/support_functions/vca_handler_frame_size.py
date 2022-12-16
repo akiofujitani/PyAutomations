@@ -230,12 +230,12 @@ def frame_resize(shape_data=list, vbox=int, hbox=int) -> dict:
 #     return shape_in_angle
 
 
-def draw_points(points_dict=dict, width=600, height=400, scale=15):
+def draw_points(points_dict=list, width=600, height=400, scale=15):
     image = Image.new('RGB', (width, height), 'white')
     draw = ImageDraw.Draw(image)
     center_x = width/ 2
     center_y = height / 2
-    point_xy = __shape_to_xy(points_dict.values())
+    point_xy = __shape_to_xy(points_dict)
     coordinates = [(center_x + (points.x / scale), center_y - (points.y / scale)) for points in point_xy]
     draw.point(coordinates, fill='black')
     image.show()

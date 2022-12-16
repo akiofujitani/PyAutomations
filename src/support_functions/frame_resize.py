@@ -6,13 +6,13 @@ def __resize_both_sides(trcfmt=dict, hbox=int, vbox=int) -> dict:
     temp_trcfmt = {}
     for side, value in trcfmt.items():
         shape_resized = vca_handler_frame_size.frame_resize(value['R'], hbox[side], vbox[side])
-        temp_trcfmt['R'] = shape_resized.values()
+        temp_trcfmt['R'] = list(shape_resized.values())
         temp_trcfmt['TRCFMT'] = ['1', str(len(shape_resized)), 'E', side, 'F']
         resized_trcfmt[side] = temp_trcfmt
         temp_trcfmt = {}
         if len(trcfmt) == 1:
             other_side = 'R' if side == 'R' else 'L'
-            temp_trcfmt['R'] = vca_handler_frame_size.shape_mirror(shape_resized).values()
+            temp_trcfmt['R'] = list(vca_handler_frame_size.shape_mirror(shape_resized).values())
             temp_trcfmt['TRCFMT'] = ['1', len(shape_resized), 'E', other_side, 'F']
             resized_trcfmt[other_side] = temp_trcfmt      
     return resized_trcfmt
@@ -24,6 +24,7 @@ if __name__ == '__main__':
     except Exception as error:
         print(f'Error loading configuration json file due \n{error}')
         quit()
+
 
     path = os.path.normpath(config['path'])
     path_done = os.path.normpath(config['path_done'])
@@ -38,8 +39,8 @@ if __name__ == '__main__':
                 try:
                     vca_data = file_handler.file_reader(os.path.join(path, vca_file))
                     job_vca = vca_handler.VCA_to_dict(vca_data)
-                    print(f'job_vca["JOB"]\n')
-                    if 'TRCFMT' not in job_vca.keys() or not int(job_vca['TRCFMT']['TRCFMT'][1]) == 400:
+                    print(f'{job_vca["JOB"]}\n')
+                    if 'TRCFMT' not in job_vca.keys() or not int(job_vca['TRCFMT']['R']['TRCFMT'][1]) == 400:
                         file_handler.file_move_copy(path, path_done, vca_file, True)
                         sleep(0.5)
                         file_handler.file_move_copy(path, path_new, vca_file, False)
@@ -55,4 +56,3 @@ if __name__ == '__main__':
                     print(f'Error {error} in file {vca_file}')
         sleep(sleep_time)
         print(f'Waiting... {sleep_time}')
-

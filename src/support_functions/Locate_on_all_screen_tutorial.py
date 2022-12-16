@@ -58,7 +58,7 @@ PIP install list
 # pip install pytesseract
 # pip install pdf2image
 # pip install opencv-python
-
+# pip install auto-py-to-exe
 
 # pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlibs
 # pip install pygsheets
