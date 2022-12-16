@@ -116,8 +116,11 @@ def file_reader(file_path):
             return file.readlines()
 
 
-def file_writer(file_path, string_values):
-    with open(file_path, 'w') as writer:
+def file_writer(file_path=str, file_name=str, string_values=str) -> None:
+    if not os.path.exists(file_path):
+        os.mkdir(file_path)
+        print(f'Directory {file_path} created')
+    with open(join(file_path, file_name), 'w') as writer:
         writer.write(string_values)
         return
 

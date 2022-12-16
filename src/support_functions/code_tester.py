@@ -57,9 +57,7 @@
 #     }
 # }
 # '''
-string_value = '100945221213161250'
 
-string_value_2 = '1000282220602144419'
+test_list = [1, 2, 3, 4, 5, 6, 7, 8, 9 ,0]
 
-print(len(string_value))
-print(len(string_value_2))
+divided_list = [test_list[i:i + 2] for i in range(0, len(test_list), 2)]

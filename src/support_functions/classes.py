@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 class Config:
     def __init__(self, sleep_time_in_sec=int, group_count=int, source_destin_extention=list):
         self.__sleep_time_in_sec = sleep_time_in_sec
@@ -46,3 +48,5 @@ class DirectoryGroup:
     @property
     def copy(self):
         return self.__copy
+
+

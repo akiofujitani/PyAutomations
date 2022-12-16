@@ -1,9 +1,12 @@
 '''
 Build file handler and frame resizer/rebuilder.
 '''
-
 import math
+from collections import namedtuple
 from PIL import Image, ImageDraw
+
+
+Point = namedtuple('Point', 'x y')
 
 
 def __volpe_points_corrector(shape_data_points):
@@ -24,7 +27,7 @@ def shape_to_xy(shape_points):
         for radius in shape_points:
             x_value = math.cos(math.radians(angle_value)) * radius
             y_value = math.sin(math.radians(angle_value)) * radius
-            x_y_dict_list.append({'x' : x_value, 'y' : y_value})
+            x_y_dict_list.append(Point(x_value, y_value))
             angle_value += angle_unit
     except Exception as error:
         print(f'Could not convert frame values duue {error}')
@@ -34,8 +37,8 @@ def shape_to_xy(shape_points):
 
 def __xy_shape_size(x_y_dict_list):
     frame_size = {}
-    frame_size['hor'] = abs(min([angle['x'] for angle in x_y_dict_list])) + abs(max([angle['x'] for angle in x_y_dict_list]))
-    frame_size['ver'] = abs(min([angle['y'] for angle in x_y_dict_list])) + abs(max([angle['y'] for angle in x_y_dict_list]))
+    frame_size['hor'] = abs(min([angle.x for angle in x_y_dict_list])) + abs(max([angle.x for angle in x_y_dict_list]))
+    frame_size['ver'] = abs(min([angle.y for angle in x_y_dict_list])) + abs(max([angle.y for angle in x_y_dict_list]))
     return frame_size
 
 
@@ -55,14 +58,14 @@ def shape_xy_resize(x_y_dict_list=list, hbox=str, vbox=str):
     y_scale_factor = (frame_size['ver'] + y_frame_diff) / frame_size['ver']
     shape_xy_resized = []
     for x_y_value in x_y_dict_list:
-        shape_xy_resized.append({'x' : x_y_value['x'] * x_scale_factor, 'y' : x_y_value['y'] * y_scale_factor})
+        shape_xy_resized.append(Point(x_y_value.x * x_scale_factor, x_y_value.y * y_scale_factor))
     return shape_xy_resized
 
 
-def __atan_to_360(y_x_values=dict, x='x', y='y'):
-    angle_radians = math.atan(y_x_values[y] / y_x_values[x])
-    x = y_x_values[x]
-    y = y_x_values[y]
+def __atan_to_360(y_x_values=Point) -> math.radians:
+    angle_radians = math.atan(y_x_values.y / y_x_values.x)
+    x = y_x_values.x
+    y = y_x_values.y
     if x > 0 and y > 0:
         angle_converter = 0
     if x < 0 and y > 0 or x < 0 and y < 0:
@@ -124,9 +127,9 @@ def radius_recalc(shape_xy_resized=list, angle_count_convert=360) -> dict:
         angle_a = __atan_to_360(x_y_values_a)
         angle_b = __atan_to_360(x_y_values_b)
 
-        length_a = math.sqrt(x_y_values_a['x'] ** 2 + x_y_values_a['y'] ** 2)
-        length_b = math.sqrt(x_y_values_b['x'] ** 2 + x_y_values_b['y'] ** 2)
-        length_a_to_b = math.sqrt((x_y_values_a['x'] - x_y_values_b['x']) ** 2 + (x_y_values_a['y'] - x_y_values_b['y']) ** 2)
+        length_a = math.sqrt(x_y_values_a.x ** 2 + x_y_values_a.y ** 2)
+        length_b = math.sqrt(x_y_values_b.x** 2 + x_y_values_b.y ** 2)
+        length_a_to_b = math.sqrt((x_y_values_a.x - x_y_values_b.x) ** 2 + (x_y_values_a.y - x_y_values_b.y) ** 2)
         angle_diff = abs(abs(angle_a) - abs(angle_b))
         length_a_to_b = math.sqrt((length_a ** 2 + length_b ** 2) - (2 * length_a * length_b) * math.cos(angle_diff))
         acos_value_1 = length_a ** 2 + length_a_to_b ** 2 - length_b ** 2
@@ -174,9 +177,9 @@ def shape_mirror(shape_in_radius=dict) -> dict:
 #         angle_a = __atan_to_360(x_y_values_a)
 #         angle_b = __atan_to_360(x_y_values_b)
 
-#         length_a = math.sqrt(x_y_values_a['x'] ** 2 + x_y_values_a['y'] ** 2)
-#         length_b = math.sqrt(x_y_values_b['x'] ** 2 + x_y_values_b['y'] ** 2)
-#         length_a_to_b = math.sqrt((x_y_values_a['x'] - x_y_values_b['x']) ** 2 + (x_y_values_a['y'] - x_y_values_b['y']) ** 2)
+#         length_a = math.sqrt(x_y_values_a.x ** 2 + x_y_values_a.y ** 2)
+#         length_b = math.sqrt(x_y_values_b.x** 2 + x_y_values_b.y ** 2)
+#         length_a_to_b = math.sqrt((x_y_values_a.x - x_y_values_b.x) ** 2 + (x_y_values_a.y - x_y_values_b.y) ** 2)
 #         # angle_diff = abs(abs(angle_a) - abs(angle_b))
 #         # length_a_to_b = math.sqrt((length_a ** 2 + length_b ** 2) - (2 * length_a * length_b) * math.cos(angle_diff))
 #         acos_value_1 = length_a ** 2 + length_a_to_b ** 2 - length_b ** 2
@@ -202,13 +205,13 @@ def shape_mirror(shape_in_radius=dict) -> dict:
 #     return shape_in_angle
 
 
-def draw_points(points_dict=dict, width=600, height=400):
+def draw_points(points_dict=dict, width=600, height=400, scale=15):
     image = Image.new('RGB', (width, height), 'white')
     draw = ImageDraw.Draw(image)
     center_x = width/ 2
     center_y = height / 2
     point_xy = shape_to_xy(points_dict.values())
-    coordinates = [(center_x + (points['x'] / 25), center_y - (points['y'] / 25)) for points in point_xy]
+    coordinates = [(center_x + (points.x / scale), center_y - (points.y / scale)) for points in point_xy]
     draw.point(coordinates, fill='black')
     image.show()
     print('Done')
@@ -253,7 +256,7 @@ system. It will tell you if B lies on the left or the right of AC.
 
 
 '''
-from collections import namedtuple
+
 
 
 def three_points(point_a, point_b, point_c):
@@ -272,7 +275,7 @@ def three_points(point_a, point_b, point_c):
     pass
 
 
-Point = namedtuple('Point', 'x y')
+
 
 
 

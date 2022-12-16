@@ -86,6 +86,40 @@ def VCA_to_dict(VCA_file_contents):
         raise Exception(f'Erro in {error}')
                 
 
+def dict_do_VCA(job_data=dict):
+    vca_contents = ''
+    for key, value in job_data.items():
+        vca_contents = vca_contents + __to_string(key, value)
+    return vca_contents
+
+def __divide_list_chunks(values_list=list, chunk_size=10):
+    values_list = list(values_list)
+    new_list = [values_list[i:i + chunk_size] for i in range(0, len(values_list), chunk_size)]
+    return new_list
+
+
+def __to_string(key=str, values=any, left='L', right='R') -> str:
+    string_line = ''
+    if type(values) == str:
+        string_line = f'{key}={values}\n'
+        return string_line
+    elif key == 'TRCFMT':
+        for value in values.values():
+            string_line = string_line + f'{key}={";".join(value["TRCFMT"])}\n'
+            radius_in_chunks = __divide_list_chunks(value['R'])
+            for chunk in radius_in_chunks:
+                string_line = string_line + f'R={";".join([str(value) for value in chunk])}\n'
+        return string_line
+    elif type(values) == list:
+        for value in values:
+            string_line = string_line + f'{key}={value}\n'
+        return string_line
+    elif 'R' in values.keys() or 'L' in values.keys():
+        string_line = f'{key}={string_line}{values[right]};{values[left]}\n'
+        return string_line
+    else:
+        print(f'{key}={value}')     
+    return
 
 
 # def VCAtoDict(VCAFileCOntent):
