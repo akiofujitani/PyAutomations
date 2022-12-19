@@ -143,7 +143,7 @@ if __name__ == '__main__':
 
         # Report extraction automation
         try:
-            # erp_volpe_handler.volpe_back_to_main()
+            erp_volpe_handler.volpe_back_to_main()
             erp_volpe_handler.volpe_load_tab('Tab_Lab', 'Icon_Prod_Unit.png')
             erp_volpe_handler.volpe_open_window('Icon_Rework_Motive.png', 'Title_Rework_Motive.png')
             
