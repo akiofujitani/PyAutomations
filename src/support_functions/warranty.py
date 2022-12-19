@@ -186,7 +186,6 @@ def warranty_add_quantity(warranty_list):
 
 
 if __name__ == '__main__':
-        # volpe_back_to_main()
     try:
         config = json_config.load_json_config('C:/Users/fausto.akio/Documents/Reports/config_volpe.json')
     except:
@@ -226,7 +225,7 @@ if __name__ == '__main__':
             else:
                 start_date = data_organizer.define_start_date(sheets_date_plus_one, file_date)
             
-            start_date = start_date - datetime.timedelta(days=1)
+            start_date = start_date
             print(datetime.datetime.strftime(start_date, '%d/%m/%Y'))
             print(datetime.datetime.strftime(end_date, '%d/%m/%Y'))
         except Exception as error:
