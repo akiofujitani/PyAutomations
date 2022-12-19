@@ -66,7 +66,7 @@ if __name__ == '__main__':
     # Defining start and end date
     if not sheets_date_plus_one == datetime.datetime.now().date():
         try:
-            file_date = ''
+            file_date = None
             file_list = file_handler.file_list(path, extension)
             for file in file_list:
                 file_date = file_handler.file_contents_last_date(file_handler.CSVtoList(join(path, file)), 'DT.PED GARANTIA')

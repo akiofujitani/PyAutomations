@@ -1,5 +1,5 @@
 import file_handler, datetime, calendar, data_organizer, os, json_config, data_communication
-from vca_handler import VCAtoDict
+from vca_handler import VCA_to_dict
 
 
 def read_vca(path, extension, start_date, end_date):
@@ -10,7 +10,7 @@ def read_vca(path, extension, start_date, end_date):
         try:
             with open(file, 'r', errors='replace') as contents:
                 fileContents = contents.readlines()
-                temp_vca_contents = VCAtoDict(fileContents)
+                temp_vca_contents = VCA_to_dict(fileContents)
                 values_dict[temp_vca_contents['JOB']] = temp_vca_contents
         except Exception as error:
             print(error)
@@ -36,7 +36,7 @@ def values_merger(path_list=list, base_list=list, base_search_tag=str, *args, st
         filtered_tags_value = {}
         filtered_tags_value[base_search_tag.upper()] = value[base_search_tag.upper()]
         if file_found:
-            vca_converted = VCAtoDict(file_handler.file_reader(file_found))
+            vca_converted = VCA_to_dict(file_handler.file_reader(file_found))
             filtered_tags_value.update(data_organizer.filter_tag(vca_converted, *args))
             merged_values[base_search_tag.upper()] = data_organizer.tags_dict_to_plain_dict(filtered_tags_value)
         else:
