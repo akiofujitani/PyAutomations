@@ -31,7 +31,7 @@ def warranty_add_quantity(warranty_list):
 if __name__ == '__main__':
         # volpe_back_to_main()
     try:
-        config = json_config.load_json_config('config_volpe.json')
+        config = json_config.load_json_config('C:/Users/fausto.akio/Documents/Reports/config_volpe.json')
     except:
         print('Could not load config file')
         exit()

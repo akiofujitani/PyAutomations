@@ -46,14 +46,15 @@ def print_test():
 if __name__ == '__main__':
     time_in_hours = 24
     start_time = '01:00'
-    wait_time = (time_in_hours * 3600) / time_in_hours
+    wait_time = 1600
     path_list = ['./src/support_functions/warranty.py', 
                 './src/support_functions/heat_map.py', 
                 './src/support_functions/Breakages_detailed.py',  
-                './src/support_functions/rework.py']
+                './src/support_functions/rework.py',
+                './src/support_functions/warranty_detailed.py']
 
 
-    schedule.every(time_in_hours).hours.at(start_time).do(volpe_automation_executer, path_list=path_list) 
+    schedule.every(1).days.at(start_time).do(volpe_automation_executer, path_list=path_list) 
     while True:
         try:
             schedule.run_pending()

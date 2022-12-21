@@ -232,6 +232,8 @@ def retrieve_file_name_date(file_name=str, name_pattern=str, date_format=str):
 
 def define_start_date(date_1, date_2):
     date_diff = date_1 - date_2
+    if date_diff == datetime.timedelta(days=0):
+        return date_1
     start_date = date_1 - date_diff
     if start_date == date_1 or start_date == date_2:
         plus_date = datetime.timedelta(days=1)

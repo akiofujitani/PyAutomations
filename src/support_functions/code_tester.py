@@ -57,4 +57,41 @@
 #     }
 # }
 # '''
+from webbrowser import open as web_open
+import tkinter
+import tkinter.messagebox
 
+if __name__ == '__main__':
+    window = tkinter.Tk()
+    window.title('Middleware Job Visualizer')
+    window.geometry('500x300')
+    window.rowconfigure(0, minsize=30)
+    window.columnconfigure(0, minsize=15)
+    window.rowconfigure(3, minsize=50)
+
+
+
+    text_label = tkinter.Label(window, text='Insira o número do pedido no campo abaixo e pressione o botão "OK"', font=('Arial', 10))
+    text_label.grid(column=1, row=1)
+
+    input_text = tkinter.Entry(window, justify='center', font=('Arial', 10))
+    input_text.place(width=350, height=25)
+    input_text.grid(column=1, row=2)
+    input_text.focus()
+
+    def click_button_ok():
+        job_number = input_text.get()
+        try:
+            int(job_number)
+            web_open(f'http://lab.optview.com.br/impressao.laboratorio.ws.php?job={str(job_number)}')
+        except Exception as error:
+            print(error)
+            tkinter.messagebox.showerror('Somente números são aceitos, favor digitar novamente')
+
+    ok_button = tkinter.Button(window, text='OK', command=click_button_ok, width=7, height=1)
+    ok_button.grid(column=2, row=2)       
+
+    window.mainloop()
+    # job_number = 2677872
+
+    # web_open(f'http://lab.optview.com.br/impressao.laboratorio.ws.php?job={str(job_number)}')

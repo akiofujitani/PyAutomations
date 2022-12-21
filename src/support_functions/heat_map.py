@@ -12,44 +12,6 @@ import tkinter.messagebox
 '''
 
 
-def type_selector(window_name, path, *args) -> None:
-    '''
-    Select production type, will be moved to erp_volpe_hadler
-    '''
-    try:
-        win_pos = win_handler.image_search(window_name, path=path)
-        sleep(0.5)
-        win_handler.icon_click('Three_dots_Button.png', path=path, region_value=(erp_volpe_handler.region_definer(win_pos.left, win_pos.top)))
-        sleep(0.5)
-        selec_type_win_pos = win_handler.image_search('title_select_type.png', path=path)
-        win_handler.icon_click('discard_all_button.png', path=path, region_value=(erp_volpe_handler.region_definer(selec_type_win_pos.left, selec_type_win_pos.top)))
-        discard_pos = win_handler.image_search('discard.png', path=path, region=(erp_volpe_handler.region_definer(selec_type_win_pos.left, selec_type_win_pos.top)))
-        win_handler.click_field(discard_pos, 'Bellow')
-        occult_inactive = win_handler.image_search('Occult_inactive.png', path=path)
-        win_handler.click_field(occult_inactive, 'Bellow', distance=0)
-        pos_x = discard_pos.left + 30
-        pos_y = discard_pos.top + discard_pos.height + 5
-        fields_list = []
-        while not len(fields_list) == len(args):
-            value = erp_volpe_handler.ctrl_d(pos_x, pos_y)
-            sleep(0.5)
-            if value in args:
-                print('Match')
-                fields_list.append(value)
-                pyautogui.press('enter')
-                sleep(0.2)
-            else:
-                keyboard.press_and_release('down')
-                pos_y = pos_y + discard_pos.height + 3 if pos_y + discard_pos.height + 3 < occult_inactive.top - 10 else pos_y
-                sleep(0.2)
-        sleep(0.5)
-        win_handler.icon_click('Select_button.png', path=path, region_value=(erp_volpe_handler.region_definer(selec_type_win_pos.left, selec_type_win_pos.top)))
-        return
-    except Exception as error:
-        print(f'Error selecting type {error}')
-        raise error
-
-
 def expand_all(sheet_pos):
     '''
     Workaround to "Expand all" absense in Volpe machine productivity window
@@ -402,7 +364,7 @@ if __name__ == '__main__':
                     erp_volpe_handler.volpe_back_to_main()
                     erp_volpe_handler.volpe_load_tab('Tab_lab', 'Icon_Prod_Unit.png')
                     erp_volpe_handler.volpe_open_window('Icon_Productivity_machine.png', 'Title_Machine_productivity.png')
-                    type_selector('Machine_productivity.png', 'Images/Machine_productivity', *type_list)
+                    erp_volpe_handler.type_selector('Machine_productivity.png', 'Images/Machine_productivity', *type_list)
                     counter = 0
                     report_date_start = start_date
                     report_date_end = start_date

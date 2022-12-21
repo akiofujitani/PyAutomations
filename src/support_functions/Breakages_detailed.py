@@ -128,13 +128,6 @@ def volpe_load_report(start_date=datetime.datetime,
 ==================================================================================================================================
 '''
 
-# Move to data organizer
-
-def add_months_to_date(date=datetime.datetime, num_of_months=int):
-    for i in range(num_of_months):
-        date = date + datetime.timedelta(days=calendar.monthrange(date.year, date.month)[1])
-    return date
-
 
 def create_update_motive_list(breakage_list):
     print('Creating motive list')
@@ -218,7 +211,7 @@ if __name__ == '__main__':
         file_date = None
         if len(file_list) > 0:
             for file in file_list:
-                file_date = file_handler.file_contents_last_date(file_handler.CSVtoList(join(path, file)), 'DT.PERDA', time_format='%d/%m/%Y %H:%M:%S') - datetime.timedelta(days=1)
+                file_date = file_handler.file_contents_last_date(file_handler.CSVtoList(join(path, file)), 'DT.PERDA', time_format='%d/%m/%Y %H:%M:%S') + datetime.timedelta(days=1)
         if file_date == None:
             start_date = sheets_date_plus_one
         else:
@@ -229,14 +222,14 @@ if __name__ == '__main__':
 
         # Report extraction automation
 
-        if start_date.date() < end_date.date():
+        if start_date.date() <= (datetime.datetime.now().date() - datetime.timedelta(days=1)):
             erp_volpe_handler.volpe_back_to_main()
             volpe_load_tab('Tab_Lab', 'Icon_Prod_Unit.png')
             volpe_open_window('Icon_Detailed_breakages.png', 'Title_Detailed_Breakages.png')
 
             report_date_end = start_date
             while report_date_end < end_date:
-                if end_date > add_months_to_date(start_date, 1):
+                if end_date > data_organizer.add_months_to_date(start_date, 1):
                     report_start_date = start_date
                     report_date_end = datetime.datetime(start_date.year, start_date.month, calendar.monthrange(start_date.year, start_date.month)[1])
                     start_date = report_date_end + datetime.timedelta(days=1)
@@ -257,7 +250,7 @@ if __name__ == '__main__':
                     updated_list = remove_from_dict(partial_list, *config['breakage']['remove_fields'])
                     ready_list = sorted(breakage_date_hour(updated_list), key=lambda value : datetime.datetime.strptime(value['DT.PERDA'], '%d/%m/%Y'))
                     sheet = data_communication.transform_in_sheet_matrix(ready_list)
-                    data_communication.data_append_values(sheets_name ,'A:M', sheet, sheets_id=sheets_id)
+                    data_communication.data_append_values(sheets_name ,'A:Z', sheet, sheets_id=sheets_id)
                     file_handler.file_move_copy(path, path_done, file, False)
                     print(f'{file} done')
             print("Done")
