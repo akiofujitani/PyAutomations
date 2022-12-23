@@ -1,0 +1,11 @@
+{
+    "start_time" : "06:00",
+    "wait_time" : "1600",
+    "path_list" : [
+        "./src/support_functions/warranty.py", 
+        "./src/support_functions/heat_map.py", 
+        "./src/support_functions/Breakages_detailed.py",  
+        "./src/support_functions/rework.py",
+        "./src/support_functions/warranty_detailed.py"
+    ]
+}
