@@ -1,6 +1,6 @@
 {
-    "start_time" : "06:00",
-    "wait_time" : "1600",
+    "start_time" : "05:30",
+    "wait_time" : "800",
     "path_list" : [
         "./src/support_functions/warranty.py", 
         "./src/support_functions/heat_map.py", 
