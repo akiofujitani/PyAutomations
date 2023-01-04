@@ -175,7 +175,7 @@ if __name__ == '__main__':
     
     # Get last uploaded date
 
-     for try_number in range(config['parameters']['number_tries']):
+    for try_number in range(config['parameters']['number_tries']):
         try:
             # erp_volpe_handler.volpe_back_to_main()
             # erp_volpe_handler.volpe_load_tab('Tab_Lab', 'Icon_Prod_Unit.png')
