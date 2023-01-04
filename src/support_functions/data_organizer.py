@@ -337,3 +337,14 @@ def add_months_to_date(date=datetime.datetime, num_of_months=int):
     for i in range(num_of_months):
         date = date + datetime.timedelta(days=calendar.monthrange(date.year, date.month)[1])
     return date
+
+
+def find_duplicates(ocurrences_list=list) -> list:
+    duplicates = []
+    seen = []
+    for item in ocurrences_list:
+        if item in seen:
+            duplicates.append(item)
+        else:
+            seen.append(item)
+    return duplicates

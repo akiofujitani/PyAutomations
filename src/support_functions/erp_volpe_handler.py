@@ -1,4 +1,4 @@
-import pyautogui, win_handler, keyboard, tkinter, datetime, file_handler, os
+import pyautogui, win_handler, keyboard, tkinter, datetime, file_handler, os, pyscreeze
 from time import sleep
 from ocr_text_reader import return_text
 from ntpath import join
@@ -357,9 +357,9 @@ def volpe_save_report(file_name, save_path, reference=None, load_report_path='Im
         reference_pos = win_handler.get_window_size()
     win_handler.icon_click('Icon_save.png', region_value=(region_definer(reference_pos.left - 15, reference_pos.top - 15) if reference_pos else ''))
     sleep(0.5)
-    for i in range(5):
-        keyboard.press_and_release('Down')
-        sleep(0.5)
+    for _ in range(5):
+        keyboard.press_and_release('down')
+        sleep(0.3)
     pyautogui.press('enter')
     sleep(1)
     save_as_window = win_handler.image_search('Title_Save_as.png')
@@ -467,6 +467,46 @@ def type_selector(window_name, path, *args) -> None:
         raise error
 
 
+def delete_from_table(column_pos=pyscreeze.Box, delete_value=str, deactivate_middle_search=True) -> None:
+    try:
+        pyautogui.rightClick(column_pos.left + 10, column_pos.top + 5)
+        sleep(0.3)
+        pyautogui.write(delete_value)
+        sleep(0.3)
+        if deactivate_middle_search:
+            for _ in range(3):
+                keyboard.press_and_release('tab')
+                sleep(0.3)
+            keyboard.press_and_release('space')
+            sleep(0.3)
+            for _ in range(2):
+                keyboard.press_and_release('shift + tab')
+                sleep(0.3)
+            keyboard.press_and_release('space')
+        else:
+            for _ in range(2):
+                keyboard.press_and_release('enter')
+                sleep(0.3)
+        sleep(0.3)
+        keyboard.press_and_release('delete')
+        sleep(0.5)
+        win_title = win_handler.get_active_windows_title()
+        if 'DELETAR' in win_title:
+            pyautogui.press('s')
+            sleep(0.3)
+            return
+        elif 'AVISO' in win_handler:
+            pyautogui.press('space')
+            raise Exception(f'Delete value wrong or not in list {delete_value}')
+        else:
+            raise Exception(f'Error in {delete_value} exclusion')
+    except Exception as error:
+        print(f'Error deleting code due {error}')
+        raise error
+    except KeyboardInterrupt:
+        print(f'Process interrupted by user')
+        raise KeyboardInterrupt
+        
 
 if __name__ == '__main__':
     try:

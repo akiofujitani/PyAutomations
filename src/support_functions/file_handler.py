@@ -127,6 +127,8 @@ def file_writer(file_path=str, file_name=str, string_values=str) -> None:
 
 def file_move_copy(path_from, path_to, file_name, copy=bool):
     try:
+        path_from = os.path.normpath(path_from)
+        path_to = os.path.normpath(path_to)
         move_copy = 'copied' if copy == True else 'moved'
         print(f'From {path_from} \nto {path_to} \nfile {file_name} {move_copy}')
         check_create_dir(path_to)
@@ -136,7 +138,7 @@ def file_move_copy(path_from, path_to, file_name, copy=bool):
         else:
             return shutil.move(join(path_from, file_name), join(path_to, new_file_name))
     except Exception as error:
-        print('Could not execute {error}')
+        print(f'Could not execute {error}')
         raise error
 
 

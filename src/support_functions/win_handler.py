@@ -87,7 +87,7 @@ def image_path_fix(path=str):
         return f'{path}/'
 
 
-def image_search(image_name=str, confidence_value=0.7, region=None, full_path=constants.SCRIPT_DIR, path='images/'):
+def image_search(image_name=str, confidence_value=0.7, region=None, full_path=constants.SCRIPT_DIR, path='images/') -> pyscreeze.Box:
     '''
     Search image base on its name and path
     uses the confidence values starting at... going down through each pass.
@@ -248,6 +248,19 @@ def region_definer(raw_x, raw_y, width=None, height=None):
     windows_size = get_window_size()
     start = translate_xy_pos(raw_x, raw_y)
     return pyscreeze.Box(start.x, start.y, windows_size.width if not width else width, windows_size.height if not height else height)
+
+
+def get_active_windows_title() -> str:
+    '''
+    Get active window title
+    '''
+    try:
+        sleep(0.3)
+        win_title = win32gui.GetWindowText(win32gui.GetForegroundWindow())
+        return win_title
+    except Exception as error:
+        print(f'Fail to get windows title due {error}')
+        raise error
 
 
 if __name__ == '__main__':
