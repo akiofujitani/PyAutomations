@@ -1,6 +1,6 @@
 from subprocess import Popen
 from time import sleep
-import schedule, datetime
+import schedule, datetime, json_config
 
 '''
 Execute script
@@ -44,14 +44,15 @@ def print_test():
 
 
 if __name__ == '__main__':
-    time_in_hours = 24
-    start_time = '01:00'
-    wait_time = 1600
-    path_list = ['./src/support_functions/warranty.py', 
-                './src/support_functions/heat_map.py', 
-                './src/support_functions/Breakages_detailed.py',  
-                './src/support_functions/rework.py',
-                './src/support_functions/warranty_detailed.py']
+    try:
+        config = json_config.load_json_config('script_executer.json')
+    except:
+        print('Could not load config file')
+        exit()
+    
+    start_time = config['start_time']
+    wait_time = int(config['wait_time'])
+    path_list = config['path_list']
 
 
     schedule.every(1).days.at(start_time).do(volpe_automation_executer, path_list=path_list) 
