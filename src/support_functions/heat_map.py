@@ -315,7 +315,7 @@ def complete_date_in_list(status_dict):
 
 if __name__ == '__main__':
     try:
-        config = json_config.load_json_config('C:/Users/fausto.akio/Documents/Reports/config_volpe.json')
+        config = json_config.load_json_config('C:/PyAutomations_Reports/config_volpe.json')
     except:
         print('Could not load config file')
         exit()

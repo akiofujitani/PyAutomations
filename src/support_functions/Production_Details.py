@@ -50,7 +50,7 @@ if __name__ == '__main__':
     # date_target = week_date(datetime.datetime.now().date(), 1)
 
     try:
-        config = json_config.load_json_config('production_config.json')
+        config = json_config.load_json_config('C:/PyAutomations_Reports/production_config.json')
     except:
         print('Could not load config file')
         exit()
