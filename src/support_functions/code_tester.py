@@ -57,7 +57,7 @@
 #     }
 # }
 # '''
-import sys, signal
+import sys, coating_configuration
 from time import sleep
 
 def signal_handler(signal, frame):

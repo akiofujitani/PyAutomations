@@ -2,7 +2,9 @@ import tkinter
 import tkinter.ttk
 import tkinter.scrolledtext
 
-    
+
+
+
 
 if __name__ == '__main__':
     # Create window

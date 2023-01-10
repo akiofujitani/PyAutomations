@@ -1,87 +1,79 @@
-import time
-import threading
-import logging
-try:
-    import tkinter as tk # Python 3.x
-    import tkinter.scrolledtext as ScrolledText
-except ImportError:
-    import Tkinter as tk # Python 2.x
-    import ScrolledText
+import tkinter as tk
+from tkinter import ttk
 
-class TextHandler(logging.Handler):
-    # This class allows you to log to a Tkinter Text or ScrolledText widget
-    # Adapted from Moshe Kaplan: https://gist.github.com/moshekaplan/c425f861de7bbf28ef06
+class windows(tk.Tk):
+    def __init__(self, *args, **kwargs):
+        tk.Tk.__init__(self, *args, **kwargs)
+        # Adding a title to the window
+        self.wm_title("Test Application")
 
-    def __init__(self, text):
-        # run the regular Handler __init__
-        logging.Handler.__init__(self)
-        # Store a reference to the Text it will log to
-        self.text = text
+        # creating a frame and assigning it to container
+        container = tk.Frame(self, height=400, width=600)
+        # specifying the region where the frame is packed in root
+        container.pack(side="top", fill="both", expand=True)
 
-    def emit(self, record):
-        msg = self.format(record)
-        def append():
-            self.text.configure(state='normal')
-            self.text.insert(tk.END, msg + '\n')
-            self.text.configure(state='disabled')
-            # Autoscroll to the bottom
-            self.text.yview(tk.END)
-        # This is necessary because we can't modify the Text from other threads
-        self.text.after(0, append)
+        # configuring the location of the container using grid
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
 
-class myGUI(tk.Frame):
+        # We will now create a dictionary of frames
+        self.frames = {}
+        # we'll create the frames themselves later but let's add the components to the dictionary.
+        for F in (MainPage, SidePage, CompletionScreen):
+            frame = F(container, self)
 
-    # This class defines the graphical user interface 
+            # the windows class acts as the root window for the frames.
+            self.frames[F] = frame
+            frame.grid(row=0, column=0, sticky="nsew")
 
-    def __init__(self, parent, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.root = parent
-        self.build_gui()
+        # Using a method to switch frames
+        self.show_frame(MainPage)
 
-    def build_gui(self):                    
-        # Build GUI
-        self.root.title('TEST')
-        self.root.option_add('*tearOff', 'FALSE')
-        self.grid(column=0, row=0, sticky='ew')
-        self.grid_columnconfigure(0, weight=1, uniform='a')
-        self.grid_columnconfigure(1, weight=1, uniform='a')
-        self.grid_columnconfigure(2, weight=1, uniform='a')
-        self.grid_columnconfigure(3, weight=1, uniform='a')
+    def show_frame(self, cont):
+            frame = self.frames[cont]
+            # raises the current frame to the top
+            frame.tkraise()
 
-        # Add text widget to display logging info
-        st = ScrolledText.ScrolledText(self, state='disabled')
-        st.configure(font='TkFixedFont')
-        st.grid(column=0, row=1, sticky='w', columnspan=4)
+class MainPage(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        label = tk.Label(self, text="Main Page")
+        label.pack(padx=10, pady=10)
 
-        # Create textLogger
-        text_handler = TextHandler(st)
+        # We use the switch_window_button in order to call the show_frame() method as a lambda function
+        switch_window_button = tk.Button(
+            self,
+            text="Go to the Side Page",
+            command=lambda: controller.show_frame(SidePage),
+        )
+        switch_window_button.pack(side="bottom", fill=tk.X)
 
-        # Logging configuration
-        logging.basicConfig(filename='test.log',
-            level=logging.INFO, 
-            format='%(asctime)s - %(levelname)s - %(message)s')        
 
-        # Add the handler to logger
-        logger = logging.getLogger()        
-        logger.addHandler(text_handler)
+class SidePage(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        label = tk.Label(self, text="This is the Side Page")
+        label.pack(padx=10, pady=10)
 
-def worker():
-    while True:
-        # Report time / date at 2-second intervals
-        time.sleep(2)
-        timeStr = time.asctime()
-        msg = 'Current time: ' + timeStr
-        logging.info(msg) 
+        switch_window_button = tk.Button(
+            self,
+            text="Go to the Completion Screen",
+            command=lambda: controller.show_frame(CompletionScreen),
+        )
+        switch_window_button.pack(side="bottom", fill=tk.X)
 
-def main():
 
-    root = tk.Tk()
-    myGUI(root)
+class CompletionScreen(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        label = tk.Label(self, text="Completion Screen, we did it!")
+        label.pack(padx=10, pady=10)
+        switch_window_button = ttk.Button(
+            self, text="Return to menu", command=lambda: controller.show_frame(MainPage)
+        )
+        switch_window_button.pack(side="bottom", fill=tk.X)
 
-    t1 = threading.Thread(target=worker, args=[])
-    t1.start()
 
-    root.mainloop()
-    t1.join()
-
-main()
+if __name__ == "__main__":
+    testObj = windows()
+    testObj.mainloop()
