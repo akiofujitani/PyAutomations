@@ -1,0 +1,83 @@
+{
+    "wait_time_min" : "1",
+    "files_per_cicle" : "1500",
+    "month_name" : [
+        "01 January",
+        "02 February",
+        "03 March",
+        "04 April",
+        "05 May",
+        "06 June",
+        "07 July",
+        "08 August",
+        "09 September",
+        "10 October",
+        "11 November",
+        "12 December"
+    ],
+    "directory_list" : [
+        {
+            "source" : "D:/Arquivos/Automapper DDF",
+            "destin" : "D:/Arquivos/DDFFiles",
+            "extension" : "",
+            "days_from_today" : "0",
+            "copy" : "False"
+        },
+        {
+            "source" : "D:/Arquivos/Automapper IMAGES",
+            "destin" : "D:/Arquivos/Images",
+            "extension" : "",
+            "days_from_today" : "0",
+            "copy" : "False"
+        },
+        {
+            "source" : "D:/Arquivos/Automapper TXT",
+            "destin" : "D:/Arquivos/INSFiles",
+            "extension" : "txt",
+            "days_from_today" : "0",
+            "copy" : "False"
+        },
+        {
+            "source" : "D:/Arquivos/Lensometro LAB",
+            "destin" : "D:/Arquivos/Lensometro/Conferencia_processo",
+            "extension" : "txt",
+            "days_from_today" : "0",
+            "copy" : "False"
+        },
+        {
+            "source" : "D:/Arquivos/Lensometro CF",
+            "destin" : "D:/Arquivos/Lensometro/Controle_Final",
+            "extension" : "txt",
+            "days_from_today" : "0",
+            "copy" : "False"
+        },
+        {
+            "source" : "D:/Arquivos/LMS Export",
+            "destin" : "D:/Arquivos/LMS/HOST_EXPORT",
+            "extension" : "vca",
+            "days_from_today" : "0",
+            "copy" : "False"
+        },
+        {
+            "source" : "D:/Arquivos/LMS Import",
+            "destin" : "D:/Arquivos/LMS/HOST_IMPORT",
+            "extension" : "vca",
+            "days_from_today" : "0",
+            "copy" : "False"
+        },
+        {
+            "source" : "//server01/Dados/Production/Montagem/facetadora/out",
+            "destin" : "D:/Arquivos/Montagem/Out",
+            "extension" : "vca",
+            "days_from_today" : "10",
+            "copy" : "False"
+        },
+        {
+            "source" : "//server01/Dados/Montagem/facetadora/bkp",
+            "destin" : "D:/Arquivos/Montagem/Bkp",
+            "extension" : "vca",
+            "days_from_today" : "10",
+            "copy" : "False"
+        }
+    ]
+}

@@ -125,14 +125,14 @@ def file_writer(file_path=str, file_name=str, string_values=str) -> None:
         return
 
 
-def file_move_copy(path_from, path_to, file_name, copy=bool):
+def file_move_copy(path_from, path_to, file_name, copy=bool, overwrite=False):
     try:
         path_from = os.path.normpath(path_from)
         path_to = os.path.normpath(path_to)
         move_copy = 'copied' if copy == True else 'moved'
         print(f'From {path_from} \nto {path_to} \nfile {file_name} {move_copy}')
         check_create_dir(path_to)
-        new_file_name = file_name_check(path_to, file_name)
+        new_file_name = __file_name_check(path_to, file_name) if overwrite is False else file_name
         if copy == True:
             return shutil.copy(join(path_from, file_name), join(path_to, new_file_name))
         else:
@@ -142,21 +142,28 @@ def file_move_copy(path_from, path_to, file_name, copy=bool):
         raise error
 
 
-def copy_number_definer(file_name=str):
+def __copy_number_definer(file_name=str):
     count = 0
-    file_name_ext_split = file_name.split('.')
-    pure_file_name = file_name_ext_split[0].replace(')', '').split('_(Copy_')
+    pure_file_name = file_name.replace(')', '').split('_(Copy_')
     count = int(pure_file_name[1]) + 1
-    return f'{pure_file_name[0]}_(Copy_{count}).{file_name_ext_split[1]}' if len(file_name_ext_split) == 2 else f'{pure_file_name}_(Copy_{count})'
+    return f'{pure_file_name[0]}_(Copy_{count})'
 
 
-def file_name_check(path, file_name):
+def __file_name_check(path, file_name):
     while os.path.exists(join(path, file_name)):
         name_splitted = file_name.split('.')
-        if '_(Copy_' in name_splitted[0]:
-            file_name = copy_number_definer(file_name)
+        if len(name_splitted) >= 2:
+            temp_name = ''
+            for i in range(len(name_splitted) - 1):
+                temp_name = temp_name + f'{name_splitted[i]}.'
+            file_name_no_ext = temp_name[:-1]
+            extension = name_splitted.pop()
         else:
-            file_name = f'{name_splitted[0]}_(Copy_1).{name_splitted[1]}' if len(name_splitted) == 2 else f'{name_splitted[0]}_(Copy_1)'
+            file_name_no_ext = name_splitted[0]
+        if '_(Copy_' in file_name_no_ext:
+            file_name = __copy_number_definer(file_name_no_ext)
+        else:
+            file_name = f'{file_name_no_ext}_(Copy_1).{extension}' if extension else f'{name_splitted[0]}_(Copy_1)'
     return file_name
 
 
@@ -203,7 +210,7 @@ def creatDir(path, dir_name=None):
 def check_create_dir(path):
     try:
         if not os.path.exists(path):
-            os.mkdir(path)
+            os.makedirs(path)
             print(f'Directory "{path}" created.')
         return path
     except Exception as error:

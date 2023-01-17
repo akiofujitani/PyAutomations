@@ -4,6 +4,7 @@ import tkinter.messagebox
 
 
 class Main_App(tkinter.Tk):
+    # Build main GUI
     def __init__(self, *args, **kwargs) -> None:
         tkinter.Tk.__init__(self, *args, **kwargs)
         self.title('Middleware Job Visualizer')
@@ -21,6 +22,7 @@ class Main_App(tkinter.Tk):
         self.ok_button.place(x=320, y=50, width=70, height=25)   
 
 
+    # Button ok click action
     def click_button_ok(self):
         self.job_number = self.input_text.get()
         try:
@@ -32,6 +34,7 @@ class Main_App(tkinter.Tk):
             tkinter.messagebox.showerror('Middleware Job Visualizer', 'Somente números são aceitos, favor digitar novamente')
 
 
+    # Action for "Enter" press keyboard event
     def func(self, event):
         self.click_button_ok()
         print(f'Enter hit {event}')

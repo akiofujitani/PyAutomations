@@ -1,8 +1,0 @@
-2022-08-12 12:38:16,420 root         DEBUG    often makes a very good meal of visiting tourists
-2022-08-12 12:38:16,420 root         INFO     Testing logging
-2022-08-12 12:38:16,435 root         WARNING  Warning!!!
-2022-08-12 12:38:16,435 root         DEBUG    DEBUG
-2022-08-12 12:38:16,436 root         INFO     INFO
-2022-08-12 12:38:16,436 root         WARNING  WARNING
-2022-08-12 12:38:16,437 root         ERROR    ERROR
-2022-08-12 12:38:16,437 root         CRITICAL CRITICAL
