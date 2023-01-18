@@ -145,18 +145,3 @@
 #     t1.join()
 
 # main()
-
-import json_config
-import logging
-import logging.config
-import datetime
-from ntpath import join
-
-path = 'C:/PyAutomations_Reports/Log'
-file_name = f'Log_{datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d")}.log'
-config = json_config.load_json_config('C:/PyAutomations_Reports/logging_config.json')
-
-logging.config.dictConfig(config)
-logger = logging.getLogger()
-logger.debug('debug log')
-print('done')

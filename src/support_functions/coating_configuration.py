@@ -1,6 +1,8 @@
-import datetime, file_handler, data_communication, win_handler, data_organizer, json_config, erp_volpe_handler, pyautogui, keyboard, sys, os
+import datetime, file_handler, data_communication, win_handler, data_organizer, json_config, erp_volpe_handler, pyautogui, logger
 from ntpath import join
 from time import sleep
+
+logger = logger.logger('coating_config')  
 
 '''
 ==================================================================================================================================
@@ -31,7 +33,7 @@ def add_product_codes(codes_list=list, window_title=str, path='images/') -> None
         win_handler.icon_click('Button_Select.png', region_value=erp_volpe_handler.region_definer(win_title_pos.left, win_title_pos.top), path=path)
         return
     except Exception as error:
-        print(f'Could not add product code due {error}')
+        logger.error(f'Could not add product code due {error}')
         raise error
     except KeyboardInterrupt:
         raise KeyboardInterrupt
@@ -51,14 +53,15 @@ def add_product_codes(codes_list=list, window_title=str, path='images/') -> None
 def wait_time(seconds=int):
     regressive_count = seconds
     for i in range(seconds):
-        print(f'Waiting.......{regressive_count}')
+        logger.info(f'Waiting.......{regressive_count}')
         regressive_count = regressive_count - 1
         sleep(1.0)
-    print('Waiting done')
+    logger.info('Waiting done')
     return
 
 
 def __get_coating(family=str, coating_by_family=dict, default_name='DEFAULT') -> list:
+    logger.debug(f'{default_name} {family} {coating_by_family[default_name]}')
     if family not in coating_by_family.keys():
         return default_name, coating_by_family[default_name]
     else:
@@ -85,6 +88,7 @@ def __uv_check_list(feature_list=list, remove_list=list, add_list=list) -> list:
             uv_check_list.append(add_item)
     return uv_check_list
 
+
 def __uv_tint(product_name=str, uv_check_list=list) -> bool:
     for feature in uv_check_list:
         if feature in product_name:
@@ -104,7 +108,7 @@ def load_table_list(file_path=str, file_path_done=str, file_name=str) -> dict:
         file_contents = file_handler.CSVtoList(join(file_path, file_name))
 
     except Exception as error:
-        print(f'Load table error {error}')
+        logger.error(f'Load table error {error}')
 
 
 '''
@@ -122,13 +126,12 @@ def load_table_list(file_path=str, file_path_done=str, file_name=str) -> dict:
 if __name__ == '__main__':
     # erp_volpe_handler.volpe_back_to_main()
     try:
-        config = json_config.load_json_config('c:/PyAutomations/coating_config.json')
+        config = json_config.load_json_config('c:/PyAutomations_Reports/coating_config.json')
     except:
-        print('Could not load config file')
+        logger.critical('Could not load config file')
         exit()
 
-    # Load config
-
+    # Load config  
     try:
         sheets_id = config['sheets_id']
         codes_list = data_communication.matrix_into_dict(data_communication.get_values(config['product_codes']['sheets_name'], 
@@ -171,23 +174,23 @@ if __name__ == '__main__':
             index_tint_coat = data_communication.list_to_dict_key_and_list(index_tint_and_tinticoat_data['values'], 0)
         uv_check_list = __uv_check_list(feature_values_list, ['POLAR'], ['UV', 'BLUECUT', '1.59 POLAR'])
     except Exception as error:
-        print(f'Error converting configuration values {error}')
+        logger.critical(f'Error converting configuration values {error}')
     
     # Get last uploaded date
 
     for try_number in range(config['parameters']['number_tries']):
         try:
-            # erp_volpe_handler.volpe_back_to_main()
-            # erp_volpe_handler.volpe_load_tab('Tab_Lab', 'Icon_Prod_Unit.png')
-            # erp_volpe_handler.volpe_open_window('Icon_Coating_config.png', 'Configuration_coating.png', path='Images/Coating_Config/')
-            print('Base automation done')
+            erp_volpe_handler.volpe_back_to_main()
+            erp_volpe_handler.volpe_load_tab('Tab_Lab', 'Icon_Prod_Unit.png')
+            erp_volpe_handler.volpe_open_window('Icon_Coating_config.png', 'Title_Configuration_coating.png', path='Images/Coating_Config/')
+            logger.info('Base automation done')
 
             done_data = data_communication.get_values(sheets_name_done, sheets_pos_done, sheets_id=sheets_id)
             done_list = ''
             if 'values' in done_data.keys():
                 done_list = data_communication.matrix_into_dict(done_data['values'], 'CODE', 'DESCRIPTION')
 
-            print('Sheets data loaded')
+            logger.info('Sheets data loaded')
 
             done_list_code = [done_product['CODE'] for done_product in done_list]
             for product in codes_list:
@@ -200,7 +203,7 @@ if __name__ == '__main__':
                         product_coating_list = product_coating_list + [tint['CODE'] for tint in tint_list if tint['TYPE'] == tint_family]
                     if not __uv_tint(product['DESCRIPTION'], uv_check_list):
                         product_coating_list = product_coating_list + [tint['CODE'] for tint in tint_list if tint['TYPE'] == 'UV']
-                    print(f'{product["DESCRIPTION"]} : {product_coating_list}')
+                    logger.debug(f'{product["DESCRIPTION"]} : {product_coating_list}')
                     win_handler.activate_window('Volpe')
                     erp_volpe_handler.load_product_code(product['CODE'], 
                                     field_name='Product.png', 
@@ -229,7 +232,7 @@ if __name__ == '__main__':
                             for delete_item in combined_delete_list:
                                 erp_volpe_handler.delete_from_table(column_pos, delete_item)
                         except Exception as error:
-                            print(f'Could not delete item due {error}')
+                            logger.error(f'Could not delete item due {error}')
                             raise error
 
                     # Add items                    
@@ -251,9 +254,9 @@ if __name__ == '__main__':
                             sleep(0.3)
                             win_handler.icon_click('Button_Ok.png', path='Images/Coating_Config')
                         except Exception as error:
-                            print(f'Coating insertion error due {error}')
+                            logger.error(f'Coating insertion error due {error}')
                             raise error
-                    print(f'{product["CODE"]} Done')
+                    logger.info(f'{product["CODE"]} Done')
                     file_handler.file_move_copy(report_path, report_path_done, file_name, False)
                     now_datetime = datetime.datetime.now()
                     data_communication.data_append_values(sheets_name_done, 
@@ -265,9 +268,9 @@ if __name__ == '__main__':
                                         now_datetime.strftime('%d/%m/%Y'), 
                                         now_datetime.strftime('%H:%M:%S')]], 
                                         sheets_id)
-                    print(f'{product["DESCRIPTION"]} done')
-            print('Done')
+                    logger.info(f'{product["DESCRIPTION"]} done')
+            logger.info('Done')
         except Exception as error:
-            print(f'Error {error}')
-            print(f'Try number {try_number + 1}')
+            logger.critical(f'Error {error}')
+            logger.critical(f'Try number {try_number + 1}')
             wait_time(5)

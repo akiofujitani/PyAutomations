@@ -27,7 +27,7 @@
     "parameters" : {
         "number_tries" : 3,
         "file_name_pattern" : "Product_coating_",
-        "report_path" : "C:/Users/fausto.akio/Documents/Reports/Coating",
-        "report_path_done" : "C:/Users/fausto.akio/Documents/Reports/Coating/Done"
+        "report_path" : "C:/PyAutomations/Coating",
+        "report_path_done" : "C:/PyAutomations/Coating/Done"
     }
 }

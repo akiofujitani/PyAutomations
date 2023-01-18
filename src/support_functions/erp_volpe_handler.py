@@ -225,13 +225,13 @@ def volpe_load_tab(tab_name, load_check_image):
 
 def volpe_open_window(icon_name, window_name, path='Images', maximize=True):
     try:
-        win_handler.icon_click(icon_name)
+        win_handler.icon_click(icon_name, path=path)
         sleep(0.5)
         win_pos = win_handler.image_search(window_name, path=path)
         sleep(0.5)
         if maximize:
             try:    
-                win_handler.icon_click('Volpe_Maximize.png', confidence_value=0.7, region_value=(region_definer(win_pos.left - 15, win_pos.top - 15)))
+                win_handler.icon_click('Volpe_Maximize.png', confidence_value=0.7, region_value=(region_definer(win_pos.left - 15, win_pos.top - 15)), path=path)
                 sleep(0.5)
             except:
                 print('Window already maximized')

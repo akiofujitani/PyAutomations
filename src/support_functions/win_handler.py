@@ -1,8 +1,11 @@
-import subprocess, pyscreeze
+import subprocess, pyscreeze, logger, pyautogui, screeninfo, constants, os
 from ntpath import join
 from time import sleep
-import pyautogui, screeninfo, constants, os
 from win32 import win32gui
+
+
+logger = logger.logger('win_handler')
+
 
 class BaseException(Exception):
     pass
@@ -27,6 +30,7 @@ def activate_window(window_name = str):
             window_name_list[0].activate()
         return window_name_list[0]
     except:
+        logger.error(f'activate window: {window_name} do not exists')
         raise Exception(f'activate window: {window_name} do not exists')
 
 
@@ -47,6 +51,7 @@ def translate_pos(pos_value, mon_pos_list, direction):
                     trans_pos = start + abs(mon_pos_list[i][direction]) + pos_value
                 else:
                     trans_pos = start + pos_value
+                logger.debug(trans_pos)
                 return trans_pos
             start = start + abs(mon_pos_list[i][direction] + mon_pos_list[i + 1][direction])
     except IndexError:
@@ -68,6 +73,7 @@ def get_monitors():
     mon_pos_x= sorted(mon_pos_x, key=lambda value: value['x'])
     mon_pos_y= sorted(mon_pos_y, key=lambda value: value['y'])
     mon_pos = {'x' : mon_pos_x, 'y' : mon_pos_y}
+    logger.debug(f'{mon_pos["x"]} x {mon_pos["y"]}')
     return mon_pos
 
 
@@ -75,6 +81,7 @@ def translate_xy_pos(position_x, position_y):
     mon_pos = get_monitors()
     x_pos = translate_pos(position_x, mon_pos['x'], 'x')
     y_pos = translate_pos(position_y, mon_pos['y'], 'y')
+    logger.debug(f'{x_pos} x {y_pos}')
     return pyautogui.Point(x_pos, y_pos)
 
 
@@ -130,7 +137,7 @@ def icon_click(icon_name=str, confidence_value=0.8, region_value=None, path='Ima
         pyautogui.moveTo(cursor_pos.x, cursor_pos.y)
         return
     except Exception as error:
-        print(f'Could not find {icon_name} icon')
+        logger.error(f'Could not find {icon_name} icon')
         raise error
 
 
@@ -143,7 +150,7 @@ def tab_select(tab_name=str, confidence_value=0.9999999, confidence_reduction_st
     cursor_pos = pyautogui.position()
     tabs = ['active', 'inactive']
     try:
-        for i in range(4):
+        for _ in range(4):
             for tab_status in tabs:
                 try:
                     tab_pos = image_search(f'{tab_name}_{tab_status}.png', confidence_value)
@@ -154,7 +161,7 @@ def tab_select(tab_name=str, confidence_value=0.9999999, confidence_reduction_st
                     sleep(0.5)
                     return
                 except Exception as error:
-                    print(f'{tab_status} not found at {confidence_value}')
+                    logger.error(f'{tab_status} not found at {confidence_value}')
             confidence_value = confidence_value - confidence_reduction_step
     except:
         raise Exception('Tab not found error')
@@ -172,7 +179,7 @@ def run_application(path = str, app_name = str):
     cmd.stdin.write(batch)
     cmd.stdin.flush()
     result = cmd.stdout.read()
-    print(result.decode())
+    logger.debug(result.decode())
     return
 
 
@@ -190,7 +197,7 @@ def loading_wait(image_name = str, path='Images', wait_time_in_sec = 15):
             if root_pos:
                 return root_pos
         except Exception as error:
-            print(f'Not loaded {error}. Count {counter}')
+            logger.error(f'Not loaded {error}. Count {counter}')
             if counter >= wait_time_in_sec:
                 raise Exception('Software frozen or loading too slow')
             counter = counter + 1
@@ -207,7 +214,7 @@ def click_volpe(pos, time=0.2):
     pyautogui.moveTo(pos_centered.x, pos_centered.y)
     sleep(0.3)
     pyautogui.dragTo(pos_centered.x, pos_centered.y, time, button='left')
-    print('click')
+    logger.debug('click')
     return
 
 
@@ -225,19 +232,20 @@ def click_field(field_pos=pyscreeze.Box, click_pos='Front', distance=20):
     match click_pos:
         case 'Front':
             pyautogui.moveTo(left + width + distance, top + height / 2 + 6)
-            print('Front')
+            logger.debug('Front')
         case 'Back':
             pyautogui.moveTo(left - distance, top + height / 2 + 6)
-            print('Back')
+            logger.debug('Back')
         case 'Bellow':
             pyautogui.moveTo(left + 20, top + height + distance)
-            print('Bellow')
+            logger.debug('Bellow')
         case 'Above':
             pyautogui.moveTo(left + 20, top - distance)
-            print('Above')
+            logger.debug('Above')
     sleep(0.3)
     click_volpe(pyautogui.position())
     sleep(0.5)
+    logger.info('Field has been clicked')
     return 
 
 
@@ -257,16 +265,17 @@ def get_active_windows_title() -> str:
     try:
         sleep(0.3)
         win_title = win32gui.GetWindowText(win32gui.GetForegroundWindow())
+        logger.info(win_title)
         return win_title
     except Exception as error:
-        print(f'Fail to get windows title due {error}')
+        logger.error(f'Fail to get windows title due {error}')
         raise error
 
 
 if __name__ == '__main__':
     counter = 0
     while True:
-        print(f'{counter}') 
+        logger.info(f'{counter}') 
         image_search("Teste_Win.png")
         counter = counter + 1
 

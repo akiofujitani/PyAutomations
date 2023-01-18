@@ -1,8 +1,10 @@
 from time import sleep
-import file_handler, json_config, datetime
+import file_handler, json_config, datetime, logger
 from dataclasses import dataclass
 from os.path import normpath, abspath
 from os.path import split as path_split
+
+logger = logger.logger('file_mover_backup')
 
 @dataclass
 class Move_Settings:
@@ -31,7 +33,7 @@ if __name__ == '__main__':
                     int(config['files_per_cicle']),
                     config['month_name'])
     except Exception as error:
-        print('Error loading configuration file.')
+        logger.critical('Error loading configuration file.')
         sleep(3)
         quit()
 
@@ -56,9 +58,9 @@ if __name__ == '__main__':
                             file_handler.file_move_copy(source_path, file_destination_path, file_name, move_settings.copy, True)
                         counter += 1
                         if counter >= default_config.file_per_cicle:
-                            print(f'Number {default_config.file_per_cicle} of files per cicle reached.')
+                            logger.info(f'Number {default_config.file_per_cicle} of files per cicle reached.')
                             break
             except Exception as error:
-                print(f'Error processing files {error}')
-        print(f'Waiting ... {default_config.min_to_seconds()}')
+                logger.error(f'Error processing files {error}')
+        logger.info(f'Waiting ... {default_config.min_to_seconds()}')
         sleep(default_config.min_to_seconds())
