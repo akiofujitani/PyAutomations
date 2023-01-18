@@ -1,7 +1,9 @@
-import win_handler, erp_volpe_handler, pyautogui, keyboard, datetime, calendar, file_handler, data_communication, data_organizer, json_config, os
+import win_handler, erp_volpe_handler, pyautogui, keyboard, datetime, calendar, file_handler, data_communication, data_organizer, json_config, os, logger
 from ntpath import join
 from time import sleep
 
+
+logger = logger.logger('breakages_detailed')
 
 '''
 ==================================================================================================================================
@@ -20,7 +22,7 @@ def volpe_load_tab(tab_name, load_check_image):
         sleep(0.3)
         return
     except Exception as error:
-        print('Volpe - load_tab error in {error}')
+        logger.error('Volpe - load_tab error in {error}')
         raise error
 
 
@@ -35,10 +37,10 @@ def volpe_open_window(icon_name, window_name, path='Images', maximize=True):
                 win_handler.icon_click('Volpe_Maximize.png', confidence_value=0.7, region_value=(erp_volpe_handler.region_definer(win_pos.left - 15, win_pos.top - 15)))
                 sleep(0.5)
             except:
-                print('Window already maximized')
+                logger.warning('Window already maximized')
         return
     except Exception as error:
-        print('Volpe - open_window {error}')
+        logger.error('Volpe - open_window {error}')
         raise error
 
 
@@ -50,7 +52,7 @@ def volpe_save_report(file_name, save_path):
     pyautogui.moveTo(10, 10)
     win_handler.icon_click('Icon_save.png')
     sleep(0.5)
-    for i in range(5):
+    for _ in range(5):
         keyboard.press_and_release('Down')
         sleep(0.5)
     pyautogui.press('enter')
@@ -76,7 +78,7 @@ def volpe_save_report(file_name, save_path):
                     if image == 'Question_mark.png':
                         win_handler.icon_click('Button_No.png')
                 except Exception as error:
-                    print(f'Image not found {error}')
+                    logger.error(f'Image not found {error}')
         sleep(0.5)
     return
 
@@ -116,7 +118,7 @@ def volpe_load_report(start_date=datetime.datetime,
         win_handler.loading_wait(report_load_wait, path=load_report_path)
         return
     except Exception as image_search_error:
-        print(f'{image_search_error}')
+        logger.error(f'{image_search_error}')
         raise Exception(f'load_report error {image_search_error}')
 
 
@@ -130,7 +132,7 @@ def volpe_load_report(start_date=datetime.datetime,
 
 
 def create_update_motive_list(breakage_list):
-    print('Creating motive list')
+    logger.info('Creating motive list')
     movite_list = []
 
     for breakage in breakage_list:
@@ -183,7 +185,7 @@ if __name__ == '__main__':
     try:
         config = json_config.load_json_config('C:/PyAutomations_Reports/config_volpe.json')
     except:
-        print('Could not load config file')
+        logger.critical('Could not load config file')
         exit()
 
     path = os.path.normpath(config['breakage']['path'])
@@ -201,7 +203,7 @@ if __name__ == '__main__':
                     config['heat_map']['minimum_date'], sheets_id=sheets_id) + datetime.timedelta(days=1)
         end_date = datetime.datetime.now() - datetime.timedelta(days=1)
     except Exception as error:
-        print(f'Error loading table {sheets_name}')
+        logger.error(f'Error loading table {sheets_name}')
         quit()
 
 
@@ -217,8 +219,8 @@ if __name__ == '__main__':
         else:
             start_date = data_organizer.define_start_date(sheets_date_plus_one, file_date)
 
-        print(datetime.datetime.strftime(start_date, '%d/%m/%Y'))
-        print(datetime.datetime.strftime(end_date, '%d/%m/%Y'))
+        logger.info(datetime.datetime.strftime(start_date, '%d/%m/%Y'))
+        logger.info(datetime.datetime.strftime(end_date, '%d/%m/%Y'))
 
         # Report extraction automation
 
@@ -252,7 +254,7 @@ if __name__ == '__main__':
                     sheet = data_communication.transform_in_sheet_matrix(ready_list)
                     data_communication.data_append_values(sheets_name ,'A:Z', sheet, sheets_id=sheets_id)
                     file_handler.file_move_copy(path, path_done, file, False)
-                    print(f'{file} done')
-            print("Done")
+                    logger.info(f'{file} done')
+            logger.info("Done")
         except Exception as error:
-            print(f'Error in data processing {error}')
+            logger.error(f'Error in data processing {error}')

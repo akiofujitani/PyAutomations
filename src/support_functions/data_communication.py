@@ -1,5 +1,7 @@
-from operator import le
-import sheets_API, os, datetime, file_handler, json_config
+import sheets_API, datetime, file_handler, json_config, logger
+
+
+logger = logger.logger('data_communication')
 
 
 template_data = '''
@@ -24,7 +26,7 @@ def get_last_date(sheets_name, position, minimum_date='01/01/2020', sheets_id=SP
         if len(sheet_loaded['values']) == 0:
             raise Exception('No values in sheets')
     except Exception as error:
-        print(f'Get last date error {error}')
+        logger.error(f'Get last date error {error}')
         return datetime.datetime.strptime(minimum_date, '%d/%m/%Y')
     return return_last_row_date(sheet_loaded)
 
@@ -41,7 +43,7 @@ def return_last_row_date(sheet_values):
     try:
         date_string = sheet_values['values'][len(sheet_values['values']) - 1][0]
     except KeyError as error:
-        print(f'No values found in table {error}')
+        logger.error(f'No values found in table {error}')
         return
     return datetime.datetime.strptime(date_string, '%d/%m/%Y')
 
@@ -75,6 +77,7 @@ def matrix_into_dict(matrix_values, *args):
             temp_dict[args[i]] = line[i] if line[i] else ''
         matrix_list_dict.append(temp_dict)
         temp_dict = {}
+    logger.debug('matriz converted to dict')
     return matrix_list_dict
 
 
@@ -82,6 +85,7 @@ def transform_list_in_coloumn(values_list=list):
     row_list = []
     for item in values_list:
         row_list.append([item])
+    logger.debug('list converted in column')
     return row_list
 
 
@@ -97,9 +101,10 @@ def file_list_last_date(path=str, extension=str, pattern_removal=str, date_patte
             file_extension = file.split('.')
             date_list.append(datetime.datetime.strptime(file_extension[0].replace(pattern_removal, ''), date_pattern).date())
             date_list.sort(reverse=True)
+        logger.debug(date_list[0])
         return date_list[0]
     except Exception as error:
-        print(f'File not found or path incorrect')
+        logger.error(error)
         return None
 
 
@@ -110,14 +115,14 @@ def data_append_values(sheets_name, range, values, sheets_id=SPREADSHEET_ID):
     sheets_name_range = f'{sheets_name}!{range}'
     try:
         sheets_API.get_values(creds, sheets_id, sheets_name_range)
-        print(f'{sheets_name_range} found')
+        logger.info(f'{sheets_name_range} found')
     except:
         try:
-            print(f'Tring to create sheet {sheets_name}')
+            logger.info(f'Tring to create sheet {sheets_name}')
             result = sheets_API.add_sheet(creds, sheets_id, sheets_name)
-            print(result)
+            logger.info(result)
         except Exception as error:
-            print(error)
+            logger.error(error)
             raise error
     return sheets_API.append_values(creds, sheets_id, sheets_name_range, 'USER_ENTERED', values)
 
@@ -131,7 +136,7 @@ def clean_complete_values_dict(values_dict=list, dict_date_name=str, template_va
     date_difference = values_dict_first_date - last_row_date
     if not date_difference.days == 1:
         if date_difference < datetime.timedelta(days=1):
-            for i in range(abs(date_difference.days) + 1):
+            for _ in range(abs(date_difference.days) + 1):
                 values_dict.pop(0)
         else:
             temp_values_dict = values_dict
@@ -150,17 +155,17 @@ def data_update_values(sheets_name=str, range=str, values=list, sheets_id=SPREAD
     sheets_name_range = f'{sheets_name}!{range}'
     try:
         sheets_values = sheets_API.get_values(creds, sheets_id, sheets_name_range)
-        print(f'{sheets_name_range} found')
+        logger.info(f'{sheets_name_range} found')
         range_details = range.split(':')
         if "values" in sheets_values.keys():
             sheets_name_range = f'{sheets_name}!{range_details[0]}{len(sheets_values["values"]) + 1}:{range_details[1]}'
     except:
         try:
-            print(f'Tring to create sheet {sheets_name}')
+            logger.info(f'Tring to create sheet {sheets_name}')
             result = sheets_API.add_sheet(creds, sheets_id, sheets_name)
-            print(result)
+            logger.info(result)
         except Exception as error:
-            print(error)
+            logger.error(error)
             raise error
     return sheets_API.update_values(creds, sheets_id, sheets_name_range, 'USER_ENTERED', values)
 
@@ -169,15 +174,15 @@ def data_update_value(sheets_name=str, range=str, value=list, sheets_id=SPREADSH
     sheets_name_range = f'{sheets_name}!{range}'
     try:
         sheets_value = sheets_API.get_values(creds, sheets_id, sheets_name_range)
-        print(f'{sheets_name_range} found')
+        logger.info(f'{sheets_name_range} found')
         sheets_API.update_values(creds, sheets_id, sheets_name_range, 'USER_ENTERED', value)
         if 'values' in sheets_value.keys():
-            print(f'{sheets_value["values"][0]} overwritten by {value} in {sheets_name} at {range}')
+            logger.info(f'{sheets_value["values"][0]} overwritten by {value} in {sheets_name} at {range}')
         else:
-            print(f'{value} inserted in {sheets_name} at {range}')
+            logger.info(f'{value} inserted in {sheets_name} at {range}')
         return
     except Exception as error:
-        print(error)
+        logger.error(error)
         raise error
 
 
@@ -210,8 +215,6 @@ def list_to_dict_key_and_list(values_list, key_index) -> dict:
     return dict_temp
 
     
-
-
 def convert_number_to_letter(column_int):
     start_index = 1   #  it can start either at 0 or at 1
     letter = ''
@@ -226,7 +229,7 @@ if __name__ == '__main__':
     try:
         config = json_config.load_json_config('config_volpe.json')
     except:
-        print('Could not load config file')
+        logger.critical('Could not load config file')
         exit()
     
     sheets_id = config['heat_map']['sheets_id']
@@ -235,12 +238,12 @@ if __name__ == '__main__':
     sheets_pos_tr = config['heat_map']['status_list']['coating']
     sheets_pos_ed = config['heat_map']['status_list']['edging']
 
-    print(sheets_id)
-    print(sheets_name)
+    logger.debug(sheets_id)
+    logger.debug(sheets_name)
 
     sheets_values = get_values(sheets_name, sheets_pos_ff, sheets_id)
 
     column_values = column_to_list(sheets_values)
-    print(sheets_values)
-    print(column_values)
-    print()
+    logger.debug(sheets_values)
+    logger.debug(column_values)
+    logger.debug()

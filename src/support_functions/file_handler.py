@@ -1,5 +1,7 @@
-import csv, os, shutil, datetime, time, chardet
+import csv, os, shutil, datetime, time, chardet, logger
 from ntpath import join
+
+logger = logger.logger('file_handler')
 
 
 def file_list(path=str, file_extention=str) -> list:
@@ -8,7 +10,7 @@ def file_list(path=str, file_extention=str) -> list:
     '''
     if not os.path.exists(path):
         os.mkdir(path)
-        print(f'Directory {path} created')
+        logger.info(f'Directory {path} created')
     return [file for file in os.listdir(path) if file.lower().endswith(f'.{file_extention.lower()}')]
 
 
@@ -21,7 +23,7 @@ def listFilesInDirSubDir(pathRoot=str, extention=str) -> list:
         for file in files:
             if file.lower().endswith(f'{extention}'):
                 fileList.append(os.path.join(root, file))
-    print(f'Listing for {pathRoot} done')
+    logger.info(f'Listing for {pathRoot} done')
     return fileList
 
 
@@ -31,7 +33,7 @@ def fileListFullPath(path, file_extention) -> list:
     '''    
     if not os.path.exists(path):
         os.mkdir(path)
-        print(f'Directory {path} created')    
+        logger.info(f'Directory {path} created')    
     return [os.path.join(path, file) for file in os.listdir(path) if file.lower().endswith(f'.{file_extention.lower()}')]
 
 
@@ -54,6 +56,7 @@ def __csv_reader(file_path, case_upper, delimeter_char, encoding='utf-8'):
                     header_value = header[key]
                 row_Contents[header_value] = row[key]        
             csv_contents.append(row_Contents)
+    logger.info('CSV contents extracted')
     return csv_contents
 
 
@@ -63,13 +66,16 @@ def CSVtoList(filePath, case_upper=True, delimeter_char='\t') -> list:
     '''
     file_path = os.path.normpath(filePath)
     try:
+        logger.debug('Trying to read csv file on default enconde')
         csv_contents = __csv_reader(file_path, case_upper, delimeter_char)
     except Exception as error:
         print(error)
         try:
             try:
+                logger.debug('Trying to read csv file on default enconde cp1252')
                 csv_contents = __csv_reader(filePath, case_upper, delimeter_char, encoding='cp1252')
             except:
+                logger.debug('Find best suited enconde and try to read')
                 encoding = __detect_encode(filePath)
                 csv_contents = __csv_reader(filePath, case_upper, delimeter_char, encoding=encoding)
         except:
@@ -82,26 +88,31 @@ def __detect_encode(file_path):
     Auxiliary method for CSVoList
     Try to detect the encoding type
     '''
+    logger.debug('Try to find best tuited encode for data')
     with open(file_path, 'rb') as rawdata:
         result = chardet.detect(rawdata.read(100000))
     return result['encoding']
 
 
-def listToCSV(valuesList, filePath):
+def listToCSV(valuesList, filePath) -> None:
+    '''
+    Convert list to CSV using first line as header
+    '''
     with open(filePath, 'w', newline='') as csvFile:
         writer = csv.DictWriter(csvFile, fieldnames=list(valuesList[0].keys()), quoting=csv.QUOTE_ALL)
         writer.writeheader()
         writer.writerows(valuesList)
+        logger.debug('List to CSV complete')
     return
 
 
 def file_finder(file_list, file_name, start_pos=0, end_pos=None):
-    print(f'Searching for file {file_name}')
+    logger.info(f'Searching for file {file_name}')
     for file in file_list:
         base_name = os.path.basename(file)
         cropped_name = base_name[start_pos:end_pos]
         if file_name in cropped_name:
-            print(f'{file_name} found')
+            logger.info(f'{file_name} found')
             return file
     return False
 
@@ -111,7 +122,7 @@ def file_reader(file_path):
         with open(file_path, encoding='utf-8') as file:
             return file.readlines()
     except Exception as error:
-        print(f'Error opening file {error}')
+        logger.warning(f'Error {error}')
         with open(file_path, encoding='cp1252') as file:
             return file.readlines()
 
@@ -119,7 +130,7 @@ def file_reader(file_path):
 def file_writer(file_path=str, file_name=str, string_values=str) -> None:
     if not os.path.exists(file_path):
         os.mkdir(file_path)
-        print(f'Directory {file_path} created')
+        logger.info(f'Directory {file_path} created')
     with open(join(file_path, file_name), 'w') as writer:
         writer.write(string_values)
         return
@@ -130,7 +141,7 @@ def file_move_copy(path_from, path_to, file_name, copy=bool, overwrite=False):
         path_from = os.path.normpath(path_from)
         path_to = os.path.normpath(path_to)
         move_copy = 'copied' if copy == True else 'moved'
-        print(f'From {path_from} \nto {path_to} \nfile {file_name} {move_copy}')
+        logger.info(f'From {path_from} \nto {path_to} \nfile {file_name} {move_copy}')
         check_create_dir(path_to)
         new_file_name = __file_name_check(path_to, file_name) if overwrite is False else file_name
         if copy == True:
@@ -138,7 +149,7 @@ def file_move_copy(path_from, path_to, file_name, copy=bool, overwrite=False):
         else:
             return shutil.move(join(path_from, file_name), join(path_to, new_file_name))
     except Exception as error:
-        print(f'Could not execute {error}')
+        logger.error(f'Could not execute {error}')
         raise error
 
 
@@ -164,6 +175,7 @@ def __file_name_check(path, file_name):
             file_name = __copy_number_definer(file_name_no_ext)
         else:
             file_name = f'{file_name_no_ext}_(Copy_1).{extension}' if extension else f'{name_splitted[0]}_(Copy_1)'
+    logger.debug(file_name)
     return file_name
 
 
@@ -179,7 +191,7 @@ def fileNameDefiner(path, file_name, extention):
                 rebuilt_name = rebuilt_name + '_' + name_splitted[part]
             rebuilt_name = rebuilt_name.replace('_' , '', 1)
             file_name = f'{rebuilt_name}_{number}'
-    print(f'File name {file_name}')
+    logger.debug(f'File name {file_name}')
     return file_name
 
 
@@ -189,11 +201,11 @@ def fileMoveRename(source, destin, source_name, destin_name):
     try:
         file_name_checked = fileNameDefiner(destin, destin_name_no_extention, extention)
         shutil.move(join(source, f'{source_name}'), join(destin, f'{file_name_checked}.{extention}'))
-        print(f'{source_name} renamed to {destin_name}')
-        print(f'Moved from "{source}" to "{destin}"')
+        logger.info(f'{source_name} renamed to {destin_name}')
+        logger.info(f'Moved from "{source}" to "{destin}"')
         return
     except FileNotFoundError as file_error:
-        print(file_error)
+        logger.warning(file_error)
     return
 
 
@@ -203,7 +215,7 @@ def creatDir(path, dir_name=None):
         full_path = join(path, dir_name)
     if not os.path.exists(full_path):
         os.mkdir(full_path)
-        print(f'Directory "{dir_name}" created.')
+        logger.info(f'Directory "{dir_name}" created.')
     return
 
 
@@ -211,11 +223,11 @@ def check_create_dir(path):
     try:
         if not os.path.exists(path):
             os.makedirs(path)
-            print(f'Directory "{path}" created.')
+            logger.info(f'Directory "{path}" created.')
         return path
     except Exception as error:
-        print(f'Could not check/create {path}')
-        raise Exception('Check/create directory error.')
+        logger.error(f'Could not check/create {path}')
+        raise Exception(error)
 
 
 def file_list_last_date(path=str, extension=str, pattern_removal=str, date_pattern=str):
@@ -230,9 +242,10 @@ def file_list_last_date(path=str, extension=str, pattern_removal=str, date_patte
             file_extension = file.split('.')
             date_list.append(datetime.datetime.strptime(file_extension[0].replace(pattern_removal, ''), date_pattern))
             date_list.sort(reverse=True)
+        logger.debug(date_list[0])
         return date_list[0]
     except Exception as error:
-        print(f'File not found or path incorrect')
+        logger.error(error)
         return None
 
 
@@ -242,7 +255,7 @@ def file_contents_last_date(file_contents=dict, field_name=str, time_format='%d/
         strip_date = datetime.datetime.strptime(last_date, time_format).date()
         return datetime.datetime.strptime(strip_date.strftime('%d/%m/%Y'), '%d/%m/%Y')
     except Exception as error:
-        print('Could not get date from file')
+        logger.error('Could not get date from file')
         raise error
 
 
@@ -257,9 +270,10 @@ def file_contents_last_date1(path=str, extension=str, field_name=str):
                 last_date = temp_date
             if temp_date > last_date:
                 last_date = temp_date
+        logger.debug(datetime.datetime.strptime(last_date, '%Y/%m/%d'))
         return last_date
     except Exception as error:
-        print('Could not get date from files')
+        logger.error('Could not get date from files')
         raise error
 
 
@@ -269,7 +283,7 @@ def listByDate(filesList, dateStart, dateEnd):
         fileDate = fileCreationDate(file)
         if fileDate >= dateStart and fileDate <= dateEnd if dateEnd else dateStart:
             listByDate.append(file)
-    print(f'Listing by date {dateStart} / {dateEnd} done')
+    logger.info(f'Listing by date {dateStart} / {dateEnd} done')
     return listByDate
 
 

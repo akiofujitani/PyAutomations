@@ -1,7 +1,10 @@
-import pyautogui, win_handler, keyboard, tkinter, datetime, file_handler, os, pyscreeze
+import pyautogui, win_handler, keyboard, tkinter, datetime, file_handler, os, pyscreeze, logger
 from time import sleep
 from ocr_text_reader import return_text
 from ntpath import join
+
+
+logger = logger.logger('erp_volpe_handler')
 
 '''
 
@@ -61,7 +64,7 @@ def volpe_login(user_name=str, password=str):
         raise(f'Login error {error}')
 
 
-def prog_maint_open_fill_os(os_number, path='images'):
+def prog_maint_open_fill_os(os_number, path='images') -> str:
     '''
     check window opened
     seearch of
@@ -71,27 +74,27 @@ def prog_maint_open_fill_os(os_number, path='images'):
     win_handler.click_field(os_field_pos, 'Bellow', distanceY=5)
     pyautogui.write(os_number)
     sleep(0.3)
-    for i in range(2):
+    for _ in range(2):
         pyautogui.press('enter')
         sleep(0.3)
     row_text = get_volpe_row('Volpe_Prog_tec_Main_row.png', path=path)
     if not row_text[0][0:4] == os_number:
         raise Exception('Wrong OS number')
     # identify os. if not find return.
-    print(f'OS {os_number} confirmed.')
+    logger.info(f'OS {os_number} confirmed.')
     os_status_pos = win_handler.image_search('OS_Status_Table.png', path=path)
     win_handler.click_field(os_status_pos, 'Bellow', distanceY=13)
     status = ctrl_d(os_status_pos.left + 20, os_status_pos.top + 20)
     if not status == 'CONCLUIDA':
         os_message = 'OS number is not concluded'
-        print(os_message)
+        logger.info(os_message)
         raise Exception(os_message)
     return row_text
 
 
 def get_text_square(left=int, top=int, width=int, height=int):
     row_text = return_text({'top' : top, 'left' : left, 'width' : width, 'height' : height}, True)
-    
+    logger.info(row_text)
     return row_text 
 
 
@@ -107,7 +110,7 @@ def get_volpe_row(row_image=str, region_start=None , path='Images'):
         row_text = return_text({'top' : selec_pos.top, 'left' : selec_pos.left, 'width' : window_size.width, 'height' : 19}, True)  
         return row_text, selec_pos 
     except Exception as error:
-        print(f'Could not find {error}')
+        logger.error(f'Could not find {error}')
         raise error
 
 
@@ -117,7 +120,7 @@ def region_definer(raw_x, raw_y, width=None, height=None):
     '''
     windows_size = win_handler.get_window_size()
     start = win_handler.translate_xy_pos(raw_x, raw_y)
-    print(f'{start.x} x {start.y}')
+    logger.info(f'{start.x} x {start.y}')
     return (start.x, start.y, windows_size.width if not width else width, windows_size.height if not height else height)
 
 
@@ -147,7 +150,7 @@ def volpe_tab_select(tab_name = str, confidence_value=0.8, confidence_reduction_
                 pyautogui.moveTo(cursor_pos.x, cursor_pos.y),
                 return
             except Exception as error:
-                print(f'{tab_name} not found {error}')
+                logger.error(f'{tab_name} not found {error}')
             confidence_value = confidence_value - confidence_reduction_step
     except:
         raise Exception('Tab not found error')
@@ -219,7 +222,7 @@ def volpe_load_tab(tab_name, load_check_image):
         sleep(0.3)
         return
     except Exception as error:
-        print(f'Volpe - load_tab error in {error}')
+        logger.error(f'Volpe - load_tab error in {error}')
         raise error
 
 
@@ -234,10 +237,10 @@ def volpe_open_window(icon_name, window_name, path='Images', maximize=True):
                 win_handler.icon_click('Volpe_Maximize.png', confidence_value=0.7, region_value=(region_definer(win_pos.left - 15, win_pos.top - 15)), path=path)
                 sleep(0.5)
             except:
-                print('Window already maximized')
+                logger.warning('Window already maximized')
         return
     except Exception as error:
-        print('Volpe - open_window {error}')
+        logger.error('Volpe - open_window {error}')
         raise error
 
 
@@ -252,7 +255,7 @@ def volpe_back_to_main(question=False):
                 try:
                     msgbox_pos = win_handler.image_search(image)
                 except Exception as error:
-                    print(f'{image} not found due {error}')
+                    logger.error(f'{image} not found due {error}')
                     image = ''
             match image:
                 case 'Exclamation_mark.png' | 'Question_mark.png':
@@ -275,7 +278,7 @@ def volpe_back_to_main(question=False):
                                             width=win_pos.width, 
                                             height=win_pos.height)))
                         except Exception as error:
-                            print(f'{button} not found \n{error}')
+                            logger.info(f'{button} not found \n{error}')
                 case _:
                     for close_button in close_buttons:
                         try:
@@ -283,11 +286,11 @@ def volpe_back_to_main(question=False):
                                             win_pos.top + 15, 
                                             width=win_pos.width + 20, 
                                             height=win_pos.height + 20)))
-                            print('Close')
+                            logger.info('Close')
                         except Exception as error:
-                            print(f'{close_button} not found due {error}')
+                            logger.warning(f'{close_button} not found due {error}')
         except Exception as error:
-            print(f'No window or button found {error}')
+            logger.error(f'No window or button found {error}')
     return
 
 
@@ -341,7 +344,7 @@ def volpe_load_report(start_date=datetime.datetime,
         sleep(1)
         return
     except Exception as image_search_error:
-        print(f'{image_search_error}')
+        logger.error(f'{image_search_error}')
         raise Exception(f'load_report error {image_search_error}')
 
 
@@ -362,6 +365,7 @@ def volpe_save_report(file_name, save_path, reference=None, load_report_path='Im
         sleep(0.3)
     pyautogui.press('enter')
     sleep(1)
+    logger.debug('Save window')
     save_as_window = win_handler.image_search('Title_Save_as.png')
     if save_as_window:
         file_full_path = join(os.path.normpath(save_path), file_name)
@@ -372,6 +376,7 @@ def volpe_save_report(file_name, save_path, reference=None, load_report_path='Im
         sleep(0.5)
         pyautogui.press('enter')
         sleep(1.0)
+        logger.debug(f'File {file_name} saved')
         msg_win_list = ['Question_mark.png', 'Exclamation_mark.png']
         for _ in range(3):
             for image in msg_win_list:
@@ -390,7 +395,7 @@ def volpe_save_report(file_name, save_path, reference=None, load_report_path='Im
                         break
                         # win_handler.icon_click('Button_No.png')
                 except Exception as error:
-                    print(f'Image not found {error}')
+                    logger.error(f'Image not found {error}')
         sleep(0.5)
     return
 
@@ -406,9 +411,9 @@ def message_box_confirm(check_count=3, yes_button=True):
                 if image in ['Button_yes.png', 'Button_save.png'] and yes_button == True or image in ['Button_no.png', 'Button_cancel.png'] and yes_button == False or image in ['Button_OK_upper.png', 'Button_Ok.png']:
                     win_handler.icon_click(image)
                 else:
-                    print(f'{image} did not meet conditional')
+                    logger.warning(f'{image} did not meet conditional')
             except Exception as error:
-                print(f'Image not found {error}')
+                logger.error(f'Image not found {error}')
     return
 
 
@@ -451,7 +456,7 @@ def type_selector(window_name, path, *args) -> None:
             value = ctrl_d(pos_x, pos_y)
             sleep(0.5)
             if value in args:
-                print('Match')
+                logger.info('Match')
                 fields_list.append(value)
                 pyautogui.press('enter')
                 sleep(0.2)
@@ -461,9 +466,10 @@ def type_selector(window_name, path, *args) -> None:
                 sleep(0.2)
         sleep(0.5)
         win_handler.icon_click('Select_button.png', path=path, region_value=(region_definer(selec_type_win_pos.left, selec_type_win_pos.top)))
+        logger.info('Type selector done')
         return
     except Exception as error:
-        print(f'Error selecting type {error}')
+        logger.error(f'Error selecting type {error}')
         raise error
 
 
@@ -473,6 +479,7 @@ def delete_from_table(column_pos=pyscreeze.Box, delete_value=str, deactivate_mid
         sleep(0.3)
         pyautogui.write(delete_value)
         sleep(0.3)
+        logger.debug(f'{delete_value} deleted')
         if deactivate_middle_search:
             for _ in range(3):
                 keyboard.press_and_release('tab')
@@ -501,10 +508,10 @@ def delete_from_table(column_pos=pyscreeze.Box, delete_value=str, deactivate_mid
         else:
             raise Exception(f'Error in {delete_value} exclusion')
     except Exception as error:
-        print(f'Error deleting code due {error}')
+        logger.error(f'Error deleting code due {error}')
         raise error
     except KeyboardInterrupt:
-        print(f'Process interrupted by user')
+        logger.error(f'Process interrupted by user')
         raise KeyboardInterrupt
         
 

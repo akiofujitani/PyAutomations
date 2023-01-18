@@ -1,16 +1,18 @@
 '''
 Build file handler and frame resizer/rebuilder.
 '''
-import math
+import math, logger
 from collections import namedtuple
 from PIL import Image, ImageDraw
 
+logger = logger.logger('vca_handler_frame')
 
 Point = namedtuple('Point', 'x y')
 Frame_Box = namedtuple('Frame_Box', 'hbox vbox')
 
 
 def __volpe_points_corrector(shape_data_points):
+    logger.debug('correcting number of points')
     temp_shape_data = [int(value) for value in shape_data_points]
     if len(shape_data_points) == 359:
         last_point = round((temp_shape_data[0] + temp_shape_data[358]) / 2)
@@ -30,8 +32,9 @@ def __shape_to_xy(shape_points):
             x_y_dict_list.append(Point(x_value, y_value))
             angle_value += angle_unit
     except Exception as error:
-        print(f'Could not convert frame values duue {error}')
+        logger.error(f'Could not convert frame values duue {error}')
         raise error
+    logger.info('Shape to X Y coordinates')
     return x_y_dict_list
 
 
@@ -39,6 +42,7 @@ def __xy_shape_size(x_y_dict_list):
     angle_x_list = [angle.x for angle in x_y_dict_list]
     angle_y_list = [angle.y for angle in x_y_dict_list]
     frame_size = Frame_Box(abs(min(angle_x_list)) + abs(max(angle_x_list)), abs(min(angle_y_list)) + abs(max(angle_y_list)))
+    logger.debug(f'{frame_size.hbox} {frame_size.vbox}')
     return frame_size
 
 
@@ -51,6 +55,7 @@ def shape_xy_resize(x_y_dict_list=list, hbox=str, vbox=str):
         raise Exception('Type error')
     hbox = frame_size.hbox if hbox == 0 else int(hbox) * 100
     vbox = frame_size.vbox if vbox == 0 else int(vbox) * 100
+    logger.debug(f'{hbox} {vbox}')
 
     x_frame_diff = (frame_size.hbox - hbox) * -1
     y_frame_diff = (frame_size.vbox - vbox) * -1
@@ -59,6 +64,7 @@ def shape_xy_resize(x_y_dict_list=list, hbox=str, vbox=str):
     shape_xy_resized = []
     for x_y_value in x_y_dict_list:
         shape_xy_resized.append(Point(x_y_value.x * x_scale_factor, x_y_value.y * y_scale_factor))
+    logger.info('Shape resized')
     return shape_xy_resized
 
 
@@ -170,6 +176,7 @@ def shape_mirror(shape_in_radius=dict) -> dict:
         else:
             mirrored_radius = shape_in_radius[full_turn - (half_turn - angle)]
         mirrored_shape[angle] = mirrored_radius
+        logger.debug('Shape mirrored')
     return mirrored_shape
 
 
@@ -231,6 +238,7 @@ def frame_resize(shape_data=list, vbox=int, hbox=int) -> dict:
 
 
 def draw_points(points_dict=list, width=600, height=400, scale=15):
+    logger.debug('Draw shape points')
     image = Image.new('RGB', (width, height), 'white')
     draw = ImageDraw.Draw(image)
     center_x = width/ 2
@@ -239,7 +247,7 @@ def draw_points(points_dict=list, width=600, height=400, scale=15):
     coordinates = [(center_x + (points.x / scale), center_y - (points.y / scale)) for points in point_xy]
     draw.point(coordinates, fill='black')
     image.show()
-    print('Done')
+    logger.debug('Done')
     return
 
 

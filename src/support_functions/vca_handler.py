@@ -1,4 +1,7 @@
-import os
+import os, logger
+
+logger = logger.logger('vca_handler')
+
 
 def VCAtoObject(VCAFileContent):
     dataValue = {}
@@ -54,6 +57,7 @@ def VCA_to_dict(VCA_file_contents):
             line = line.replace('\n', '').replace('\t', '')
             if len(line) > 0:
                 tag_and_value = line.split('=')
+                logger.debug(tag_and_value[0])
                 if ';' not in tag_and_value[1]:
                     if tag_and_value[0] in data_value.keys():
                         data_value[tag_and_value[0]] = convert_add_to_list(data_value[tag_and_value[0]], tag_and_value[1])
@@ -80,9 +84,10 @@ def VCA_to_dict(VCA_file_contents):
                                 data_value['TRCFMT'].update({temp_values['TRCFMT'][3] : temp_values})
                             else:
                                 data_value['TRCFMT'] = {temp_values['TRCFMT'][3] : temp_values}
+        logger.info('VCA contents converted')
         return data_value
     except Exception as error:
-        print(f'Erro ocurred in {error}')
+        logger.error(f'Erro ocurred in {error}')
         raise Exception(f'Erro in {error}')
                 
 
@@ -119,7 +124,7 @@ def __to_string(key=str, values=any, left='L', right='R') -> str:
         string_line = f'{key}={string_line}{values[right]};{values[left]}\n'
         return string_line
     else:
-        print(f'{key}={value}')     
+        logger.info(f'{key}={value}')     
     return
 
 

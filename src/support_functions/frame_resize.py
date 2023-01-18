@@ -1,5 +1,8 @@
-import file_handler, vca_handler, vca_handler_frame_size, json_config, os
+import file_handler, vca_handler, vca_handler_frame_size, json_config, os, logger
 from time import sleep
+
+logger = logger.logger('frame_resize')
+
 
 def __resize_both_sides(trcfmt=dict, hbox=int, vbox=int) -> dict:
     resized_trcfmt = {}
@@ -14,7 +17,9 @@ def __resize_both_sides(trcfmt=dict, hbox=int, vbox=int) -> dict:
             other_side = 'R' if side == 'R' else 'L'
             temp_trcfmt['R'] = list(vca_handler_frame_size.shape_mirror(shape_resized).values())
             temp_trcfmt['TRCFMT'] = ['1', len(shape_resized), 'E', other_side, 'F']
-            resized_trcfmt[other_side] = temp_trcfmt      
+            resized_trcfmt[other_side] = temp_trcfmt
+        logger.debug(f'Side {side} done')
+    logger.debug('Both sizes resized')     
     return resized_trcfmt
 
 

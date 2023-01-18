@@ -61,6 +61,6 @@ if __name__ == '__main__':
                             logger.info(f'Number {default_config.file_per_cicle} of files per cicle reached.')
                             break
             except Exception as error:
-                logger.error(f'Error processing files {error}')
+                logger.warning(f'Error processing files {error}')
         logger.info(f'Waiting ... {default_config.min_to_seconds()}')
         sleep(default_config.min_to_seconds())
