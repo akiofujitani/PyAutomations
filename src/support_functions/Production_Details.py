@@ -1,5 +1,8 @@
-import file_handler, datetime, calendar, data_organizer, os, json_config, data_communication
+import file_handler, datetime, calendar, data_organizer, os, json_config, data_communication, logger
 from vca_handler import VCA_to_dict
+
+
+logger = logger.logger('production_details')
 
 
 def read_vca(path, extension, start_date, end_date):
@@ -13,7 +16,7 @@ def read_vca(path, extension, start_date, end_date):
                 temp_vca_contents = VCA_to_dict(fileContents)
                 values_dict[temp_vca_contents['JOB']] = temp_vca_contents
         except Exception as error:
-            print(error)
+            logger.error(error)
     return values_dict
 
 
@@ -26,22 +29,26 @@ def week_date(date_value, days_to_subtract):
 
 
 def values_merger(path_list=list, base_list=list, base_search_tag=str, *args, start_pos=0, end_pos=12):
-    file_list = []
-    for path in path_list:
-        file_list = file_list + file_handler.listFilesInDirSubDir(path, 'vca')
-    merged_list = []
-    for value in base_list:
-        merged_values = value
-        file_found = file_handler.file_finder(file_list, value[base_search_tag.upper()], start_pos=start_pos, end_pos=end_pos)
-        filtered_tags_value = {}
-        filtered_tags_value[base_search_tag.upper()] = value[base_search_tag.upper()]
-        if file_found:
-            vca_converted = VCA_to_dict(file_handler.file_reader(file_found))
-            filtered_tags_value.update(data_organizer.filter_tag(vca_converted, *args))
-            merged_values[base_search_tag.upper()] = data_organizer.tags_dict_to_plain_dict(filtered_tags_value)
-        else:
-            merged_values[base_search_tag.upper()] = filtered_tags_value
-        merged_list.append(merged_values)
+    try:
+        file_list = []
+        for path in path_list:
+            file_list = file_list + file_handler.listFilesInDirSubDir(path, 'vca')
+        merged_list = []
+        for value in base_list:
+            merged_values = value
+            file_found = file_handler.file_finder(file_list, value[base_search_tag.upper()], start_pos=start_pos, end_pos=end_pos)
+            filtered_tags_value = {}
+            filtered_tags_value[base_search_tag.upper()] = value[base_search_tag.upper()]
+            if file_found:
+                vca_converted = VCA_to_dict(file_handler.file_reader(file_found))
+                filtered_tags_value.update(data_organizer.filter_tag(vca_converted, *args))
+                merged_values[base_search_tag.upper()] = data_organizer.tags_dict_to_plain_dict(filtered_tags_value)
+            else:
+                merged_values[base_search_tag.upper()] = filtered_tags_value
+            merged_list.append(merged_values)
+    except Exception as error:
+        logger.error(error)
+        raise error
     return merged_list
 
 

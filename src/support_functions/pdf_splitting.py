@@ -1,6 +1,9 @@
-import file_handler
+import file_handler, logger
 from ntpath import join
 from PyPDF2 import PdfFileReader, PdfFileWriter
+
+
+logger = logger.logger('pdf_splitting')
 
 
 def pdf_split(file_path, destin_path, name_of_split):
@@ -12,7 +15,7 @@ def pdf_split(file_path, destin_path, name_of_split):
         output = join(destin_path, f'{file_name}.pdf')
         with open(output, 'wb') as output_pdf:
             pdf_writer.write(output_pdf)
-            print(f'{file_name} done')
+            logger.info(f'{file_name} done')
     return
 
 

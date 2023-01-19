@@ -1,7 +1,10 @@
 from webbrowser import open as web_open
+import logger
 import tkinter
 import tkinter.messagebox
 
+
+logger = logger.logger('middleware_job_visualizer')
 
 class Main_App(tkinter.Tk):
     # Build main GUI
@@ -30,14 +33,14 @@ class Main_App(tkinter.Tk):
             web_open(f'http://lab.optview.com.br/impressao.laboratorio.ws.php?job={str(self.job_number)}')
             self.input_text.delete(0, tkinter.END)
         except Exception as error:
-            print(error)
+            logger.error(error)
             tkinter.messagebox.showerror('Middleware Job Visualizer', 'Somente números são aceitos, favor digitar novamente')
 
 
     # Action for "Enter" press keyboard event
     def func(self, event):
         self.click_button_ok()
-        print(f'Enter hit {event}')
+        logger.debug(f'Enter hit {event}')
 
 
 if __name__ == '__main__':

@@ -59,6 +59,7 @@ def volpe_login(user_name=str, password=str):
         win_handler.icon_click('Ok_button.png')
         win_handler.loading_wait('Volpe_Raiz_user.png')
         sleep(1)
+        logger.info(f'Login done to user {user_name}')
         return
     except Exception as error:
         raise(f'Login error {error}')
