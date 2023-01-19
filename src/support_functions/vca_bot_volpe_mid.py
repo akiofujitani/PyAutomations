@@ -1,8 +1,11 @@
-import file_handler, vca_handler, vca_handler_frame_size, json_config
+import file_handler, vca_handler, vca_handler_frame_size, json_config, logger
 from time import sleep
 from tkinter import messagebox
 from ntpath import join
 from os.path import normpath
+
+
+logger = logger.logger('vca_bot_volpe_mid')
 
 
 def __resize_both_sides(trcfmt=dict, hbox=int, vbox=int) -> dict:
@@ -18,7 +21,8 @@ def __resize_both_sides(trcfmt=dict, hbox=int, vbox=int) -> dict:
             other_side = 'R' if side == 'R' else 'L'
             temp_trcfmt['R'] = list(vca_handler_frame_size.shape_mirror(shape_resized).values())
             temp_trcfmt['TRCFMT'] = ['1', len(shape_resized), 'E', other_side, 'F']
-            resized_trcfmt[other_side] = temp_trcfmt      
+            resized_trcfmt[other_side] = temp_trcfmt
+        logger.info(f'Side {side} done')      
     return resized_trcfmt
 
 
@@ -26,6 +30,7 @@ if __name__ == '__main__':
     try:
         config = json_config.load_json_config('config.json')
     except Exception as error:
+        logger.critical(error)
         messagebox.showerror('VCA Bot Volpe/Middleware', f'Error loading configuration json file due \n{error}')
         quit()
 
@@ -44,7 +49,7 @@ if __name__ == '__main__':
                     try:
                         vca_data = file_handler.file_reader(join(path, vca_file))
                         job_vca = vca_handler.VCA_to_dict(vca_data)
-                        print(f'{job_vca["JOB"]}\n')
+                        logger.info(f'{job_vca["JOB"]}\n')
                         if 'TRCFMT' not in job_vca.keys() or not int(job_vca['TRCFMT']['R']['TRCFMT'][1]) == 400:
                             file_handler.file_move_copy(path, path_done, vca_file, True)
                             sleep(0.5)
@@ -55,8 +60,8 @@ if __name__ == '__main__':
                             vca_contents_string = vca_handler.dict_do_VCA(job_vca)
                             file_handler.file_move_copy(path, path_done, vca_file, False)
                             file_handler.file_writer(path_new, vca_file, vca_contents_string)
-                            print(vca_contents_string)
-                            print('\n\n')
+                            logger.info(vca_contents_string)
+                            logger.info('\n\n')
                     except Exception as error:
                         print(f'Error {error} in file {vca_file}')
 
@@ -73,10 +78,11 @@ if __name__ == '__main__':
                                 file_handler.file_move_copy(source_directory, destin_directory, file, file_copy)
                                 sleep(0.1)
                     except Exception as error:
-                        print(f'Error processing files {error}')
+                        logger.error(f'Error processing files {error}')
 
-            print(f'Waiting... {sleep_time} seconds')
+            logger.info(f'Waiting... {sleep_time} seconds')
             sleep(sleep_time)
     except Exception as error:
+        logger.critical(error)
         messagebox.showerror('VCA Bot Volpe/Middleware', f'Error in routine execution\n{error}')
         quit()

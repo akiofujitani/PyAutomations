@@ -1,6 +1,8 @@
-import erp_volpe_handler, datetime, calendar, file_handler, data_communication, data_organizer, json_config, os
+import erp_volpe_handler, datetime, calendar, file_handler, data_communication, data_organizer, json_config, os, logger
 from ntpath import join
 from copy import deepcopy
+
+logger = logger.logger('rework')
 
 
 '''
@@ -58,7 +60,7 @@ def get_rework_list_template(table_sheet=str, position=str, column_number=int):
             rework_dict[rework_name] = 0
         return rework_dict
     except Exception as error:
-        print(f'Could not load values from {table_sheet}\n{error}') 
+        logger.error(f'Could not load values from {table_sheet}\n{error}') 
 
 
 def check_update_values_list(values_list=list, table_sheet=str, position=str, column_number=int):
@@ -73,7 +75,7 @@ def check_update_values_list(values_list=list, table_sheet=str, position=str, co
             data_communication.data_append_values(table_sheet, position, data_communication.transform_list_in_coloumn(values_to_update), sheets_id=sheets_id)
         return
     except Exception as error:
-        print('Could not check or update values due {error}')
+        logger.error('Could not check or update values due {error}')
         raise error
 
 
@@ -113,7 +115,7 @@ if __name__ == '__main__':
     try:
         config = json_config.load_json_config('C:/Users/fausto.akio/Documents/Reports/config_volpe.json')
     except:
-        print('Could not load config file')
+        logger.critical('Could not load config file')
         exit()
 
     path = os.path.normpath(config['rework']['path'])
@@ -127,7 +129,7 @@ if __name__ == '__main__':
         sheets_date_plus_one = data_communication.get_last_date(sheets_name, 'A:A', config['heat_map']['minimum_date'], sheets_id=sheets_id) + datetime.timedelta(days=1)
         end_date = datetime.datetime.now() - datetime.timedelta(days=1)
     except Exception as error:
-        print(f'Error loading table {sheets_name}')
+        logger.critical(f'Error loading table {sheets_name}')
         quit()
 
 
@@ -138,15 +140,16 @@ if __name__ == '__main__':
     else:
         start_date = data_organizer.define_start_date(sheets_date_plus_one, file_date)
     if not start_date.date() == datetime.datetime.now().date():
-        print(datetime.datetime.strftime(start_date, '%d/%m/%Y'))
-        print(datetime.datetime.strftime(end_date, '%d/%m/%Y'))
+        logger.info(datetime.datetime.strftime(start_date, '%d/%m/%Y'))
+        logger.info(datetime.datetime.strftime(end_date, '%d/%m/%Y'))
 
         # Report extraction automation
         try:
             erp_volpe_handler.volpe_back_to_main()
             erp_volpe_handler.volpe_load_tab('Tab_Lab', 'Icon_Prod_Unit.png')
             erp_volpe_handler.volpe_open_window('Icon_Rework_Motive.png', 'Title_Rework_Motive.png')
-            
+            logger.info('Volpe rework started')
+
             counter = 0
             report_date_start = start_date
             report_date_end = start_date
@@ -163,11 +166,11 @@ if __name__ == '__main__':
                                 date_until_dist=35,
                                 load_report_path='Images/Rework_motives')
                     erp_volpe_handler.volpe_save_report(f'REWORK_{datetime.datetime.strftime(report_date_start, "%Y%m%d")}', path)
-                    print(f'Date {datetime.datetime.strftime(report_date_start, "%d/%m/%Y")} done.')
+                    logger.info(f'Date {datetime.datetime.strftime(report_date_start, "%d/%m/%Y")} done.')
                     report_date_start = report_date_start + datetime.timedelta(days=1)
                     report_date_end = report_date_end + datetime.timedelta(days=1)
                 except Exception as error:
-                    print(f'Error {error}')
+                    logger.warning(f'Error {error}')
                     if counter >= 10:
                         raise Exception('Error: Too many tries.')
                     erp_volpe_handler.volpe_back_to_main()
@@ -175,7 +178,7 @@ if __name__ == '__main__':
                     erp_volpe_handler.volpe_open_window('Icon_Rework_Motive.png', 'Title_Rework_Motive.png')
                     counter = counter + 1
         except Exception as error:
-            print(f'General error: {error}')
+            logger.critical(f'General error: {error}')
             exit()
 
         # Data processing
@@ -191,12 +194,12 @@ if __name__ == '__main__':
             for line in partial_list:
                 motive_list.add(line['MOTIVO RETRABALHO'])
             file_handler.file_move_copy(path, path_done, file, False)
-            print(f'{file} done')
+            logger.info(f'{file} done')
         
         check_update_values_list(list(motive_list), 'Rework_Data', 'A:A', 0)
         rework_dict = get_rework_list_template('Rework_Data', 'C:C', 0)
         rework_organized = convert_rework_list(rework_list, rework_dict)
 
+        logger.debug('Sending to database')
         result = data_communication.data_append_values('REWORK' , 'A:Z', data_communication.transform_in_sheet_matrix(rework_organized), sheets_id=sheets_id)
-        print('Almost')
-        print("Done")
+        logger.info("Done")

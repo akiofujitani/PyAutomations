@@ -1,6 +1,7 @@
-import datetime, file_handler, data_communication, data_organizer, json_config, os, Production_Details
+import datetime, file_handler, data_communication, data_organizer, json_config, os, Production_Details, logger
 from ntpath import join
 
+logger = logger.logger('warranty_detailed')
 
 '''
 ==================================================================================================================================
@@ -33,11 +34,12 @@ if __name__ == '__main__':
     try:
         config = json_config.load_json_config('C:/PyAutomations_Reports/config_volpe.json')
     except:
-        print('Could not load config file')
+        logger.critical('Could not load config file')
         exit()
 
     # Load config
 
+    logger.info('Load config')
     remove_fields = config['warranty_detailed']['remove_fields']
     path = file_handler.check_create_dir(os.path.normpath(config['warranty_detailed']['path']))
     path_done = file_handler.check_create_dir(os.path.normpath(config['warranty_detailed']['path_done']))
@@ -59,7 +61,7 @@ if __name__ == '__main__':
         sheets_date_plus_one = data_communication.get_last_date(sheets_name_date, sheets_date_pos, '01/01/2022', sheets_id=sheets_id) + datetime.timedelta(days=1)
         end_date = datetime.datetime.now() - datetime.timedelta(days=1)
     except Exception as error:
-        print(f'Error loading table {sheets_name_date}')
+        logger.critical(f'Error loading table {sheets_name_date}')
         quit()
 
 
@@ -78,10 +80,10 @@ if __name__ == '__main__':
             else:
                 start_date = data_organizer.define_start_date(sheets_date_plus_one, file_date)
 
-            print(datetime.datetime.strftime(start_date, '%d/%m/%Y'))
-            print(datetime.datetime.strftime(end_date, '%d/%m/%Y'))
+            logger.info(datetime.datetime.strftime(start_date, '%d/%m/%Y'))
+            logger.info(datetime.datetime.strftime(end_date, '%d/%m/%Y'))
         except Exception as error:
-            print(error)
+            logger.critical(error)
             exit()
 
         # Data processing
@@ -97,7 +99,7 @@ if __name__ == '__main__':
                 if len(filtered_list) > 0:
                     for field_name in warranty_job_fields:
                         temp_list = Production_Details.values_merger(path_export, sorted_list, field_name, *filter_tags_list)
-                        print(f'{field_name} filtering terminated')
+                        logger.info(f'{field_name} filtering terminated')
                     plain_dict_list = data_organizer.dict_list_to_plain_dict(temp_list)
                     filled_dict_list = data_organizer.plain_dict_list_completer(plain_dict_list)
                     # filled_dict_list = data_organizer.convert_to_date(filled_dict_list, '%Y%m%d', '%d/%m/%Y', 'PEDIDO GARANTIA__ENTRYDATE', 'PEDIDO ORIGINAL__ENTRYDATE')
@@ -106,8 +108,8 @@ if __name__ == '__main__':
                     file_date = file_handler.file_contents_last_date(file_handler.CSVtoList(join(path, file)), 'DT.PED GARANTIA')
                     string_file_date = datetime.datetime.strftime(file_date, '%d/%m/%Y')
                     data_communication.data_update_values(sheets_name_date, sheets_date_pos, [[string_file_date]], sheets_id=sheets_id)
-                    print(f'{file} done')
+                    logger.info(f'{file} done')
                 file_handler.file_move_copy(path, path_done, file, False)
-            print("Done")
+            logger.info("Done")
         except Exception as error:
-            print(f'Error in data processing {error}')
+            logger.error(f'Error in data processing {error}')

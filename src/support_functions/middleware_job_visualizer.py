@@ -3,7 +3,6 @@ import logger
 import tkinter
 import tkinter.messagebox
 
-
 logger = logger.logger('middleware_job_visualizer')
 
 class Main_App(tkinter.Tk):
@@ -40,7 +39,7 @@ class Main_App(tkinter.Tk):
     # Action for "Enter" press keyboard event
     def func(self, event):
         self.click_button_ok()
-        logger.debug(f'Enter hit {event}')
+        logger.info(f'Enter hit {event}')
 
 
 if __name__ == '__main__':
