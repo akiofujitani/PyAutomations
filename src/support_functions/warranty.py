@@ -1,8 +1,10 @@
 from shutil import ExecError
+import logger
 import win_handler, erp_volpe_handler, pyautogui, keyboard, datetime, calendar, file_handler, data_communication, data_organizer, json_config, os
 from ntpath import join
 from time import sleep
 
+logger = logger.logger('warranty')
 
 '''
 ==================================================================================================================================
@@ -21,7 +23,7 @@ def volpe_load_tab(tab_name, load_check_image):
         sleep(0.3)
         return
     except Exception as error:
-        print('Volpe - load_tab error in {error}')
+        logger.error('Volpe - load_tab error in {error}')
         raise error
 
 
@@ -36,10 +38,10 @@ def volpe_open_window(icon_name, window_name, path='Images', maximize=True):
                 win_handler.icon_click('Volpe_Maximize.png', confidence_value=0.7, region_value=(erp_volpe_handler.region_definer(win_pos.left - 15, win_pos.top - 15)))
                 sleep(0.5)
             except:
-                print('Window already maximized')
+                logger.info('Window already maximized')
         return
     except Exception as error:
-        print('Volpe - open_window {error}')
+        logger.error('Volpe - open_window {error}')
         raise error
 
 
