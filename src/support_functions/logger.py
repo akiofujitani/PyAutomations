@@ -18,7 +18,7 @@ class LogConfig:
 
 def logger(module_name = __name__):
     try:
-        config = json_config.load_json_config('C:/PyAutomations_Reports/logging_config.json')
+        config = json_config.load_json_config('logging_config.json')
     except Exception as error:
         print(f'Config loading error {error}')
         exit()

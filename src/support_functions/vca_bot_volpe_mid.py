@@ -63,7 +63,7 @@ if __name__ == '__main__':
                             logger.info(vca_contents_string)
                             logger.info('\n\n')
                     except Exception as error:
-                        print(f'Error {error} in file {vca_file}')
+                        logger.error(f'Error {error} in file {vca_file}')
 
             if len(config['move_groups']) > 0:
                 for move_group in config['move_groups']:
