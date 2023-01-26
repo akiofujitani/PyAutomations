@@ -1,8 +1,11 @@
+
+import logging, json_config, tkinter
+from datetime import datetime
+from os.path import exists
+from os import makedirs
 from dataclasses import dataclass
 from ntpath import join
-import logging, json_config
-from datetime import datetime
-
+from tkinter.scrolledtext import ScrolledText
 
 @dataclass
 class LogConfig:
@@ -16,43 +19,99 @@ class LogConfig:
     log_extension : str
 
 
-def logger(module_name = __name__):
-    try:
-        config = json_config.load_json_config('logging_config.json')
-    except Exception as error:
-        print(f'Config loading error {error}')
-        exit()
+try:
+    config = json_config.load_json_config('logging_config.json')
     logger_config = LogConfig(config['version'], 
-                        config['log_format'],
-                        config['logger_level'],
-                        config['console_level'],
-                        config['file_level'],
-                        config['path'],
-                        config['log_name'],
-                        config['log_extension'])
+                            config['log_format'],
+                            config['logger_level'],
+                            config['console_level'],
+                            config['file_level'],
+                            config['path'],
+                            config['log_name'],
+                            config['log_extension'])
+except Exception as error:
+    print(f'Config loading error {error}')
+    exit()
 
 
-    formatter = logging.Formatter(logger_config.log_format, datefmt='%Y/%m/%d %H:%M:%S')
+class logger:
+    def __init__(self, module_name) -> None:
+        self.current_date = datetime.strftime(datetime.now().date(), "%Y%m%d")
 
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logger_config.console_level)
-    console_handler.setFormatter(formatter)
+        self.formatter = logging.Formatter(logger_config.log_format, datefmt='%Y/%m/%d %H:%M:%S')
 
-    file_handler = logging.FileHandler(join(logger_config.path, f'{logger_config.log_name}{datetime.strftime(datetime.now().date(), "%Y%m%d")}.{logger_config.log_extension}'))
-    file_handler.setLevel(logger_config.file_level)
-    file_handler.setFormatter(formatter)
+        self.console_handler = logging.StreamHandler()
+        self.console_handler.setLevel(logger_config.console_level)
+        self.console_handler.setFormatter(self.formatter)
 
-    current_logger = logging.getLogger(module_name)
-    current_logger.addHandler(console_handler)
-    current_logger.addHandler(file_handler)
-    current_logger.setLevel(logger_config.logger_level)
+        self.log_file_handler = self.__new_file_handler()
 
-    return current_logger
+        self.current_logger = logging.getLogger(module_name)
+        self.current_logger.addHandler(self.console_handler)
+        self.current_logger.addHandler(self.log_file_handler)
+        self.current_logger.setLevel(logger_config.logger_level)
+        
+
+    def critical(self, message=str):
+        self.__check_change_date()
+        self.current_logger.critical(message)
+    
+
+    def error(self, message=str):
+        self.__check_change_date()
+        self.current_logger.error(message)
+
+    
+    def warning(self, message=str):
+        self.__check_change_date()
+        self.current_logger.warning(message)
+    
+
+    def info(self, message=str):
+        self.__check_change_date()
+        self.current_logger.info(message)
+    
+
+    def debug(self, message=str):
+        self.__check_change_date()
+        self.current_logger.debug(message)
 
 
-if __name__ == '__main__':
-    demo = logger(__name__)
-    demo.warning('warning')
-    demo.info('info')
-    print('Done')
+    def __check_change_date(self):
+        if not self.current_date == datetime.strftime(datetime.now().date(), "%Y%m%d"):
+            for logger_handler in self.current_logger.handlers:
+                if isinstance(logger_handler, logging.FileHandler):
+                    self.current_logger.handlers.remove(logger_handler)
+                    self.new_log_file_handler = self.__new_file_handler(self)
+                    self.current_logger.addHandler(self.new_log_file_handler)
+    
 
+    def __new_file_handler(self):
+        if not exists(logger_config.path):
+            makedirs(logger_config.path)
+        self.log_file_handler = logging.FileHandler(join(logger_config.path, f'{logger_config.log_name}{self.current_date}.{logger_config.log_extension}'))
+        self.log_file_handler.setLevel(logger_config.file_level)
+        self.log_file_handler.setFormatter(self.formatter)
+        return self.log_file_handler
+
+
+    def addHanlder(self, handler=logging.Handler):
+        self.current_logger.addHandler(handler)
+
+class TextHandler(logging.Handler):
+    def __init__(self, text=ScrolledText):
+        logging.Handler.__init__(self)
+        formatter = logging.Formatter(logger_config.log_format, datefmt='%Y/%m/%d %H:%M:%S')
+        logging.Handler.setFormatter(self, formatter)
+        logging.Handler.setLevel(self, logger_config.console_level)
+        self.text = text
+    
+
+    def emit(self, record):
+        message = self.format(record)
+        def append():
+            self.text.configure(state='normal')
+            self.text.insert(tkinter.END, f'{message}\n')
+            self.text.configure(state='disabled')
+            self.text.yview(tkinter.END)        
+        self.text.after(0, append)    

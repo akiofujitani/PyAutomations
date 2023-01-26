@@ -61,7 +61,6 @@ if __name__ == '__main__':
                             file_handler.file_move_copy(path, path_done, vca_file, False)
                             file_handler.file_writer(path_new, vca_file, vca_contents_string)
                             logger.info(vca_contents_string)
-                            logger.info('\n\n')
                     except Exception as error:
                         logger.error(f'Error {error} in file {vca_file}')
 

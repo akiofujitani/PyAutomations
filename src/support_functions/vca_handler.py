@@ -87,8 +87,8 @@ def VCA_to_dict(VCA_file_contents):
         logger.info('VCA contents converted')
         return data_value
     except Exception as error:
-        logger.error(f'Erro ocurred in {error}')
-        raise Exception(f'Erro in {error}')
+        logger.error(f'Error ocurred in {error}')
+        raise Exception(f'Error in {error}')
                 
 
 def dict_do_VCA(job_data=dict):
