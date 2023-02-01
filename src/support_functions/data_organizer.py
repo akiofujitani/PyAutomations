@@ -1,9 +1,9 @@
-from audioop import reverse
 from ntpath import join
-
 from cv2 import sort
-import file_handler, datetime, calendar
+import file_handler, datetime, calendar, logger
 from collections import Counter
+
+logger = logger.logger('data_organizer')
 
 '''
 filter_tag
@@ -44,7 +44,7 @@ def checkData(tag, convertedData):
                     countOne += 1
                 case 2:
                     countTwo += 1
-    print(f'{tag} checked')
+    logger.debug(f'{tag} checked')
     return 2 if countTwo > countOne else 1
 
 
@@ -66,13 +66,13 @@ def plain_dict_float_format(plain_dict):
     for line in plain_dict:
         temp_dict = {}
         for key in line.keys():
-            print(line[key])
+            logger.debug(line[key])
             if not line[key] == 0 and isFloat(line[key]):
                 temp_dict[key] = str(line[key]).replace('.',',')
             else:
                 temp_dict[key] = line[key]
         float_updated_plain_dict.append(temp_dict)
-        print('Float values converted')
+        logger.info('Float values converted')
     return float_updated_plain_dict
 
 
@@ -107,7 +107,7 @@ def jobAndFileDate(filePath, fileList):
 
 
 def dict_list_to_plain_dict(dict_list):
-    print('Converting to simple dict')
+    logger.info('Converting to simple dict')
     plain_dict = []
     for line in dict_list:
         line_dict = {}

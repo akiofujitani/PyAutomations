@@ -122,7 +122,6 @@ def load_table_list(file_path=str, file_path_done=str, file_name=str) -> dict:
 '''
 
 
-
 if __name__ == '__main__':
     # erp_volpe_handler.volpe_back_to_main()
     try:
@@ -198,7 +197,7 @@ if __name__ == '__main__':
                     product_coating_list = []
                     family_type, product_coating_list = __get_coating(product['FAMILY'], coating_list)
                     if __get_lens_tint(product['DESCRIPTION'], feature_values_list):
-                        product_coating_list = product_coating_list + __define_tint_coating(product['DESCRIPTION'], index_tint_coat)
+                        product_coating_list = product_coating_list + __define_tint_coating(product['DESCRIPTION'], index_tint_coat, {'POLY' : '1.59', '1.50 BLUECUT' : '1.56', '1.50' : '1.49'})
                         tint_family = family_type if family_type == 'BELLIOTICA' else 'DEFAULT'
                         product_coating_list = product_coating_list + [tint['CODE'] for tint in tint_list if tint['TYPE'] == tint_family]
                     if not __uv_tint(product['DESCRIPTION'], uv_check_list):

@@ -106,7 +106,7 @@ def image_search(image_name=str, confidence_value=0.7, region=None, full_path=co
         # for i in range(3):
         image_pos = pyautogui.locateOnScreen(image_path, minSearchTime=0.5, confidence=confidence_value, region=region)
         if not image_pos == None:
-            print(f'{image_name} found at {image_pos.left} x {image_pos.top}')
+            logger.debug(f'{image_name} found at {image_pos.left} x {image_pos.top}')
             return image_pos
         else:
             raise ImageNotFoundException

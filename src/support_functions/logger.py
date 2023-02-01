@@ -82,7 +82,7 @@ class logger:
             for logger_handler in self.current_logger.handlers:
                 if isinstance(logger_handler, logging.FileHandler):
                     self.current_logger.handlers.remove(logger_handler)
-                    self.new_log_file_handler = self.__new_file_handler(self)
+                    self.new_log_file_handler = self.__new_file_handler()
                     self.current_logger.addHandler(self.new_log_file_handler)
     
 

@@ -69,7 +69,7 @@ def CSVtoList(filePath, case_upper=True, delimeter_char='\t') -> list:
         logger.debug('Trying to read csv file on default enconde')
         csv_contents = __csv_reader(file_path, case_upper, delimeter_char)
     except Exception as error:
-        print(error)
+        logger.error(error)
         try:
             try:
                 logger.debug('Trying to read csv file on default enconde cp1252')
@@ -141,7 +141,7 @@ def file_move_copy(path_from, path_to, file_name, copy=bool, overwrite=False):
         path_from = os.path.normpath(path_from)
         path_to = os.path.normpath(path_to)
         move_copy = 'copied' if copy == True else 'moved'
-        logger.info(f'From {path_from} \nto {path_to} \nfile {file_name} {move_copy}')
+        logger.debug(f'From {path_from} \nto {path_to} \nfile {file_name} {move_copy}')
         check_create_dir(path_to)
         new_file_name = __file_name_check(path_to, file_name) if overwrite is False else file_name
         if copy == True:

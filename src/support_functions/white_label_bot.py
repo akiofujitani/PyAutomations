@@ -1,6 +1,8 @@
-import datetime, file_handler, data_communication, win_handler, data_organizer, json_config, erp_volpe_handler, pyautogui, keyboard
+import datetime, file_handler, data_communication, win_handler, data_organizer, json_config, erp_volpe_handler, pyautogui, keyboard, logger
 from ntpath import join
 from time import sleep
+
+logger = logger.logger('white_label_bot')
 
 '''
 ==================================================================================================================================
@@ -30,7 +32,9 @@ def registry_load_by_description(description):
         sleep(0.5)
         pyautogui.write(f"'%{description}")
         win_handler.icon_click('Button_Consult.png', path='Images/Registry')
+        logger.debug(f'{description} written')
     except Exception as error:
+        logger.error(f'Error {error}')
         raise error
     return
 
@@ -49,9 +53,10 @@ def open_white_label_descr():
         descr_by_customer_win = win_handler.image_search('Description_by_customer.png', path='Images/Registry')
         descr_by_customer_sheet_pos = win_handler.image_search('Description_by_customer_sheet_header.png', region=(erp_volpe_handler.region_definer(descr_by_customer_win.left - 15, descr_by_customer_win.top)), path='Images/Registry')
         win_handler.click_field(descr_by_customer_sheet_pos, 'Bellow', distance=30)
+        logger.debug('White label description openned')
         sleep(0.5)
     except Exception as error:
-        print(f'Erro opening windows {error}')
+        logger.error(f'Erro opening windows {error}')
         raise error
 
 
@@ -77,7 +82,7 @@ def insert_white_label_values(description=str, code=str, engraving=str):
         win_handler.icon_click('Volpe_Close.png')
     except Exception as error:
         for _ in range(3):
-            print(f'Error in {error}')
+            logger.warning(f'Error in {error}')
             button_list = ['Button_cancel.png', 'Button_yes.png', 'Button_yes_Win11.png', 'Volpe_Close.png', 'Volpe_Close_Inactive.png']
             for button in button_list:
                 try:     
@@ -88,7 +93,7 @@ def insert_white_label_values(description=str, code=str, engraving=str):
                     button_pos = win_handler.image_search(button, region=region)
                     win_handler.click_volpe(button_pos)
                 except:
-                    print(f'Button {button} not found')
+                    logger.warning(f'Button {button} not found')
     return
 
 
@@ -141,7 +146,7 @@ def create_white_label_description(white_label, shorten_list, swap_list, done_li
             selected_pos = win_handler.image_search('Volpe_Table_selected.png', region=(erp_volpe_handler.region_definer(header_pos.left - 15, header_pos.top, 200)))
             code_value = erp_volpe_handler.ctrl_d(code_pos.left + 35, selected_pos.top + 4)
     except Exception as error:
-        print(f'Create white laber error {error}')
+        logger.error(f'Create white laber error {error}')
         raise error
 
 
@@ -149,7 +154,7 @@ if __name__ == '__main__':
     try:
         config = json_config.load_json_config('white_label.json')
     except:
-        print('Could not load config file')
+        logger.critical('Could not load config file')
         exit()
 
     # Load config
@@ -172,7 +177,7 @@ if __name__ == '__main__':
         description_swap = data_communication.get_values(sheets_name_swap, sheets_pos_swap, sheets_id)
         
     except Exception as error:
-        print(f'{error} loading table {sheets_name}')
+        logger.critical(f'{error} loading table {sheets_name}')
         quit()
 
     # erp_volpe_handler.volpe_back_to_main()
@@ -191,11 +196,11 @@ if __name__ == '__main__':
                     done_list_data = data_communication.get_values(sheets_done_name, sheets_done_pos, sheets_id)
                     white_label_done_list = data_communication.matrix_into_dict(done_list_data['values'], 'CODE', 'DESCRIPTION', 'WHITE_LABEL', 'CUSTOMER_CODE', 'FAMILY')
                 except Exception as error:
-                    print(f'Error {error}')
+                    logger.error(f'Error {error}')
                     raise error
                 registry_load_by_description(white_label['BASE'])
                 create_white_label_description(white_label, shorten_list, swap_list, [white_label['WHITE_LABEL'] for white_label in white_label_done_list], config)
                 data_communication.data_update_value(sheets_name, f'H{i + 2}', [['DONE']], sheets_id)
-        print('Done')
+        logger.info('Done')
     except KeyboardInterrupt:
-        print('Script interrupted')
+        logger.critical('Script interrupted')

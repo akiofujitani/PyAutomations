@@ -6,36 +6,6 @@ from ntpath import join
 
 logger = logger.logger('erp_volpe_handler')
 
-'''
-
-    run_application('c:\VolpeWaw', 'volpe.exe')
-    sleep(2)
-    try:
-        image_search('Volpe_login.png')
-        sleep(0.3)
-        user_pos = image_search('Volpe_login_user.png')
-        pyautogui.doubleClick(user_pos.left + user_pos.width + 20, user_pos.top + 15)
-        sleep(0.5)
-        pyautogui.write('fausto.akio')
-        sleep(0.3)
-        pass_pos = image_search('Volpe_login_pass.png')
-        pyautogui.doubleClick(pass_pos.left + pass_pos.width + 20, pass_pos.top + 15)
-        sleep(0.5)
-        pyautogui.write('calculo')
-        sleep(0.3)
-        ok_pos = image_search('Ok_button.png')
-        ok_XY = pyautogui.center(ok_pos)
-        pyautogui.click(ok_XY.x, ok_XY.y) 
-        loading_wait('Volpe_Raiz_user.png')
-        sleep(1)
-        tab_select('Tab_Maintenance')
-        loading_wait('Icon_Prog_Tec_man.png')
-        icon_click('Icon_Prog_Tec_man.png')
-        loading_wait('Windows_Prog_Tec_man.png')
-            except Exception as error:
-        print(error)
-
-'''
 
 def volpe_login(user_name=str, password=str):
     '''
@@ -168,7 +138,7 @@ def ctrl_d(pos_x, pos_y):
     pyautogui.hotkey('ctrl', 'd')
     sleep(0.3)
     copy_value = tkinter.Tk().clipboard_get()
-    print(f'Field values: {copy_value}.')
+    logger.debug(f'Field values: {copy_value}.')
     sleep(0.3)
     return copy_value
 
@@ -525,9 +495,9 @@ if __name__ == '__main__':
             win_handler.image_search('Appoint_Final.png', region=(region_definer(appoint_win.left, appoint_win.top)))
             row_text = get_volpe_row('Volpe_Prog_Tec_Main_Table_Header_Start.png', region_definer(appoint_win.left, appoint_win.top))
         except Exception as image_search_error:
-            print(f'No appointments {image_search_error}')
+            logger.error(f'No appointments {image_search_error}')
             # return to zero.
         values = appointments_value(row_text[0], ['GUSTAVO RAMOS', 'MARCOS DEPAULA', 'LEONARDO AIRES', 'FAUSTO AKIO'])
-        print(values)
+        logger.info(values)
     except Exception as error:
-        print(error)
+        logger.critical(error)

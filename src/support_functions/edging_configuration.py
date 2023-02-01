@@ -1,6 +1,9 @@
-import datetime, file_handler, data_communication, win_handler, data_organizer, json_config, erp_volpe_handler, pyautogui, keyboard, sys, os
+import datetime, data_communication, win_handler, json_config, erp_volpe_handler, pyautogui, keyboard, logger
 from ntpath import join
 from time import sleep
+
+logger = logger.logger('edging_configurator')
+
 
 '''
 ==================================================================================================================================
@@ -29,11 +32,11 @@ def load_product_code(code):
 
 
 def edging_index_type(product_description, type_list):
-    print(product_description)
+    logger.info(product_description)
     for type in type_list:
         for index in type_list[type]:
             if index.upper() in product_description.upper():
-                print(f'Product type: {type}')
+                logger.debug(f'Product type: {type}')
                 return type
     raise Exception('Could not find eding type')
 
@@ -48,10 +51,10 @@ def delete_line(tries=2):
             sleep(0.7)
             pyautogui.press('s')
             sleep(0.3)
-            print('Line deleted')
+            logger.debug('Line deleted')
             return
         except Exception as error:
-            print(f'Could not dele line due {error}')
+            logger.error(f'Could not dele line due {error}')
             if count >= 1:
                 raise error
     return
@@ -60,7 +63,7 @@ def delete_line(tries=2):
 def frame_type_checker(ocr_text, frame_type_list):
     for frame in frame_type_list:
         if frame in ocr_text:
-            print(f'Frame type {frame} return')
+            logger.debug(f'Frame type {frame} return')
             return True
     return False
 
@@ -74,8 +77,10 @@ def list_delete_edging_config(product, config):
         type_edging_header_pos = win_handler.image_search('header_montagem.png', region=(erp_volpe_handler.region_definer(win_pos.left - 15, win_pos.top)), path='Images/Edging_Config/')
         frame_header_pos = win_handler.image_search('header_arm.png', region=(erp_volpe_handler.region_definer(win_pos.left - 15, win_pos.top)), path='Images/Edging_Config/')
         line_pos = win_handler.image_search('Volpe_Table_selected.png', region=(erp_volpe_handler.region_definer(header_pos.left - 15, header_pos.top)))       
-        
+        logger.debug('Fields positions extracted')
+
         code = erp_volpe_handler.ctrl_d(code_pos.left + 15, line_pos.top + 3)
+        logger.debug(f'Code {code}')
         while True:
             line_text = ''
             try:
@@ -86,7 +91,7 @@ def list_delete_edging_config(product, config):
                 if len(line_text) <= 30:
                     raise Exception('Text incomplete')
             except Exception as error:
-                print(f'OCR Error {error}')
+                logger.error(f'OCR Error {error}')
                 line_text = f'{erp_volpe_handler.ctrl_d(type_edging_header_pos.left + 100, line_pos.top + 3)} {erp_volpe_handler.ctrl_d(frame_header_pos.left + 100, line_pos.top + 3)}'
             line_text = line_text.replace('É', 'E')
             if edging_index not in line_text:
@@ -116,17 +121,17 @@ def list_delete_edging_config(product, config):
                     break
         return
     except Exception as error:
-        print(f'List delete error {error}')
+        logger.error(f'List delete error {error}')
         raise error
 
 
 def wait_time(seconds=int):
     regressive_count = seconds
     for i in range(seconds):
-        print(f'Waiting.......{regressive_count}')
+        logger.info(f'Waiting.......{regressive_count}')
         regressive_count = regressive_count - 1
         sleep(1.0)
-    print('Waiting done')
+    logger.info('Waiting done')
     return
 
 
@@ -135,7 +140,7 @@ if __name__ == '__main__':
     try:
         config = json_config.load_json_config('edging_config.json')
     except:
-        print('Could not load config file')
+        logger.critical('Could not load config file')
         exit()
 
     # Load config
@@ -157,24 +162,24 @@ if __name__ == '__main__':
             sleep(0.5)
             erp_volpe_handler.volpe_open_window('Icon_config_edging.png', 'Configuration_edging.png', path='Images/Edging_Config/')
 
-            print('Base automation done')
+            logger.info('Base automation done')
 
             data_list = data_communication.get_values(sheets_name, sheets_pos, sheets_id)
             done_list = data_communication.get_values(sheets_name_done, sheets_pos_done, sheets_id)
-            print('Sheets data loaded')
+            logger.info('Sheets data loaded')
 
             product_done_list = ''
             if 'values' in done_list.keys():
                 product_done_list = data_communication.matrix_into_dict(done_list['values'], 'CODE', 'DESCRIPTION')
             if 'values' in data_list.keys():
                 product_list = data_communication.matrix_into_dict(data_list['values'], 'CODE', 'DESCRIPTION')
-            print('Sheets data converted')
+            logger.info('Sheets data converted')
 
             for product in product_list:
                 if not product['CODE'] in list(done_product['CODE'] for done_product in product_done_list):
                     load_product_code(product['CODE'])
                     list_delete_edging_config(product, config)
-                    print('Done')
+                    logger.debug('Done')
                     now_datetime = datetime.datetime.now()
                     data_communication.data_append_values(sheets_name_done, 
                                         sheets_pos_done, 
@@ -183,9 +188,9 @@ if __name__ == '__main__':
                                         now_datetime.strftime('%d/%m/%Y'), 
                                         now_datetime.strftime('%H:%M:%S')]], 
                                         sheets_id)
-                    print(f'{product["DESCRIPTION"]} done')
-            print('Done')
+                    logger.info(f'{product["DESCRIPTION"]} done')
+            logger.debug('Done')
         except Exception as error:
-            print(f'Error {error}')
-            print(f'Try number {try_number + 1}')
+            logger.warning(f'Error {error}')
+            logger.warning(f'Try number {try_number + 1}')
             wait_time(5)

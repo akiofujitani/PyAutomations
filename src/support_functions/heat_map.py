@@ -1,7 +1,10 @@
-import datetime, heat_map_classes, win_handler, erp_volpe_handler, pyautogui, keyboard, file_handler, data_communication, json_config, os, collections
+import datetime, heat_map_classes, win_handler, erp_volpe_handler, pyautogui, keyboard, file_handler, data_communication, json_config, os, logger
 from ntpath import join
 from time import sleep
 import tkinter.messagebox
+
+logger = logger.logger('heat_map')
+
 
 '''
 ================================================================================================================
@@ -20,7 +23,7 @@ def expand_all(sheet_pos):
     line_text = ''
     for _ in range(10):
         keyboard.press_and_release('Page Down')
-        print('page down')
+        logger.debug('page down')
         sleep(0.2)
     while 'Total' not in line_text:
         selected_pos = win_handler.image_search('Volpe_Table_selected.png', region=(erp_volpe_handler.region_definer(sheet_pos.left - 15, sheet_pos.top)))
@@ -52,10 +55,10 @@ def machine_productivity_expand_all():
         except Exception as error:
             if 'ImageNotFound: Volpe_Table_selected.png' not in error[0]:
                 raise Exception('Error expanding table')
-        print('Expand all done')
+        logger.info('Expand all done')
         return
     except Exception as error:
-        print(f'expand_all {error}')
+        logger.error(f'expand_all {error}')
 
 
 def get_time(string_value):
@@ -317,7 +320,7 @@ if __name__ == '__main__':
     try:
         config = json_config.load_json_config('C:/PyAutomations_Reports/config_volpe.json')
     except:
-        print('Could not load config file')
+        logger.critical('Could not load config file')
         exit()
 
 
@@ -333,8 +336,8 @@ if __name__ == '__main__':
     for jobtype in config['heat_map']['job_type']:
         path = file_handler.check_create_dir(os.path.normpath(config['heat_map']['path_output'][jobtype]))
         path_done = file_handler.check_create_dir(os.path.normpath(config['heat_map']['path_done'][jobtype]))
-        print(config['heat_map']['job_type'][jobtype])
-        print(config['heat_map']['sheets_type_name'][jobtype])
+        logger.debug(config['heat_map']['job_type'][jobtype])
+        logger.debug(config['heat_map']['sheets_type_name'][jobtype])
 
         status_jobtype = config['heat_map']['status_list'][jobtype]
         sheets_name = config["heat_map"]["sheets_type_name"][f'date_source_{config["heat_map"]["sheets_type_name"][jobtype]}']
@@ -350,8 +353,8 @@ if __name__ == '__main__':
             else:
                 start_date = define_start_date(sheets_date_plus_one, file_date)
 
-            print(datetime.datetime.strftime(start_date, '%d/%m/%Y'))
-            print(datetime.datetime.strftime(end_date, '%d/%m/%Y'))
+            logger.debug(datetime.datetime.strftime(start_date, '%d/%m/%Y'))
+            logger.debug(datetime.datetime.strftime(end_date, '%d/%m/%Y'))
 
             type_list = config['heat_map']['job_type'][jobtype]
 
@@ -382,11 +385,11 @@ if __name__ == '__main__':
                                                 load_report_path='Images/Machine_productivity')
                             machine_productivity_expand_all()
                             erp_volpe_handler.volpe_save_report(f'{file_name_pattern}{datetime.datetime.strftime(report_date_start, "%Y%m%d")}', path)
-                            print(f'Date {datetime.datetime.strftime(report_date_start, "%d/%m/%Y")} done.')
+                            logger.info(f'Date {datetime.datetime.strftime(report_date_start, "%d/%m/%Y")} done.')
                             report_date_start = report_date_start + datetime.timedelta(days=1)
                             report_date_end = report_date_end + datetime.timedelta(days=1)
                         except Exception as error:
-                            print(f'Error {error}')
+                            logger.warning(f'Error {error}')
                             if counter >= 5:
                                 raise Exception('Error: Too many tries.')
                             erp_volpe_handler.volpe_back_to_main()
@@ -394,7 +397,7 @@ if __name__ == '__main__':
                             erp_volpe_handler.volpe_open_window('Icon_Productivity_machine.png', 'Title_Machine_productivity.png')
                     # get_productivity(start_date, end_date, type_list, path, file_name_pattern)
                 except Exception as error:
-                    print('Automation error: {error}')
+                    logger.error('Automation error: {error}')
                     erp_volpe_handler.volpe_back_to_main()
 
 
@@ -412,7 +415,7 @@ if __name__ == '__main__':
                     for status in status_dict.keys():
                         if status in status_list_by_jobtype:
                             count_status = count_status + 1
-                            print(f'{status} started')
+                            logger.info(f'{status} started')
                             range_value = 'A:Z'
                             range_name = f'{status} {config["heat_map"]["sheets_type_name"][jobtype]}'
                             try:
@@ -421,17 +424,17 @@ if __name__ == '__main__':
                                     data_communication.data_append_values(range_name, range_value, status_dict_matrix, sheets_id=sheets_id)
                                 for item in status_dict[status]:
                                     values = list(item.values())
-                                    print(values)
+                                    logger.debug(values)
                             except Exception as error:
-                                print(f'Could not store values for {status}')
+                                logger.warning(f'Could not store values for {status}')
                                 file_name = f'{count_status:02d}_{status}'
                                 file_handler.listToCSV(status_dict[status], join(path_done, f'{file_name.replace("/", ".") if "/" in file_name else file_name}.csv'))
-                                print(f'{status} saved to CSV due {error}')
-                            print(f'{status} done')
+                                logger.error(f'{status} saved to CSV due {error}')
+                            logger.debug(f'{status} done')
                     done_file_move(path, path_done, extension_str)
-                    print('Done')
+                    logger.info('Done')
                 except Exception as error:
-                    print(f'Error {error} ocurred')
+                    logger.error(f'Error {error} ocurred')
                 except KeyboardInterrupt:
                     tkinter.messagebox.showinfo('PyAutomation', 'Script interrupted by user.')
 
