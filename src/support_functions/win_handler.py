@@ -121,6 +121,8 @@ def image_search(image_name=str, confidence_value=0.7, region=None, full_path=co
         raise Exception(error_string)
     except Exception as error:
         raise Exception(f'Image_search exception {error.__class}')
+    except KeyboardInterrupt as error:
+        raise error
 
 
 def icon_click(icon_name=str, confidence_value=0.8, region_value=None, path='Images/'):
@@ -139,7 +141,8 @@ def icon_click(icon_name=str, confidence_value=0.8, region_value=None, path='Ima
     except Exception as error:
         logger.error(f'Could not find {icon_name} icon')
         raise error
-
+    except KeyboardInterrupt as error:
+        raise error
 
 def tab_select(tab_name=str, confidence_value=0.9999999, confidence_reduction_step=0.0000003):
     '''
@@ -163,8 +166,10 @@ def tab_select(tab_name=str, confidence_value=0.9999999, confidence_reduction_st
                 except Exception as error:
                     logger.error(f'{tab_status} not found at {confidence_value}')
             confidence_value = confidence_value - confidence_reduction_step
-    except:
-        raise Exception('Tab not found error')
+    except Exception as error:
+        raise Exception(f'Tab not found due {error}')
+    except KeyboardInterrupt as error:
+        raise error
 
 
 def run_application(path = str, app_name = str):
@@ -172,14 +177,19 @@ def run_application(path = str, app_name = str):
     Can't comment much, got this from internet.
     Just created a way to insert variables of file and path and later convert it to bytes
     '''
-    cmd_line = ['cmd', '/q', '/k', 'echo off']
-    cmd = subprocess.Popen(cmd_line, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    temp= f'\n cd {path}\n {app_name}\n exit\n'
-    batch = bytes(temp, 'utf-8')
-    cmd.stdin.write(batch)
-    cmd.stdin.flush()
-    result = cmd.stdout.read()
-    logger.debug(result.decode())
+    try:
+        cmd_line = ['cmd', '/q', '/k', 'echo off']
+        cmd = subprocess.Popen(cmd_line, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        temp= f'\n cd {path}\n {app_name}\n exit\n'
+        batch = bytes(temp, 'utf-8')
+        cmd.stdin.write(batch)
+        cmd.stdin.flush()
+        result = cmd.stdout.read()
+        logger.debug(result.decode())
+    except Exception as error:
+        raise error
+    except KeyboardInterrupt as error:
+        raise error
     return
 
 
@@ -201,20 +211,25 @@ def loading_wait(image_name = str, path='Images', wait_time_in_sec = 15):
             if counter >= wait_time_in_sec:
                 raise Exception('Software frozen or loading too slow')
             counter = counter + 1
+        except KeyboardInterrupt as error:
+            raise error
 
 
 def click_volpe(pos, time=0.2):
     '''
     I don't believe in this, a software need a slow click like drag to work.
     '''
-    if type(pos) == pyautogui.Point:
-        pos_centered = pos
-    else:
-        pos_centered = pyautogui.center(pos)
-    pyautogui.moveTo(pos_centered.x, pos_centered.y)
-    sleep(0.3)
-    pyautogui.dragTo(pos_centered.x, pos_centered.y, time, button='left')
-    logger.debug('click')
+    try:
+        if type(pos) == pyautogui.Point:
+            pos_centered = pos
+        else:
+            pos_centered = pyautogui.center(pos)
+        pyautogui.moveTo(pos_centered.x, pos_centered.y)
+        sleep(0.3)
+        pyautogui.dragTo(pos_centered.x, pos_centered.y, time, button='left')
+        logger.debug('click')
+    except KeyboardInterrupt as error:
+        raise error
     return
 
 
@@ -225,27 +240,30 @@ def click_field(field_pos=pyscreeze.Box, click_pos='Front', distance=20):
     distance in X from image left position
     distance in Y from image top position
     '''
-    left = field_pos.left
-    top = field_pos.top
-    width = field_pos.width
-    height = field_pos.height
-    match click_pos:
-        case 'Front':
-            pyautogui.moveTo(left + width + distance, top + height / 2 + 6)
-            logger.debug('Front')
-        case 'Back':
-            pyautogui.moveTo(left - distance, top + height / 2 + 6)
-            logger.debug('Back')
-        case 'Bellow':
-            pyautogui.moveTo(left + 20, top + height + distance)
-            logger.debug('Bellow')
-        case 'Above':
-            pyautogui.moveTo(left + 20, top - distance)
-            logger.debug('Above')
-    sleep(0.3)
-    click_volpe(pyautogui.position())
-    sleep(0.5)
-    logger.info('Field has been clicked')
+    try:
+        left = field_pos.left
+        top = field_pos.top
+        width = field_pos.width
+        height = field_pos.height
+        match click_pos:
+            case 'Front':
+                pyautogui.moveTo(left + width + distance, top + height / 2 + 6)
+                logger.debug('Front')
+            case 'Back':
+                pyautogui.moveTo(left - distance, top + height / 2 + 6)
+                logger.debug('Back')
+            case 'Bellow':
+                pyautogui.moveTo(left + 20, top + height + distance)
+                logger.debug('Bellow')
+            case 'Above':
+                pyautogui.moveTo(left + 20, top - distance)
+                logger.debug('Above')
+        sleep(0.3)
+        click_volpe(pyautogui.position())
+        sleep(0.5)
+        logger.info('Field has been clicked')
+    except KeyboardInterrupt as error:
+        raise error
     return 
 
 
@@ -253,10 +271,12 @@ def region_definer(raw_x, raw_y, width=None, height=None):
     '''
     Specic for image_search, translate position and return tuple with left, top, width and height
     '''
-    windows_size = get_window_size()
-    start = translate_xy_pos(raw_x, raw_y)
-    return pyscreeze.Box(start.x, start.y, windows_size.width if not width else width, windows_size.height if not height else height)
-
+    try:
+        windows_size = get_window_size()
+        start = translate_xy_pos(raw_x, raw_y)
+        return pyscreeze.Box(start.x, start.y, windows_size.width if not width else width, windows_size.height if not height else height)
+    except KeyboardInterrupt as error:
+        raise error
 
 def get_active_windows_title() -> str:
     '''
@@ -269,6 +289,8 @@ def get_active_windows_title() -> str:
         return win_title
     except Exception as error:
         logger.error(f'Fail to get windows title due {error}')
+        raise error
+    except KeyboardInterrupt as error:
         raise error
 
 

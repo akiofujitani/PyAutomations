@@ -1,13 +1,15 @@
 from shutil import ExecError
-import google.auth, os, json_config
+import google.auth, os, json_config, logger
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 
+logger = logger.logger('sheets_API')
 
-def load_creds():
+
+def load_creds() -> google.oauth2.credentials.Credentials:
     # If modifying these scopes, delete the file token.json.
 
     config_json = {}
@@ -27,6 +29,7 @@ def load_creds():
             try:
                 creds.refresh(Request())
             except Exception as error:
+                logger.debug(error)
                 os.remove('token.json')
                 flow = InstalledAppFlow.from_client_secrets_file(
                     'client_key.json', SCOPES)
@@ -34,10 +37,11 @@ def load_creds():
                 # Save the credentials for the next run
                 with open('token.json', 'w') as token:
                     token.write(creds.to_json())
+    logger.debug(type(creds))
     return creds
 
 
-def get_values(creds, spreadsheet_id, range_name):
+def get_values(creds, spreadsheet_id, range_name) -> dict:
     """
     Creates the batch_update the user has access to.
     Load pre-authorized user credentials from the environment.
@@ -53,10 +57,10 @@ def get_values(creds, spreadsheet_id, range_name):
         result = service.spreadsheets().values().get(
             spreadsheetId=spreadsheet_id, range=range_name).execute()
         rows = result.get('values', [])
-        print(f"{len(rows)} rows retrieved")
+        logger.info(f"{len(rows)} rows retrieved")
         return result
     except HttpError as error:
-        print(f"An error occurred: {error}")
+        logger.error(f"An error occurred: {error}")
         raise error
 
 
@@ -77,10 +81,10 @@ def batch_get_values(creds, spreadsheet_id, range_names):
         result = service.spreadsheets().values().batchGet(
             spreadsheetId=spreadsheet_id, ranges=range_names).execute()
         ranges = result.get('valueRanges', [])
-        print(f"{len(ranges)} ranges retrieved")
+        logger.info(f"{len(ranges)} ranges retrieved")
         return result
     except HttpError as error:
-        print(f"An error occurred: {error}")
+        logger.error(f"An error occurred: {error}")
         raise error
 
 
@@ -107,10 +111,10 @@ def update_values(creds, spreadsheet_id, range_name, value_input_option, values)
         result = service.spreadsheets().values().update(
             spreadsheetId=spreadsheet_id, range=range_name,
             valueInputOption=value_input_option, body=body).execute()
-        print(f"{result.get('updatedCells')} cells updated.")
+        logger.info(f"{result.get('updatedCells')} cells updated.")
         return result
     except HttpError as error:
-        print(f"An error occurred: {error}")
+        logger.error(f"An error occurred: {error}")
         raise error
 
 
@@ -129,10 +133,10 @@ def add_sheet(creds, spreadsheet_id, sheet_name):
         }
         result = service.spreadsheets().batchUpdate(
             spreadsheetId=spreadsheet_id, body=request_body).execute()
-        print(result)
+        logger.info(result)
         return result
     except HttpError as error:
-        print(f"An error occurred: {error}")
+        logger.error(f"An error occurred: {error}")
         raise error
 
 def batch_update_values(spreadsheet_id, range_name,
@@ -167,10 +171,10 @@ def batch_update_values(spreadsheet_id, range_name,
         }
         result = service.spreadsheets().values().batchUpdate(
             spreadsheetId=spreadsheet_id, body=body).execute()
-        print(f"{(result.get('totalUpdatedCells'))} cells updated.")
+        logger.info(f"{(result.get('totalUpdatedCells'))} cells updated.")
         return result
     except HttpError as error:
-        print(f"An error occurred: {error}")
+        logger.error(f"An error occurred: {error}")
         raise error
 
 
@@ -198,11 +202,11 @@ def append_values(creds, spreadsheet_id, range_name, value_input_option, values)
         result = service.spreadsheets().values().append(
             spreadsheetId=spreadsheet_id, range=range_name,
             valueInputOption=value_input_option, body=body).execute()
-        print(f"{(result.get('updates').get('updatedCells'))} cells appended.")
+        logger.info(f"{(result.get('updates').get('updatedCells'))} cells appended.")
         return result
 
     except HttpError as error:
-        print(f"An error occurred: {error}")
+        logger.error(f"An error occurred: {error}")
         raise error
 
 
@@ -223,10 +227,10 @@ def create(creds, title):
         spreadsheet = service.spreadsheets().create(body=spreadsheet,
                                                     fields='spreadsheetId') \
             .execute()
-        print(f"Spreadsheet ID: {(spreadsheet.get('spreadsheetId'))}")
+        logger.info(f"Spreadsheet ID: {(spreadsheet.get('spreadsheetId'))}")
         return spreadsheet.get('spreadsheetId')
     except HttpError as error:
-        print(f"An error occurred: {error}")
+        logger.error(f"An error occurred: {error}")
         raise error
 
 
@@ -240,4 +244,4 @@ if __name__ == '__main__':
 
     creds = load_creds()
     cell_values = get_values(creds, SPREADSHEET_ID, f'{RANGE_NAME}{RANGE}')
-    print(cell_values)
+    logger.debug(cell_values)

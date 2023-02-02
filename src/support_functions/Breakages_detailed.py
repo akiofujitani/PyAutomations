@@ -22,7 +22,7 @@ def volpe_load_tab(tab_name, load_check_image):
         sleep(0.3)
         return
     except Exception as error:
-        logger.error('Volpe - load_tab error in {error}')
+        logger.error(f'Volpe - load_tab error in {error}')
         raise error
 
 
