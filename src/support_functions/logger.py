@@ -1,4 +1,3 @@
-
 import logging, json_config, tkinter
 from datetime import datetime
 from os.path import exists
@@ -6,6 +5,7 @@ from os import makedirs
 from dataclasses import dataclass
 from ntpath import join
 from tkinter.scrolledtext import ScrolledText
+from queue import Queue
 
 @dataclass
 class LogConfig:
@@ -20,7 +20,24 @@ class LogConfig:
 
 
 try:
-    config = json_config.load_json_config('logging_config.json')
+    template = """{
+        "version" : 1,
+        "log_format" : "[%(asctime)s -%(levelname)s] %(name)s - %(message)s",
+        "logger_level" : 10,
+        "console_level" : 10,
+        "file_level" : 20,
+        "path" : "Log/",
+        "log_name" : "Log_",
+        "log_extension" : "log",
+        "critical" : 50,
+        "error" : 40,
+        "warning" : 30,
+        "info" : 20,
+        "debug" : 10,
+        "notset" : 0
+    }
+    """
+    config = json_config.load_json_config('logging_config.json', template)
     logger_config = LogConfig(config['version'], 
                             config['log_format'],
                             config['logger_level'],
@@ -50,7 +67,10 @@ class logger:
         self.current_logger.addHandler(self.console_handler)
         self.current_logger.addHandler(self.log_file_handler)
         self.current_logger.setLevel(logger_config.logger_level)
-        
+
+        self.queue_handler = LogQueuer()
+        self.current_logger.addHandler(self.queue_handler)
+
 
     def critical(self, message=str):
         self.__check_change_date()
@@ -81,6 +101,7 @@ class logger:
         if not self.current_date == datetime.strftime(datetime.now().date(), "%Y%m%d"):
             for logger_handler in self.current_logger.handlers:
                 if isinstance(logger_handler, logging.FileHandler):
+                    self.current_date = datetime.strftime(datetime.now().date(), "%Y%m%d")
                     self.current_logger.handlers.remove(logger_handler)
                     self.new_log_file_handler = self.__new_file_handler()
                     self.current_logger.addHandler(self.new_log_file_handler)
@@ -115,3 +136,15 @@ class TextHandler(logging.Handler):
             self.text.configure(state='disabled')
             self.text.yview(tkinter.END)        
         self.text.after(0, append)    
+
+class LogQueuer(logging.Handler):
+    def __init__(self) -> None:
+        logging.Handler.__init__(self)
+        formatter = logging.Formatter(logger_config.log_format, datefmt='%Y/%m/%d %H:%M:%S')
+        logging.Handler.setFormatter(self, formatter)
+        logging.Handler.setLevel(self, logger_config.console_level)
+        self.log_queue = Queue()
+
+    
+    def emit(self, record):
+        self.log_queue.put(self.format(record))

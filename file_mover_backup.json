@@ -17,13 +17,6 @@
     ],
     "directory_list" : [
         {
-            "source" : "D:/Arquivos/Images",
-            "destin" : "//192.168.5.8/Arquivo/Free Form/Automapper/PMFFiles",
-            "extension" : "",
-            "days_from_today" : "0",
-            "copy" : "False"
-        },
-        {
             "source" : "//192.168.5.8/Arquivo/Free Form/Automapper/DDFFiles",
             "destin" : "//192.168.5.8/Arquivo/Free Form/Automapper/PMFFiles",
             "extension" : "pmf",
@@ -90,6 +83,13 @@
             "source" : "D:/Arquivos/LMS/Job Print Middleware",
             "destin" : "//192.168.5.8/Arquivo/LMS/JOB_PRINT_MID",
             "extension" : "pdf",
+            "days_from_today" : "0",
+            "copy" : "False"
+        },        
+        {
+            "source" : "D:/Arquivos/Images",
+            "destin" : "//192.168.5.8/Arquivo/Free Form/Automapper/PMFFiles",
+            "extension" : "",
             "days_from_today" : "0",
             "copy" : "False"
         }

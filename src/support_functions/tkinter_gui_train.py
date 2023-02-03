@@ -5,7 +5,6 @@ import tkinter.scrolledtext
 
 
 
-
 if __name__ == '__main__':
     # Create window
     window = tkinter.Tk()
@@ -91,6 +90,10 @@ if __name__ == '__main__':
     scroll_text.insert(tkinter.INSERT, 'Your text goes here')
     scroll_text.delete(1.0, tkinter.END) # clear scroll text field contents.
 
+
+    list_box = tkinter.ttk.Treeview(window, columns=('Lang', 'Status', 'Like'))
+    list_box.insert('', iid=0, index=1, values=['Pearl', 'No', 'No'])
+    list_box.grid(column=1, row=6, columnspan=2)
     # Message box
 
     import tkinter.messagebox
