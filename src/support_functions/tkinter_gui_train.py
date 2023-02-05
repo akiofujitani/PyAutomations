@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     # Create text input field disabled
 
-    text_2 = tkinter.Entry(window,width=30, state='disabled')
+    text_2 = tkinter.Entry(window, width=30, state='disabled')
     text_2.grid(column=0, row=4)
 
     # Button click action

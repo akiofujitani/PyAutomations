@@ -1,10 +1,10 @@
 from time import sleep
-import file_handler, json_config, datetime, tkinter, os, threading
+import file_handler, json_config, datetime, tkinter, threading, sys
 import logger as log
 from dataclasses import dataclass
 from os.path import normpath, abspath
 from os.path import split as path_split
-from queue import Queue
+from tkinter import messagebox
 
 logger = log.logger('file_mover_backup')
 
@@ -32,7 +32,6 @@ class ThreadEventException(Exception):
     '''Thread event exception'''
     pass
 
-
 class Main_App(tkinter.Tk):
     def __init__(self, *args, **kwargs) -> None:
         tkinter.Tk.__init__(self, *args, **kwargs)
@@ -53,25 +52,11 @@ class Main_App(tkinter.Tk):
         config_button = tkinter.Button(self, text='Configuration', command=self.__click_button_config, width=25)
         config_button.grid(column=3, row=0, padx=(3), pady=(3), sticky='nesw')
 
-        self.scrolled_text = tkinter.scrolledtext.ScrolledText(self, state='disabled')
-        self.scrolled_text.configure(wrap=tkinter.WORD, font=('Arial', 9))
-        self.scrolled_text.grid(column=0, row=1, columnspan=4, sticky='nesw', padx=(3), pady=(3))
-        self.log_queue = logger.queue_handler.log_queue
-        self.after(100, self.poll_log_queue)
-
-
-    def display(self, message):
-        self.scrolled_text.configure(state='normal')
-        self.scrolled_text.insert(tkinter.END, f'{message}\n')
-        self.scrolled_text.configure(state='disabled')
-        self.scrolled_text.yview(tkinter.END)  
-
-
-    def poll_log_queue(self):
-        while not self.log_queue.empty():
-            message = self.log_queue.get(block=False)
-            self.display(message)
-        self.after(100, self.poll_log_queue)
+        scrolled_text = tkinter.scrolledtext.ScrolledText(self, state='disabled')
+        scrolled_text.configure(wrap=tkinter.WORD, font=('Arial', 9))
+        scrolled_text.grid(column=0, row=1, columnspan=4, sticky='nesw', padx=(3), pady=(3))
+        logger.addHanlder(log.TextHandler(scrolled_text))
+        self.protocol('WM_DELETE_WINDOW', self.__on_window_close)
 
 
     def __click_button_start(self):
@@ -89,7 +74,18 @@ class Main_App(tkinter.Tk):
         logger.debug('Button config clicked')
 
 
+    def __on_window_close(self):
+        if messagebox.askokcancel('Quit', 'Do you want to quit?'):
+            event.set()
+            logger.info('Waiting for thread')
+            self.destroy()
+            sys.exit()
+
+
 def __load_configuration(config_path=str) -> dict:
+    '''
+    Load configuration from .json file. If json file do not exists it will be created using the template values.
+    '''
     try:
         config_template = """{
         "wait_time_min" : 15,
@@ -152,6 +148,8 @@ def main(event=threading.Event):
                             file_destination_path = normpath(file_destination)
                             source_path, file_name = path_split(abspath(file))
                             file_handler.file_move_copy(source_path, file_destination_path, file_name, move_settings.copy, True)
+                            logger.debug(f'File {counter} {file_name} moved')
+                            logger.debug(f'From {source_path} to {file_destination_path}')
                         counter += 1
                         if counter >= config.file_per_cicle:
                             logger.info(f'Number {config.file_per_cicle} of files per cicle reached.')
@@ -161,21 +159,25 @@ def main(event=threading.Event):
                             logger.info(f'Counter at {counter}')
                             logger.info(f'Moving from {source_path} to {file_destination_path}')
                             raise ThreadEventException('Event set')
-            except ThreadEventException as thread_end:
+            except ThreadEventException:
                 logger.info('Thread finalized')
                 event.clear()
                 return
             except Exception as error:
                 logger.warning(f'Error processing files {error}')
         logger.info(f'Waiting ... {config.min_to_seconds()}')
-        sleep(config.min_to_seconds())
+        for second in range(config.min_to_seconds()):
+            sleep(1)
+            if event.is_set():
+                logger.info(f'Wait time interrupted at {second}')
+                event.clear()
+                return
 
 
 if __name__ == '__main__':
     event = threading.Event()
-    thread = threading.Thread(target=main, args=(event,), name='File_Mover')
+    thread = threading.Thread(target=main, args=(event,), daemon=True, name='File_Mover')
     thread.start()
     window = Main_App()
     window.mainloop()
-    thread.join()
 

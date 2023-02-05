@@ -68,9 +68,6 @@ class logger:
         self.current_logger.addHandler(self.log_file_handler)
         self.current_logger.setLevel(logger_config.logger_level)
 
-        self.queue_handler = LogQueuer()
-        self.current_logger.addHandler(self.queue_handler)
-
 
     def critical(self, message=str):
         self.__check_change_date()
