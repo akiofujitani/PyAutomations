@@ -13,6 +13,7 @@ class LogConfig:
     log_format : str
     logger_level : int
     console_level : int
+    gui_level : int
     file_level : int
     path : str
     log_name : str
@@ -25,6 +26,7 @@ try:
         "log_format" : "[%(asctime)s -%(levelname)s] %(name)s - %(message)s",
         "logger_level" : 10,
         "console_level" : 10,
+        "gui_level" : 20,
         "file_level" : 20,
         "path" : "Log/",
         "log_name" : "Log_",
@@ -42,6 +44,7 @@ try:
                             config['log_format'],
                             config['logger_level'],
                             config['console_level'],
+                            config['gui_level'],
                             config['file_level'],
                             config['path'],
                             config['log_name'],
@@ -121,7 +124,7 @@ class TextHandler(logging.Handler):
         logging.Handler.__init__(self)
         formatter = logging.Formatter(logger_config.log_format, datefmt='%Y/%m/%d %H:%M:%S')
         logging.Handler.setFormatter(self, formatter)
-        logging.Handler.setLevel(self, logger_config.console_level)
+        logging.Handler.setLevel(self, logger_config.gui_level)
         self.text = text
     
 

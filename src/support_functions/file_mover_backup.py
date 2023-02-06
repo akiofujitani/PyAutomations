@@ -33,9 +33,9 @@ class ThreadEventException(Exception):
     pass
 
 class Main_App(tkinter.Tk):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, title=str, *args, **kwargs) -> None:
         tkinter.Tk.__init__(self, *args, **kwargs)
-        self.title('VCA Bot Volpe Mid')
+        self.title(title)
         self.minsize(width=500, height=500)
         self.grid_rowconfigure(0, minsize=40)
         self.grid_columnconfigure(0, weight=0, minsize=50)
@@ -61,8 +61,10 @@ class Main_App(tkinter.Tk):
 
     def __click_button_start(self):
         logger.debug('Button start clicked')
-        thread = threading.Thread(target=main, args=(event,), name='File_Mover')
-        thread.start()
+        if event.is_set():
+            thread = threading.Thread(target=main, args=(event,), daemon=True,  name='File_Mover')
+            thread.start()
+            event.clear()
 
 
     def __click_button_stop(self):
@@ -77,7 +79,7 @@ class Main_App(tkinter.Tk):
     def __on_window_close(self):
         if messagebox.askokcancel('Quit', 'Do you want to quit?'):
             event.set()
-            logger.info('Waiting for thread')
+            logger.info('Forcing kill thread if it is open')
             self.destroy()
             sys.exit()
 
@@ -137,7 +139,7 @@ def main(event=threading.Event):
             try:
                 if event.is_set():
                     raise ThreadEventException('Event set')
-                logger.debug(f'Listing files from {move_settings.source}')
+                logger.info(f'Listing files from {move_settings.source}')
                 file_list = file_handler.listFilesInDirSubDir(move_settings.source, move_settings.extention)
                 if len(file_list) > 0:
                     counter = 0
@@ -148,36 +150,37 @@ def main(event=threading.Event):
                             file_destination_path = normpath(file_destination)
                             source_path, file_name = path_split(abspath(file))
                             file_handler.file_move_copy(source_path, file_destination_path, file_name, move_settings.copy, True)
-                            logger.debug(f'File {counter} {file_name} moved')
-                            logger.debug(f'From {source_path} to {file_destination_path}')
+                            logger.debug(f'File {counter} "{file_name}" moved')
+                            logger.debug(f'From "{source_path}" to "{file_destination_path}"')
                         counter += 1
                         if counter >= config.file_per_cicle:
                             logger.info(f'Number {config.file_per_cicle} of files per cicle reached.')
-                            logger.info(f'From {source_path} to {file_destination_path}')
                             break
                         if event.is_set():
                             logger.info(f'Counter at {counter}')
-                            logger.info(f'Moving from {source_path} to {file_destination_path}')
+                            logger.info(f'Moving from "{source_path}" to "{file_destination_path}"')
                             raise ThreadEventException('Event set')
             except ThreadEventException:
                 logger.info('Thread finalized')
-                event.clear()
                 return
             except Exception as error:
                 logger.warning(f'Error processing files {error}')
-        logger.info(f'Waiting ... {config.min_to_seconds()}')
-        for second in range(config.min_to_seconds()):
+        wait_time = config.min_to_seconds()
+        logger.info(f'Wait time ... {wait_time}')
+        for second in range(wait_time):
             sleep(1)
+            if second % 15 == 0 and not second == 0:
+                logger.info(f'Time to next cicle {wait_time - second}')
             if event.is_set():
                 logger.info(f'Wait time interrupted at {second}')
-                event.clear()
                 return
 
 
 if __name__ == '__main__':
+    window = Main_App('File mover backup')
     event = threading.Event()
     thread = threading.Thread(target=main, args=(event,), daemon=True, name='File_Mover')
     thread.start()
-    window = Main_App()
     window.mainloop()
+
 
