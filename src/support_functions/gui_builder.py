@@ -75,7 +75,40 @@ class Edit_Values(tkinter.Tk):
         logger.debug('Button save')
 
 
+class Edit_Month(tkinter.Tk):
+    def __init__(self, parent, month_number=int, month_descroption=str, *args, **kwargs) -> None:
+        tkinter.Tk.__init__(self, *args, **kwargs)
+        self.month_number = month_number
+        self.month_description = month_descroption
+        self.title('Edit month description')
+        self.minsize(width=350, height=100)
 
+        ttk.Label(self, text='Month number', justify='left').grid(column=0, row=0, padx=(5), pady=(5, 0))
+        self.gui_month_num = ttk.Entry(self, width=50, justify='center')
+        self.gui_month_num.grid(column=1, row=0, sticky='nesw', columnspan=3, padx=(5), pady=(5, 0))
+        self.gui_month_num.insert(tkinter.END, month_number)
+        self.gui_month_num.configure(state='disabled')
+
+        ttk.Label(self, text='Month Description', justify='left').grid(column=0, row=1, padx=(5), pady=(5, 0))
+        self.gui_month_descr = ttk.Entry(self, width=50, justify='center')
+        self.gui_month_descr.grid(column=1, row=1, sticky='nesw', columnspan=3, padx=(5), pady=(5, 0))
+        self.gui_month_descr.insert(tkinter.END, month_descroption)
+
+        cancel_button = tkinter.Button(self, text='Cancel', command=self.__click_button_cancel, width=15)
+        cancel_button.grid(column=2, row=2, padx=(5), pady=(5))    
+        save_button = tkinter.Button(self, text='Save', command=self.__click_button_save, width=15)
+        save_button.grid(column=3, row=2, padx=(5), pady=(5))          
+
+
+    def __click_button_cancel(self):
+        logger.debug('Button cancel')
+        self.destroy()
+    
+
+    def __click_button_save(self):
+        logger.debug('Button save')
+        text = self.gui_month_descr.get()
+        return text
 
 
 class Config_Window(tkinter.Tk):
@@ -161,7 +194,7 @@ class Config_Window(tkinter.Tk):
     def __tree_item_edit(self, event):
         selected_item = self.months_naming_tree.selection()[0]
         record = [str(value) for value in self.months_naming_tree.item(selected_item)['values']]
-        edited_values = Edit_Values(record, ['Month','Month Description'], 'Edit month description')
+        edited_values = Edit_Month(record[0], record[1])
         logger.debug('Double click')
 
 
