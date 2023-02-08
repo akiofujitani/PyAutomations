@@ -74,25 +74,35 @@ class Edit_Values(tkinter.Tk):
     def __click_button_save(self):
         logger.debug('Button save')
 
+        
+
 
 class Edit_Month(tkinter.Tk):
-    def __init__(self, parent, month_number=int, month_descroption=str, *args, **kwargs) -> None:
+    def __init__(self, parent=ttk.Notebook, *args, **kwargs) -> None:
         tkinter.Tk.__init__(self, *args, **kwargs)
-        self.month_number = month_number
-        self.month_description = month_descroption
+        self.parent = parent
         self.title('Edit month description')
         self.minsize(width=350, height=100)
+        logger.debug(parent)
+        self.selected_item = self.parent.selection()[0]
+        self.record_value = [str(value) for value in self.parent.item(self.selected_item)['values']]
 
         ttk.Label(self, text='Month number', justify='left').grid(column=0, row=0, padx=(5), pady=(5, 0))
         self.gui_month_num = ttk.Entry(self, width=50, justify='center')
         self.gui_month_num.grid(column=1, row=0, sticky='nesw', columnspan=3, padx=(5), pady=(5, 0))
-        self.gui_month_num.insert(tkinter.END, month_number)
+        self.gui_month_num.insert(tkinter.END, self.record_value[0])
         self.gui_month_num.configure(state='disabled')
 
         ttk.Label(self, text='Month Description', justify='left').grid(column=0, row=1, padx=(5), pady=(5, 0))
         self.gui_month_descr = ttk.Entry(self, width=50, justify='center')
         self.gui_month_descr.grid(column=1, row=1, sticky='nesw', columnspan=3, padx=(5), pady=(5, 0))
-        self.gui_month_descr.insert(tkinter.END, month_descroption)
+        self.gui_month_descr.insert(tkinter.END, self.record_value[1])
+        self.gui_month_descr.focus_force()
+        self.gui_month_descr.select_clear()
+        self.gui_month_descr.select_range(0, tkinter.END)
+        self.bind("<Return>", self.__click_button_save)
+        self.bind("<Escape>", lambda *ignore: self.destroy())
+
 
         cancel_button = tkinter.Button(self, text='Cancel', command=self.__click_button_cancel, width=15)
         cancel_button.grid(column=2, row=2, padx=(5), pady=(5))    
@@ -105,11 +115,12 @@ class Edit_Month(tkinter.Tk):
         self.destroy()
     
 
-    def __click_button_save(self):
-        logger.debug('Button save')
-        text = self.gui_month_descr.get()
-        return text
-
+    def __click_button_save(self, event):
+        self.record_value[1] = self.gui_month_descr.get()
+        self.parent.item(self.selected_item, values=self.record_value)
+        logger.debug(f'Button save {self.record_value[1]}')
+        self.destroy()
+        return
 
 class Config_Window(tkinter.Tk):
     def __init__(self, config=file_mover_backup.Configuration_Values, *args, **kwargs) -> None:
@@ -117,46 +128,66 @@ class Config_Window(tkinter.Tk):
         self.config = config
         self.title('Configuration')
         self.minsize(width=400, height=300)
-        self.rowconfigure(0, weight=1, )
+        self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
-
         self.tab_control = ttk.Notebook(self)
+
+        # Tab Main
         tab_main = ttk.Frame(self.tab_control)
         tab_file_settings = ttk.Frame(self.tab_control)
-
         self.tab_control.add(tab_main, text='Main')
         self.tab_control.add(tab_file_settings, text='File Settings')
-        self.tab_control.grid(column=0, row=0, columnspan=4, sticky='nesw', padx=(5), pady=(5))
+        self.tab_control.grid(column=0, 
+                        row=0, 
+                        columnspan=4, 
+                        sticky='nesw',
+                        padx=(5), pady=(5))
 
-        ttk.Label(tab_main, text='Wait time', justify='left').grid(column=0, row=0, padx=(5), pady=(5, 0))
-        ttk.Label(tab_main, text='Files per cicle', justify='left').grid(column=0, row=1, padx=(5), pady=(5, 0))
-        ttk.Label(tab_main, text='Months naming', justify='left').grid(column=0, row=2, padx=(5), pady=(5, 0))
+
+        ttk.Label(tab_main, 
+                        text='Wait time', 
+                        justify='left').grid(column=0, 
+                                        row=0, 
+                                        padx=(5), 
+                                        pady=(5, 0))
+        ttk.Label(tab_main, 
+                        text='Files per cicle', 
+                        justify='left').grid(column=0, 
+                                        row=1, 
+                                        padx=(5), 
+                                        pady=(5, 0))
+        ttk.Label(tab_main, 
+                        text='Months naming', 
+                        justify='left').grid(column=0, 
+                                        row=2, 
+                                        padx=(5), 
+                                        pady=(5, 0))
 
         valid_command = (tab_main.register(self.__validade_values))
-        wait_time_entry = ttk.Entry(tab_main, 
+        self.wait_time_entry = ttk.Entry(tab_main, 
                         width=40, 
                         justify='center', 
                         validate='key', 
                         validatecommand=(valid_command, '%P'))
-        wait_time_entry.grid(column=1, 
+        self.wait_time_entry.grid(column=1, 
                         row=0, 
-                        columnspan=2, 
+                        columnspan=3, 
                         sticky='nesw', 
                         padx=(5), 
                         pady=(5, 0))
-        wait_time_entry.insert(tkinter.END, str(self.config.wait_time))
-        files_per_cicle = ttk.Entry(tab_main, 
+        self.wait_time_entry.insert(tkinter.END, str(self.config.wait_time))
+        self.files_per_cicle = ttk.Entry(tab_main, 
                         width=40, 
                         justify='center', 
                         validate='key', 
                         validatecommand=(valid_command, '%P'))
-        files_per_cicle.grid(column=1,
+        self.files_per_cicle.grid(column=1,
                         row=1, 
-                        columnspan=2, 
+                        columnspan=3, 
                         sticky='nesw', 
                         padx=(5), 
                         pady=(5, 0))
-        files_per_cicle.insert(tkinter.END, str(self.config.file_per_cicle))
+        self.files_per_cicle.insert(tkinter.END, str(self.config.file_per_cicle))
         month_columns = ('month_number' , 'month_description')
         self.months_naming_tree = ttk.Treeview(tab_main, columns=month_columns, show='headings')
         self.months_naming_tree.heading('month_number', text='Month Number')
@@ -164,37 +195,71 @@ class Config_Window(tkinter.Tk):
         for i in range(len(config.month_name_list)):
             self.months_naming_tree.insert('', tkinter.END, values=(i + 1, config.month_name_list[i]))
         self.months_naming_tree.bind('<Double-1>', self.__tree_item_edit)
+        self.months_naming_tree.bind("<Return>", self.__tree_item_edit)
         self.months_naming_tree.grid(column=1, 
                         row=2, 
                         columnspan=2,
-                        rowspan=int(len(config.month_name_list)) + 1, 
                         sticky='nesw', 
-                        padx=(5), 
+                        padx=(5, 0), 
                         pady=(5, 0))
         self.months_naming_tree.columnconfigure(1, weight=1)
         self.months_naming_tree.columnconfigure(0, weight=1)
+        scrollbar = ttk.Scrollbar(tab_main, orient=tkinter.VERTICAL, command=self.months_naming_tree.yview)
+        self.months_naming_tree.configure(yscroll=scrollbar.set)
+        scrollbar.grid(row=2, 
+                        column=3, 
+                        sticky='ns',
+                        padx=(0, 5),
+                        pady=(5, 0))
+
         tab_main.columnconfigure(1, weight=1)
         tab_main.rowconfigure(2, weight=1)
+
+        # Tab File Settings
+        tab_file_settings.columnconfigure(1, weight=1)
+        tab_file_settings.rowconfigure(0, weight=1)
+        file_manag_column = ('source', 'destin', 'extention', 'wait_days', 'copy')
+        file_manag_descri = ('Souce', 'Destination', 'Extention', 'Days to move/copy', 'Make copy')
+        self.file_manag_tree = ttk.Treeview(tab_file_settings, columns=file_manag_column, show='headings')
+        for i in range(len(file_manag_column)):
+            self.file_manag_tree.heading(file_manag_column[i], text=file_manag_descri[i])
+            self.file_manag_tree.column(file_manag_column[i], minwidth=10, width=100)
+        for directory_list in self.config.directory_list:
+            self.file_manag_tree.insert('', tkinter.END, values=(tuple(directory_list.__dict__.values())))
+        self.file_manag_tree.bind('<Double-1>', self.__tree_item_edit)
+        self.file_manag_tree.bind("<Return>", self.__tree_item_edit)
+        self.file_manag_tree.grid(column=1, 
+                        row=0, 
+                        columnspan=4,
+                        sticky='nesw', 
+                        padx=(5, 0), 
+                        pady=(5, 0))
+        y_scrollbar = ttk.Scrollbar(tab_file_settings, orient=tkinter.VERTICAL, command=self.file_manag_tree.yview)
+        self.file_manag_tree.configure(yscroll=y_scrollbar.set)
+        y_scrollbar.grid(row=0, 
+                        column=5, 
+                        sticky='ns',
+                        padx=(0, 5),
+                        pady=(5, 0))
+        self.file_manag_tree.columnconfigure(0, weight=1)
+        self.file_manag_tree.rowconfigure(0, weight=1)
+
 
         cancel_button = tkinter.Button(self, text='Cancel', command=self.__click_button_cancel, width=15)
         cancel_button.grid(column=2, row=1, padx=(5), pady=(0, 5))    
         save_button = tkinter.Button(self, text='Save', command=self.__click_button_save, width=15)
         save_button.grid(column=3, row=1, padx=(5), pady=(0, 5))
         self.protocol('WM_DELETE_WINDOW', self.__on_window_close)
-
-
-    def __tree_item_selected(self, event):
-        for selected_item in self.months_naming_tree.selection():
-            item = self.months_naming_tree.item(selected_item)
-            record = [str(value) for value in item['values']]
-            # show a message
-            msgbox.showinfo(title='Information', message=','.join(record))
+        self.month_edit = None
 
 
     def __tree_item_edit(self, event):
-        selected_item = self.months_naming_tree.selection()[0]
-        record = [str(value) for value in self.months_naming_tree.item(selected_item)['values']]
-        edited_values = Edit_Month(record[0], record[1])
+        try:
+            if self.month_edit.state() == 'normal':
+                self.month_edit.focus_force()
+        except Exception as error:
+            logger.debug(error)
+            self.month_edit = Edit_Month(self.months_naming_tree)
         logger.debug('Double click')
 
 

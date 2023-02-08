@@ -14,7 +14,19 @@ class Move_Settings:
     destination: str
     extention: str
     days_from_today: int
-    copy: bool 
+    copy: bool
+
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        else:
+            self_values = self.__dict__
+            other_values = other.__dict__
+            for i in range(len(self_values)):
+                if not getattr(self_values[i]) == getattr(other_values[i]):
+                    return False
+            return True
 
 @dataclass
 class Configuration_Values:
@@ -22,6 +34,18 @@ class Configuration_Values:
     file_per_cicle: int
     month_name_list: list
     directory_list: list
+
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        else:
+            self_values = self.__dict__
+            other_values = other.__dict__
+            for i in range(len(self_values)):
+                if not getattr(self_values[i]) == getattr(other_values[i]):
+                    return False
+            return True
 
 
     def min_to_seconds(self) -> int:
