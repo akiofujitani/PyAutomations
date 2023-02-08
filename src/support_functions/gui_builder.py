@@ -46,7 +46,7 @@ class EntryPopup(ttk.Entry):
 
 
 class Edit_Values(tkinter.Tk):
-    def __init__(self, values_list=list, key_list=list, edit_title=str, *args, **kwargs) -> None:
+    def __init__(self, parent=ttk.Frame, values_list=list, key_list=list, edit_title=str, values_disabled=list, *args, **kwargs) -> None:
         tkinter.Tk.__init__(self, *args, **kwargs)
         self.values_list = values_list
         self.title(edit_title)
@@ -78,7 +78,7 @@ class Edit_Values(tkinter.Tk):
 
 
 class Edit_Month(tkinter.Tk):
-    def __init__(self, parent=ttk.Notebook, *args, **kwargs) -> None:
+    def __init__(self, parent=ttk.Frame, *args, **kwargs) -> None:
         tkinter.Tk.__init__(self, *args, **kwargs)
         self.parent = parent
         self.title('Edit month description')
