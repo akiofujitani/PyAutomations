@@ -3,7 +3,9 @@ from tkinter import ttk
 import logger as log
 from os.path import normpath
 from time import sleep
+from tkinter import filedialog
 import tkinter.messagebox as msgbox
+
 
 logger = log.logger('gui_builder')
 
@@ -46,11 +48,11 @@ class EntryPopup(ttk.Entry):
 
 
 class Edit_Values(tkinter.Tk):
-    def __init__(self, parent=ttk.Treeview, key_list=list, edit_title=str, values_disabled=list, focus_force=None, *args, **kwargs) -> None:
+    def __init__(self, parent=ttk.Treeview, key_list=list, edit_title=str, values_disabled=None, path_keys=None, focus_force=None, *args, **kwargs) -> None:
         tkinter.Tk.__init__(self, *args, **kwargs)
         self.parent = parent
         self.title(edit_title)
-        self.minsize(width=350, height=30 * (len(key_list) + 1))
+        self.minsize(width=350, height=28 * (len(key_list) + 1))
 
         self.selected_item = self.parent.selection()[0]
         self.record_value = [str(value) for value in self.parent.item(self.selected_item)['values']]
@@ -58,10 +60,20 @@ class Edit_Values(tkinter.Tk):
         for key_index in range(len(key_list)):
             ttk.Label(self, text=key_list[key_index], justify='left').grid(column=0, row=key_index, padx=(5), pady=(5, 0))
             entry = ttk.Entry(self, width=50, justify='center')
-            entry.grid(column=1, row=key_index, sticky='nesw', columnspan=3, padx=(5), pady=(5, 0))
+            entry_column_span = 3
+            if not path_keys == None:
+                if key_list[key_index] in path_keys:
+                    entry_column_span = 2
+                    entry.grid(column=1, row=key_index, sticky='nesw', columnspan=entry_column_span, padx=(5), pady=(5, 0))
+                    browse_button = tkinter.Button(self, text='...', width=3, command=self.__browse_files)
+                    browse_button.grid(column=3, row=key_index, padx=(5), pady=(5, 0))
+            else:
+                entry.grid(column=1, row=key_index, sticky='nesw', columnspan=entry_column_span, padx=(5), pady=(5, 0))
+            entry.grid(column=1, row=key_index, sticky='nesw', columnspan=entry_column_span, padx=(5), pady=(5, 0))
             entry.insert(tkinter.END, str(self.record_value[key_index]))
-            if key_list[key_index] in values_disabled:
-                entry.configure(state='disabled')
+            if not values_disabled == None:
+                if key_list[key_index] in values_disabled:
+                    entry.configure(state='disabled')
             self.entry_dict[key_list[key_index]] = entry
         if focus_force:
             self.entry_dict[focus_force].focus_force()
@@ -71,9 +83,9 @@ class Edit_Values(tkinter.Tk):
         self.bind("<Escape>", lambda *ignore: self.destroy())
 
         cancel_button = tkinter.Button(self, text='Cancel', command=self.__click_button_cancel, width=15)
-        cancel_button.grid(column=2, row=key_index + 1, padx=(5), pady=(5))    
+        cancel_button.grid(column=1, row=key_index + 1, padx=(5), pady=(5))    
         save_button = tkinter.Button(self, text='Save', command=self.__click_button_save, width=15)
-        save_button.grid(column=3, row=key_index + 1, padx=(5), pady=(5))       
+        save_button.grid(column=2, row=key_index + 1, padx=(5), pady=(5))       
         
 
     def __click_button_cancel(self):
@@ -81,13 +93,22 @@ class Edit_Values(tkinter.Tk):
         self.destroy()
     
 
-    def __click_button_save(self):
+    def __click_button_save(self, event):
         logger.debug('Button save')
-        self.record_value[1] = self.parent.selection_get()
-        self.parent.item(self.selected_item, values=self.record_value)
-        logger.debug(f'Button save {self.record_value[1]}')
+        new_record = []
+        for entry in self.entry_dict.values():
+            new_record.append(entry.get())
+        for i in range(len(new_record)):
+            if not self.record_value[i] == new_record[i]:
+                self.parent.item(self.selected_item, values=new_record)
+        logger.debug(f'Button save {new_record[1]}')
         self.destroy()
 
+
+    def __browse_files(self):
+        logger.debug('Browser files')
+        file_path = filedialog.askdirectory(initialdir='/', title='Select the file path')
+        logger.debug('File path')
 
 class Main_Frame(tkinter.Frame):
     def __init__(self, config=file_mover_backup.Configuration_Values, *args, **kwargs) -> None:
@@ -176,7 +197,7 @@ class Main_Frame(tkinter.Frame):
                             'Month Description'], 
                             'Edit month description', 
                             ['Month number'], 
-                            'Month Description')
+                            focus_force='Month Description')
         logger.debug('Double click')
     
 
@@ -187,6 +208,50 @@ class Main_Frame(tkinter.Frame):
         else:
             logger.debug(f'{value} is false')
             return False
+
+
+class File_Settings(tkinter.Frame):
+    def __init__(self, config=file_mover_backup.Configuration_Values, *args, **kwargs) -> None:
+        tkinter.Frame.__init__(self, *args, **kwargs)
+        self.config = config
+        file_manag_column = ('source', 'destin', 'extention', 'wait_days', 'copy')
+        self.file_manag_descri = ('Souce', 'Destination', 'Extention', 'Days to move/copy', 'Make copy')
+        self.file_manag_tree = ttk.Treeview(self, columns=file_manag_column, show='headings')
+        for i in range(len(file_manag_column)):
+            self.file_manag_tree.heading(file_manag_column[i], text=self.file_manag_descri[i])
+            self.file_manag_tree.column(file_manag_column[i], minwidth=10, width=100)
+        for directory_list in self.config.directory_list:
+            self.file_manag_tree.insert('', tkinter.END, values=(tuple(directory_list.__dict__.values())))
+        self.file_manag_tree.bind('<Double-1>', self.__tree_item_edit)
+        self.file_manag_tree.bind("<Return>", self.__tree_item_edit)
+        self.file_manag_tree.grid(column=1, 
+                        row=0, 
+                        columnspan=4,
+                        sticky='nesw', 
+                        padx=(5, 0), 
+                        pady=(5, 0))
+        y_scrollbar = ttk.Scrollbar(self, orient=tkinter.VERTICAL, command=self.file_manag_tree.yview)
+        self.file_manag_tree.configure(yscroll=y_scrollbar.set)
+        y_scrollbar.grid(row=0, 
+                        column=5, 
+                        sticky='ns',
+                        padx=(0, 5),
+                        pady=(5, 0))
+        self.file_manag_tree.columnconfigure(0, weight=1)
+        self.file_manag_tree.rowconfigure(0, weight=1)
+
+    
+    def __tree_item_edit(self, event):
+        try:
+            if self.file_config.state() == 'normal':
+                self.file_config.focus_force()
+        except Exception as error:
+            logger.debug(error)
+            self.file_config = Edit_Values(self.file_manag_tree, 
+                            self.file_manag_descri, 
+                            'Edit file move settings',
+                            path_keys=['Souce', 'Destination'])
+        logger.debug('Double click')
 
 class Edit_Month(tkinter.Tk):
     def __init__(self, parent=ttk.Frame, *args, **kwargs) -> None:
@@ -245,7 +310,7 @@ class Config_Window(tkinter.Tk):
 
         # Tab Main
         tab_main = Main_Frame(self.config)
-        tab_file_settings = ttk.Frame(self.tab_control)
+        tab_file_settings = File_Settings(self.config)
         self.tab_control.add(tab_main, text='Main')
         self.tab_control.add(tab_file_settings, text='File Settings')
         self.tab_control.grid(column=0, 
@@ -258,31 +323,7 @@ class Config_Window(tkinter.Tk):
         # Tab File Settings
         tab_file_settings.columnconfigure(1, weight=1)
         tab_file_settings.rowconfigure(0, weight=1)
-        file_manag_column = ('source', 'destin', 'extention', 'wait_days', 'copy')
-        file_manag_descri = ('Souce', 'Destination', 'Extention', 'Days to move/copy', 'Make copy')
-        self.file_manag_tree = ttk.Treeview(tab_file_settings, columns=file_manag_column, show='headings')
-        for i in range(len(file_manag_column)):
-            self.file_manag_tree.heading(file_manag_column[i], text=file_manag_descri[i])
-            self.file_manag_tree.column(file_manag_column[i], minwidth=10, width=100)
-        for directory_list in self.config.directory_list:
-            self.file_manag_tree.insert('', tkinter.END, values=(tuple(directory_list.__dict__.values())))
-        self.file_manag_tree.bind('<Double-1>', self.__tree_item_edit)
-        self.file_manag_tree.bind("<Return>", self.__tree_item_edit)
-        self.file_manag_tree.grid(column=1, 
-                        row=0, 
-                        columnspan=4,
-                        sticky='nesw', 
-                        padx=(5, 0), 
-                        pady=(5, 0))
-        y_scrollbar = ttk.Scrollbar(tab_file_settings, orient=tkinter.VERTICAL, command=self.file_manag_tree.yview)
-        self.file_manag_tree.configure(yscroll=y_scrollbar.set)
-        y_scrollbar.grid(row=0, 
-                        column=5, 
-                        sticky='ns',
-                        padx=(0, 5),
-                        pady=(5, 0))
-        self.file_manag_tree.columnconfigure(0, weight=1)
-        self.file_manag_tree.rowconfigure(0, weight=1)
+        
 
 
         cancel_button = tkinter.Button(self, text='Cancel', command=self.__click_button_cancel, width=15)
@@ -291,21 +332,6 @@ class Config_Window(tkinter.Tk):
         save_button.grid(column=3, row=1, padx=(5), pady=(0, 5))
         self.protocol('WM_DELETE_WINDOW', self.__on_window_close)
         self.month_edit = None
-
-
-    def __tree_item_edit(self, event):
-        try:
-            if self.month_edit.state() == 'normal':
-                self.month_edit.focus_force()
-        except Exception as error:
-            logger.debug(error)
-            self.month_edit = Edit_Values(self.months_naming_tree, 
-                            ['Month number', 
-                            'Month Description'], 
-                            'Edit month description', 
-                            ['Month number'], 
-                            'Month Description')
-        logger.debug('Double click')
 
 
     def __click_button_cancel(self):
