@@ -22,9 +22,8 @@ class Move_Settings:
             return NotImplemented
         else:
             self_values = self.__dict__
-            other_values = other.__dict__
-            for i in range(len(self_values)):
-                if not getattr(self_values[i]) == getattr(other_values[i]):
+            for key in self_values.keys():
+                if not getattr(self, key) == getattr(other, key):
                     return False
             return True
 
@@ -41,11 +40,14 @@ class Configuration_Values:
             return NotImplemented
         else:
             self_values = self.__dict__
-            other_values = other.__dict__
-            for i in range(len(self_values)):
-                if not getattr(self_values[i]) == getattr(other_values[i]):
+            for key in self_values.keys():
+                if not getattr(self, key) == getattr(other, key):
                     return False
             return True
+
+
+    def directory_list_add(self, move_settings=Move_Settings) -> None:
+        self.directory_list.append(move_settings)
 
 
     def min_to_seconds(self) -> int:

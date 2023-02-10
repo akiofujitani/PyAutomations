@@ -1,10 +1,12 @@
-import tkinter, json_config, file_mover_backup
+import tkinter, json_config
+from file_mover_backup import *
 from tkinter import ttk
 import logger as log
 from os.path import normpath
+from os.path import exists
 from time import sleep
 from tkinter import filedialog
-import tkinter.messagebox as msgbox
+from tkinter import messagebox
 
 
 logger = log.logger('gui_builder')
@@ -47,16 +49,16 @@ class EntryPopup(ttk.Entry):
         return 'break'
 
 
-class Edit_Values(tkinter.Tk):
+class Edit_Values(tkinter.Toplevel):
     def __init__(self, parent=ttk.Treeview, key_list=list, edit_title=str, values_disabled=None, path_keys=None, focus_force=None, *args, **kwargs) -> None:
-        tkinter.Tk.__init__(self, *args, **kwargs)
+        tkinter.Toplevel.__init__(self, *args, **kwargs)
         self.parent = parent
         self.title(edit_title)
-        self.minsize(width=350, height=28 * (len(key_list) + 1))
-
+        self.transient()
         self.selected_item = self.parent.selection()[0]
         self.record_value = [str(value) for value in self.parent.item(self.selected_item)['values']]
         self.entry_dict = {}
+        self.button_dict = {}
         for key_index in range(len(key_list)):
             ttk.Label(self, text=key_list[key_index], justify='left').grid(column=0, row=key_index, padx=(5), pady=(5, 0))
             entry = ttk.Entry(self, width=50, justify='center')
@@ -64,9 +66,11 @@ class Edit_Values(tkinter.Tk):
             if not path_keys == None:
                 if key_list[key_index] in path_keys:
                     entry_column_span = 2
-                    entry.grid(column=1, row=key_index, sticky='nesw', columnspan=entry_column_span, padx=(5), pady=(5, 0))
-                    browse_button = tkinter.Button(self, text='...', width=3, command=self.__browse_files)
-                    browse_button.grid(column=3, row=key_index, padx=(5), pady=(5, 0))
+                    entry.grid(column=1, row=key_index, sticky='nesw', columnspan=entry_column_span, padx=(5, 0), pady=(5, 0))
+                    browse_button = tkinter.Button(self, text='...', width=3)
+                    browse_button.grid(column=3, row=key_index, padx=(0, 5), pady=(5, 0))
+                    self.button_dict[f'{key_list[key_index]}_button'] = browse_button
+                    self.button_dict[f'{key_list[key_index]}_button'].configure(command= lambda info=key_list[key_index]: self.__browse_files(info))
             else:
                 entry.grid(column=1, row=key_index, sticky='nesw', columnspan=entry_column_span, padx=(5), pady=(5, 0))
             entry.grid(column=1, row=key_index, sticky='nesw', columnspan=entry_column_span, padx=(5), pady=(5, 0))
@@ -93,7 +97,7 @@ class Edit_Values(tkinter.Tk):
         self.destroy()
     
 
-    def __click_button_save(self, event):
+    def __click_button_save(self, event=None):
         logger.debug('Button save')
         new_record = []
         for entry in self.entry_dict.values():
@@ -105,13 +109,18 @@ class Edit_Values(tkinter.Tk):
         self.destroy()
 
 
-    def __browse_files(self):
+    def __browse_files(self, button_id=str):
         logger.debug('Browser files')
+        logger.debug(button_id)
         file_path = filedialog.askdirectory(initialdir='/', title='Select the file path')
-        logger.debug('File path')
+        if file_path:
+            self.entry_dict[button_id].delete(0, tkinter.END)
+            self.entry_dict[button_id].insert(tkinter.END, str(normpath(file_path)))
+        self.lift()
+        logger.debug(f'File path {file_path}')
 
 class Main_Frame(tkinter.Frame):
-    def __init__(self, config=file_mover_backup.Configuration_Values, *args, **kwargs) -> None:
+    def __init__(self, config=Configuration_Values, *args, **kwargs) -> None:
         tkinter.Frame.__init__(self, *args, **kwargs)
         self.config = config
         ttk.Label(self, 
@@ -186,6 +195,13 @@ class Main_Frame(tkinter.Frame):
         self.rowconfigure(2, weight=1)
     
 
+    def return_config_updated(self) -> dict:
+        new_config = [int(self.wait_time_entry.get()),
+                            int(self.files_per_cicle.get()),
+                            [self.months_naming_tree.item(value)['values'][1] for value in self.months_naming_tree.get_children()]]
+        return new_config
+    
+
     def __tree_item_edit(self, event):
         try:
             if self.month_edit.state() == 'normal':
@@ -209,11 +225,11 @@ class Main_Frame(tkinter.Frame):
             logger.debug(f'{value} is false')
             return False
 
-
 class File_Settings(tkinter.Frame):
-    def __init__(self, config=file_mover_backup.Configuration_Values, *args, **kwargs) -> None:
+    def __init__(self, config=Configuration_Values, config_path=str, *args, **kwargs) -> None:
         tkinter.Frame.__init__(self, *args, **kwargs)
         self.config = config
+        self.config_path = config_path
         file_manag_column = ('source', 'destin', 'extention', 'wait_days', 'copy')
         self.file_manag_descri = ('Souce', 'Destination', 'Extention', 'Days to move/copy', 'Make copy')
         self.file_manag_tree = ttk.Treeview(self, columns=file_manag_column, show='headings')
@@ -253,53 +269,23 @@ class File_Settings(tkinter.Frame):
                             path_keys=['Souce', 'Destination'])
         logger.debug('Double click')
 
-class Edit_Month(tkinter.Tk):
-    def __init__(self, parent=ttk.Frame, *args, **kwargs) -> None:
-        tkinter.Tk.__init__(self, *args, **kwargs)
-        self.parent = parent
-        self.title('Edit month description')
-        self.minsize(width=350, height=100)
-        logger.debug(parent)
-        self.selected_item = self.parent.selection()[0]
-        self.record_value = [str(value) for value in self.parent.item(self.selected_item)['values']]
 
-        ttk.Label(self, text='Month number', justify='left').grid(column=0, row=0, padx=(5), pady=(5, 0))
-        self.gui_month_num = ttk.Entry(self, width=50, justify='center')
-        self.gui_month_num.grid(column=1, row=0, sticky='nesw', columnspan=3, padx=(5), pady=(5, 0))
-        self.gui_month_num.insert(tkinter.END, self.record_value[0])
-        self.gui_month_num.configure(state='disabled')
-
-        ttk.Label(self, text='Month Description', justify='left').grid(column=0, row=1, padx=(5), pady=(5, 0))
-        self.gui_month_descr = ttk.Entry(self, width=50, justify='center')
-        self.gui_month_descr.grid(column=1, row=1, sticky='nesw', columnspan=3, padx=(5), pady=(5, 0))
-        self.gui_month_descr.insert(tkinter.END, self.record_value[1])
-        self.gui_month_descr.focus_force()
-        self.gui_month_descr.select_clear()
-        self.gui_month_descr.select_range(0, tkinter.END)
-        self.bind("<Return>", self.__click_button_save)
-        self.bind("<Escape>", lambda *ignore: self.destroy())
+    def return_config_updated(self) -> list:
+        move_settings_list = [self.file_manag_tree.item(value)['values'] for value in self.file_manag_tree.get_children()]
+        return move_settings_list
 
 
-        cancel_button = tkinter.Button(self, text='Cancel', command=self.__click_button_cancel, width=15)
-        cancel_button.grid(column=2, row=2, padx=(5), pady=(5))    
-        save_button = tkinter.Button(self, text='Save', command=self.__click_button_save, width=15)
-        save_button.grid(column=3, row=2, padx=(5), pady=(5))          
+    def delete_item(self) -> bool:
+        selected_item = self.file_manag_tree.selection()[0]
+        logger.debug(selected_item)
+        if messagebox.askquestion('Delete', f'Do you really want to delete the item {selected_item}'):
+            self.file_manag_tree.delete(selected_item)
+            return True
+        return False
 
-
-    def __click_button_cancel(self):
-        logger.debug('Button cancel')
-        self.destroy()
-    
-
-    def __click_button_save(self, event):
-        self.record_value[1] = self.gui_month_descr.get()
-        self.parent.item(self.selected_item, values=self.record_value)
-        logger.debug(f'Button save {self.record_value[1]}')
-        self.destroy()
-        return
 
 class Config_Window(tkinter.Tk):
-    def __init__(self, config=file_mover_backup.Configuration_Values, *args, **kwargs) -> None:
+    def __init__(self, config=Configuration_Values, *args, **kwargs) -> None:
         tkinter.Tk.__init__(self, *args, **kwargs)
         self.config = config
         self.title('Configuration')
@@ -309,10 +295,10 @@ class Config_Window(tkinter.Tk):
         self.tab_control = ttk.Notebook(self)
 
         # Tab Main
-        tab_main = Main_Frame(self.config)
-        tab_file_settings = File_Settings(self.config)
-        self.tab_control.add(tab_main, text='Main')
-        self.tab_control.add(tab_file_settings, text='File Settings')
+        self.tab_main = Main_Frame(self.config)
+        self.tab_file_settings = File_Settings(self.config)
+        self.tab_control.add(self.tab_main, text='Main')
+        self.tab_control.add(self.tab_file_settings, text='File Settings')
         self.tab_control.grid(column=0, 
                         row=0, 
                         columnspan=4, 
@@ -321,18 +307,33 @@ class Config_Window(tkinter.Tk):
                         pady=(5, 0))
 
         # Tab File Settings
-        tab_file_settings.columnconfigure(1, weight=1)
-        tab_file_settings.rowconfigure(0, weight=1)
+        self.tab_file_settings.columnconfigure(1, weight=1)
+        self.tab_file_settings.rowconfigure(0, weight=1)
         
-
-
+        self.delete_button = tkinter.Button(self, text='Delete', command=self.__click_button_delete, width=15)
+        self.delete_button.grid(column=1, row=1, padx=(5), pady=(0, 5))
+        self.delete_button.configure(default='disabled')
+        self.delete_button.configure()
         cancel_button = tkinter.Button(self, text='Cancel', command=self.__click_button_cancel, width=15)
         cancel_button.grid(column=2, row=1, padx=(5), pady=(0, 5))    
         save_button = tkinter.Button(self, text='Save', command=self.__click_button_save, width=15)
         save_button.grid(column=3, row=1, padx=(5), pady=(0, 5))
         self.protocol('WM_DELETE_WINDOW', self.__on_window_close)
+        self.tab_control.bind('<<NotebookTabChanged>>', self.__tab_selected)
         self.month_edit = None
 
+
+    def __tab_selected(self, event):
+        if self.tab_control.index(self.tab_control.select()) == 0:
+            self.delete_button.configure(state='disabled')
+        else:
+            self.delete_button.configure(state='normal')
+
+
+    def __click_button_delete(self):
+        logger.debug('Delete button clicked')
+        self.tab_file_settings.delete_item()
+        
 
     def __click_button_cancel(self):
         logger.debug('Cancel click')
@@ -341,20 +342,26 @@ class Config_Window(tkinter.Tk):
 
     def __click_button_save(self):
         logger.debug('Save click')
+        logger.debug('')
+        main_config = self.tab_main.return_config_updated()
+        file_settings = self.tab_file_settings.return_config_updated()
+        new_config = Configuration_Values(int(main_config[0]),
+                int(main_config[1]),
+                main_config[2], 
+                [Move_Settings(normpath(item[0]), 
+                        normpath(item[1]),
+                        item[2],
+                        int(item[3]),
+                        eval(item[4])) for item in file_settings])
+        if not self.config.__eq__(new_config):
+            logger.debug('Not equals')
+            json_config.save_json_config(self.config_path, new_config.__dict__)
+        self.destroy()
 
 
     def __on_window_close(self):
         logger.debug('On close click')
         self.destroy()
-
-
-    def __validade_values(self, value=str):
-        if value.isnumeric() or value == '':
-            logger.debug(f'{value} is true')
-            return True
-        else:
-            logger.debug(f'{value} is false')
-            return False
     
 
 def __load_configuration(config_path=str) -> dict:
@@ -390,10 +397,10 @@ def __load_configuration(config_path=str) -> dict:
             ]
         }"""
         config = json_config.load_json_config(config_path, config_template)
-        return file_mover_backup.Configuration_Values(int(config['wait_time_min']),
+        return Configuration_Values(int(config['wait_time_min']),
                 int(config['files_per_cicle']),
                 config['month_name'], 
-                [file_mover_backup.Move_Settings(normpath(item['source']), 
+                [Move_Settings(normpath(item['source']), 
                         normpath(item['destin']),
                         item['extension'],
                         int(item['days_from_today']),
@@ -406,5 +413,5 @@ def __load_configuration(config_path=str) -> dict:
 
 if __name__ == '__main__':
     config = __load_configuration('file_mover_backup.json')
-    window = Config_Window(config)
+    window = Config_Window(config, 'file_mover_backup.json')
     window.mainloop()
