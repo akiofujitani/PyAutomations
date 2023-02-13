@@ -1,0 +1,67 @@
+import math
+
+
+def direction(side=str, direction_h=int, direction_v=int):
+    match side:
+        case 'R':
+            if direction_h == 0 and direction_v == 1:
+                return 90
+            if direction_h == 0 and direction_v == 2:
+                return 270
+            if direction_h == 1 and direction_v == 0:
+                return 0
+            if direction_h == 2 and direction_v == 0:
+                return 180
+            if direction_h == 1 and direction_v == 1:
+                return 0
+            elif direction_h == 1 and direction_v == 2:
+                return 180
+            elif direction_h == 2 and direction_v == 1:
+                return 90
+            else:
+                return 270
+        case 'L':
+            if direction_h == 0 and direction_v == 1:
+                return 90
+            if direction_h == 0 and direction_v == 2:
+                return 270
+            if direction_h == 1 and direction_v == 0:
+                return 180
+            if direction_h == 2 and direction_v == 0:
+                return 0
+            if direction_h == 0 and direction_v == 2:
+                return 180
+            elif direction_h == 0 and direction_v == 3:
+                return 0
+            elif direction_h == 1 and direction_v == 2:
+                return 90
+            else:
+                return 270
+    
+
+print(f'Direction - LADO "R/L')
+side = input() 
+print('Prism horizontal')
+prism_1 = int(input())
+direction_1 = 0
+if not prism_1 == 0:
+    print(f'Direction (1 - "NASAL", 2 "TEMPORAL")')
+    direction_1 = int(input())
+
+print('Prism vertical')
+prism_2 = int(input())
+direction_2 = 0
+if not prism_2 == 0:
+    print(f'Direction (1, "SUPERIOR", 2 "INFERIOR")')
+    direction_2 = int(input()) 
+
+
+if not direction_1 == 0 and not direction_2 == 0:
+    prism_diop = math.sqrt((prism_1 ** 2) + (prism_2 ** 2))
+    prism_angle = direction(side, direction_1, direction_2) + (math.atan(prism_1/ prism_2) * 180) / math.pi
+else:
+    prism_diop = prism_1 if not direction_1 == 0 else prism_2
+    prism_angle = direction(side, direction_1, direction_2)
+
+print(f'Prisma diopter {prism_diop}\nPrism angle {prism_angle}')
+

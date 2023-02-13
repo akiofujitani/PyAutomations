@@ -52,14 +52,16 @@ if __name__ == '__main__':
     Button = tkinter.Button(window, text='Ok', command=click_button_ok, width=5)
     Button.grid(column=1, row=1)
 
-    Button_2 = tkinter.Button(window, text='Second Button', command=combo_box_get, bg='red', fg='white')
+    Button_2 = tkinter.Button(window, text='Second Button', command=combo_box_get)
     Button_2.grid(column=1, row=2)
+    Button_2.configure(bg='red', fg='white')
 
     # Create combobox
 
     combo_box = tkinter.ttk.Combobox(window, width=10)
     combo_box['values'] = ('banana', 'apple', 'orange', 'strawberry', 'pineapple', 'tomato')
     combo_box.current(5)
+    combo_box.set('strawberry')
     combo_box.grid(column=1, row=3)
 
     # Check button

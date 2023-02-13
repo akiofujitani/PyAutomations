@@ -17,7 +17,7 @@
     ],
     "directory_list": [
         {
-            "source": "//192.168.5.2/Arquivos/LMS/Export/Backup",
+            "source": "//192.168.5.2/Arquivos/LMS/Export",
             "destination": "//192.168.5.8/Arquivo/LMS/HOST_EXPORT",
             "extention": "vca",
             "days_from_today": 0,
