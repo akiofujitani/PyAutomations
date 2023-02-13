@@ -50,7 +50,15 @@ class EntryPopup(ttk.Entry):
 
 
 class Edit_Values(tkinter.Toplevel):
-    def __init__(self, parent=ttk.Treeview, key_list=list, edit_title=str, values_disabled=None, path_keys=None, focus_force=None, *args, **kwargs) -> None:
+    def __init__(self, 
+                    parent=ttk.Treeview, 
+                    key_list=tuple, 
+                    type_list=tuple,
+                    edit_title=str, 
+                    values_disabled=None, 
+                    path_keys=None, 
+                    focus_force=None, 
+                    *args, **kwargs) -> None:
         tkinter.Toplevel.__init__(self, *args, **kwargs)
         self.parent = parent
         self.title(edit_title)
@@ -69,8 +77,8 @@ class Edit_Values(tkinter.Toplevel):
                     entry.grid(column=1, row=key_index, sticky='nesw', columnspan=entry_column_span, padx=(5, 0), pady=(5, 0))
                     browse_button = tkinter.Button(self, text='...', width=3)
                     browse_button.grid(column=3, row=key_index, padx=(0, 5), pady=(5, 0))
-                    self.button_dict[f'{key_list[key_index]}_button'] = browse_button
-                    self.button_dict[f'{key_list[key_index]}_button'].configure(command= lambda info=key_list[key_index]: self.__browse_files(info))
+                    self.button_dict[f'{key_list[key_index]}'] = browse_button
+                    self.button_dict[f'{key_list[key_index]}'].configure(command= lambda info=key_list[key_index]: self.__browse_files(info))
             else:
                 entry.grid(column=1, row=key_index, sticky='nesw', columnspan=entry_column_span, padx=(5), pady=(5, 0))
             entry.grid(column=1, row=key_index, sticky='nesw', columnspan=entry_column_span, padx=(5), pady=(5, 0))
@@ -94,18 +102,34 @@ class Edit_Values(tkinter.Toplevel):
 
     def __click_button_cancel(self):
         logger.debug('Button cancel')
+        if self.__compare_to_empty(''):
+            self.parent.delete(self.selected_item)
         self.destroy()
     
+
+    def __compare_to_empty(self, compare_value=str):
+        for value in self.record_value:
+            if not value == compare_value:
+                return False
+        return True
+
 
     def __click_button_save(self, event=None):
         logger.debug('Button save')
         new_record = []
-        for entry in self.entry_dict.values():
-            new_record.append(entry.get())
+        for entry_key in self.entry_dict.keys():
+            if entry_key in self.button_dict.keys():
+                if not exists(self.entry_dict[entry_key].get()):
+                    messagebox.showerror('Saving error', f'Please, check path {self.entry_dict[entry_key].get()}')
+                    return
+                else:
+                    new_record.append(normpath(self.entry_dict[entry_key].get()))
+            else:
+                new_record.append(self.entry_dict[entry_key].get())
         for i in range(len(new_record)):
             if not self.record_value[i] == new_record[i]:
                 self.parent.item(self.selected_item, values=new_record)
-        logger.debug(f'Button save {new_record[1]}')
+        logger.debug(f'Button save done')
         self.destroy()
 
 
@@ -118,6 +142,7 @@ class Edit_Values(tkinter.Toplevel):
             self.entry_dict[button_id].insert(tkinter.END, str(normpath(file_path)))
         self.lift()
         logger.debug(f'File path {file_path}')
+
 
 class Main_Frame(tkinter.Frame):
     def __init__(self, config=Configuration_Values, *args, **kwargs) -> None:
@@ -190,6 +215,8 @@ class Main_Frame(tkinter.Frame):
                         sticky='ns',
                         padx=(0, 5),
                         pady=(5, 0))
+        self.edit_button = tkinter.Button(self, text='Edit', command=self.__click_button_edit, width=15)
+        self.edit_button.grid(column=2, row=3, padx=(5, 0), pady=(0, 5))
 
         self.columnconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
@@ -200,7 +227,11 @@ class Main_Frame(tkinter.Frame):
                             int(self.files_per_cicle.get()),
                             [self.months_naming_tree.item(value)['values'][1] for value in self.months_naming_tree.get_children()]]
         return new_config
-    
+
+
+    def __click_button_edit(self):
+        self.__tree_item_edit(self)
+
 
     def __tree_item_edit(self, event):
         try:
@@ -208,12 +239,17 @@ class Main_Frame(tkinter.Frame):
                 self.month_edit.focus_force()
         except Exception as error:
             logger.debug(error)
-            self.month_edit = Edit_Values(self.months_naming_tree, 
-                            ['Month number', 
-                            'Month Description'], 
-                            'Edit month description', 
-                            ['Month number'], 
-                            focus_force='Month Description')
+            try:
+                self.months_naming_tree.selection()[0]
+                self.month_edit = Edit_Values(self.months_naming_tree, 
+                                ('Month number', 
+                                'Month Description'),
+                                (int, str), 
+                                'Edit month description', 
+                                ['Month number'], 
+                                focus_force='Month Description')
+            except:
+                messagebox.showerror('Edit error', 'No row is selected')
         logger.debug('Double click')
     
 
@@ -255,6 +291,12 @@ class File_Settings(tkinter.Frame):
                         pady=(5, 0))
         self.file_manag_tree.columnconfigure(0, weight=1)
         self.file_manag_tree.rowconfigure(0, weight=1)
+        self.add_button = tkinter.Button(self, text='Add', command=self.__click_button_add, width=15)
+        self.add_button.grid(column=2, row=1, padx=(5, 0), pady=(0,5))
+        self.edit_button = tkinter.Button(self, text='Edit', command=self.__click_button_edit, width=15)
+        self.edit_button.grid(column=3, row=1, padx=(0), pady=(0, 5))
+        self.delete_button = tkinter.Button(self, text='Delete', command=self.__click_button_delete, width=15)
+        self.delete_button.grid(column=4, row=1, padx=(0), pady=(0, 5))
 
     
     def __tree_item_edit(self, event):
@@ -263,10 +305,15 @@ class File_Settings(tkinter.Frame):
                 self.file_config.focus_force()
         except Exception as error:
             logger.debug(error)
-            self.file_config = Edit_Values(self.file_manag_tree, 
-                            self.file_manag_descri, 
-                            'Edit file move settings',
-                            path_keys=['Souce', 'Destination'])
+            try:
+                self.file_manag_tree.selection()[0]
+                self.file_config = Edit_Values(self.file_manag_tree, 
+                                self.file_manag_descri,
+                                (str, str, str, int, bool),
+                                'Edit file move settings',
+                                path_keys=['Souce', 'Destination'])
+            except:
+                messagebox.showerror('Edit error', 'No row is selected')
         logger.debug('Double click')
 
 
@@ -275,19 +322,40 @@ class File_Settings(tkinter.Frame):
         return move_settings_list
 
 
-    def delete_item(self) -> bool:
-        selected_item = self.file_manag_tree.selection()[0]
-        logger.debug(selected_item)
-        if messagebox.askquestion('Delete', f'Do you really want to delete the item {selected_item}'):
-            self.file_manag_tree.delete(selected_item)
-            return True
-        return False
+    def __click_button_add(self):
+        empty_values = []
+        for _ in range(len(self.file_manag_descri)):
+            empty_values.append('')
+        self.file_manag_tree.insert('', tkinter.END, values=(tuple(empty_values)))
+        children_list = self.file_manag_tree.get_children()
+        self.file_manag_tree.selection_set(children_list[-1])
+        self.__tree_item_edit(None)
 
+
+    def __click_button_edit(self):
+        self.__tree_item_edit(self)
+
+
+    def __click_button_delete(self) -> bool:
+        try:
+            selected_item = self.file_manag_tree.selection()[0]
+            logger.debug(selected_item)
+            if messagebox.askquestion('Delete', f'Do you really want to delete the item {selected_item}'):
+                self.file_manag_tree.delete(selected_item)
+                return True
+            return False
+        except:
+            messagebox.showerror('Edit error', 'No row is selected')
+
+
+    def add_item(self) -> None:
+        pass
 
 class Config_Window(tkinter.Tk):
-    def __init__(self, config=Configuration_Values, *args, **kwargs) -> None:
+    def __init__(self, config=Configuration_Values, config_path=str, *args, **kwargs) -> None:
         tkinter.Tk.__init__(self, *args, **kwargs)
         self.config = config
+        self.config_path = config_path
         self.title('Configuration')
         self.minsize(width=400, height=300)
         self.rowconfigure(0, weight=1)
@@ -301,7 +369,7 @@ class Config_Window(tkinter.Tk):
         self.tab_control.add(self.tab_file_settings, text='File Settings')
         self.tab_control.grid(column=0, 
                         row=0, 
-                        columnspan=4, 
+                        columnspan=6, 
                         sticky='nesw', 
                         padx=(5, 0), 
                         pady=(5, 0))
@@ -310,29 +378,12 @@ class Config_Window(tkinter.Tk):
         self.tab_file_settings.columnconfigure(1, weight=1)
         self.tab_file_settings.rowconfigure(0, weight=1)
         
-        self.delete_button = tkinter.Button(self, text='Delete', command=self.__click_button_delete, width=15)
-        self.delete_button.grid(column=1, row=1, padx=(5), pady=(0, 5))
-        self.delete_button.configure(default='disabled')
-        self.delete_button.configure()
         cancel_button = tkinter.Button(self, text='Cancel', command=self.__click_button_cancel, width=15)
-        cancel_button.grid(column=2, row=1, padx=(5), pady=(0, 5))    
+        cancel_button.grid(column=4, row=1, padx=(5), pady=(0, 5))    
         save_button = tkinter.Button(self, text='Save', command=self.__click_button_save, width=15)
-        save_button.grid(column=3, row=1, padx=(5), pady=(0, 5))
+        save_button.grid(column=5, row=1, padx=(5), pady=(0, 5))
         self.protocol('WM_DELETE_WINDOW', self.__on_window_close)
-        self.tab_control.bind('<<NotebookTabChanged>>', self.__tab_selected)
         self.month_edit = None
-
-
-    def __tab_selected(self, event):
-        if self.tab_control.index(self.tab_control.select()) == 0:
-            self.delete_button.configure(state='disabled')
-        else:
-            self.delete_button.configure(state='normal')
-
-
-    def __click_button_delete(self):
-        logger.debug('Delete button clicked')
-        self.tab_file_settings.delete_item()
         
 
     def __click_button_cancel(self):
@@ -355,7 +406,7 @@ class Config_Window(tkinter.Tk):
                         eval(item[4])) for item in file_settings])
         if not self.config.__eq__(new_config):
             logger.debug('Not equals')
-            json_config.save_json_config(self.config_path, new_config.__dict__)
+            json_config.save_json_config(self.config_path, new_config.convert_to_dict())
         self.destroy()
 
 
@@ -370,9 +421,9 @@ def __load_configuration(config_path=str) -> dict:
     '''
     try:
         config_template = """{
-        "wait_time_min" : 15,
+        "wait_time" : 15,
         "files_per_cicle" : 1500,
-        "month_name" : [
+        "month_name_list" : [
             "01 January",
             "02 February",
             "03 March",
@@ -389,22 +440,22 @@ def __load_configuration(config_path=str) -> dict:
             "directory_list" : [
                 {
                     "source" : "./Source",
-                    "destin" : "./Destin",
-                    "extension" : "",
+                    "destination" : "./Destin",
+                    "extention" : "",
                     "days_from_today" : 0,
                     "copy" : "False"
                 }
             ]
         }"""
         config = json_config.load_json_config(config_path, config_template)
-        return Configuration_Values(int(config['wait_time_min']),
+        return Configuration_Values(int(config['wait_time']),
                 int(config['files_per_cicle']),
-                config['month_name'], 
+                config['month_name_list'], 
                 [Move_Settings(normpath(item['source']), 
-                        normpath(item['destin']),
-                        item['extension'],
+                        normpath(item['destination']),
+                        item['extention'],
                         int(item['days_from_today']),
-                        eval(item['copy'])) for item in config['directory_list']])
+                        eval(str(item['copy']))) for item in config['directory_list']])
     except Exception as error:
         logger.critical(f'Error loading configuration file. {error}')
         sleep(3)
@@ -413,5 +464,7 @@ def __load_configuration(config_path=str) -> dict:
 
 if __name__ == '__main__':
     config = __load_configuration('file_mover_backup.json')
+
+    logger.debug(type(config.directory_list[0]))
     window = Config_Window(config, 'file_mover_backup.json')
     window.mainloop()

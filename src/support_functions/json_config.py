@@ -19,7 +19,7 @@ def load_json_config(config_file=str, template_data=None) -> dict:
 
 
 def save_json_config(config_file=str, json_config=dict) -> None:
-    with open(config_file) as json_file:
+    with open(config_file, 'w') as json_file:
         json.dump(json_config, json_file, indent=4)
     return
 

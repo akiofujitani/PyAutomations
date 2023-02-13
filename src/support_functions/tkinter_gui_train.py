@@ -10,7 +10,7 @@ if __name__ == '__main__':
     window = tkinter.Tk()
 
     window.title('Test fuck the name')
-    window.geometry('500x400')
+    window.geometry('700x400')
 
     #Create label with text
 
@@ -74,6 +74,7 @@ if __name__ == '__main__':
     # Radio Button
 
     radio_selected = tkinter.IntVar()
+    radio_selected.set(2)
 
     def radio_clicked():
         print(radio_selected.get() + 1)
@@ -83,6 +84,20 @@ if __name__ == '__main__':
         radio_button[f'radio_{i}'] = tkinter.ttk.Radiobutton(window, text=f'Radio {i + 1}', value=i, variable=radio_selected, command=radio_clicked)
         radio_button[f'radio_{i}'].grid(column=2, row=i)
 
+
+    radio_bool = tkinter.BooleanVar()
+    radio_bool.set(False)
+
+    def radio_bool_clicked():
+        print(radio_bool.get())
+    
+    boolean_name = ('True', 'False')
+    radio_bool_button = {}
+    for i in range(len(boolean_name)):
+        radio_bool_button[i] = tkinter.ttk.Radiobutton(window, text=boolean_name[i], value=eval(boolean_name[i]), variable=radio_bool, command=radio_bool_clicked)
+        radio_bool_button[i].grid(column=3, row=i)
+    
+
     # ScrolledText
 
     scroll_text = tkinter.scrolledtext.ScrolledText(window, width=40, height=15)
@@ -91,9 +106,13 @@ if __name__ == '__main__':
     scroll_text.delete(1.0, tkinter.END) # clear scroll text field contents.
 
 
-    list_box = tkinter.ttk.Treeview(window, columns=('Lang', 'Status', 'Like'))
-    list_box.insert('', iid=0, index=1, values=['Pearl', 'No', 'No'])
-    list_box.grid(column=1, row=6, columnspan=2)
+    list_box = tkinter.ttk.Treeview(window, columns=('lang', 'status', 'like'), show='headings')
+    list_box.heading('lang', text='Language')
+    list_box.heading('status', text='Status')
+    list_box.heading('like', text='Like')
+    list_box.insert('', tkinter.END, values=('Pearl', 'No', 'No'))
+    list_box.grid(column=0, row=6, columnspan=3)
+
     # Message box
 
     import tkinter.messagebox

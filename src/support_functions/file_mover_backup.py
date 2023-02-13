@@ -26,6 +26,16 @@ class Move_Settings:
                 if not getattr(self, key) == getattr(other, key):
                     return False
             return True
+    
+
+    def convert_to_dict(self) -> dict:
+        values_dict = {}
+        values_dict['source'] = self.source.replace('\\', '/')
+        values_dict['destination'] = self.destination.replace('\\', '/')
+        values_dict['extention'] = self.extention
+        values_dict['days_from_today'] = self.days_from_today
+        values_dict['copy'] = self.copy
+        return values_dict
 
 @dataclass
 class Configuration_Values:
@@ -44,6 +54,15 @@ class Configuration_Values:
                 if not getattr(self, key) == getattr(other, key):
                     return False
             return True
+    
+
+    def convert_to_dict(self) -> dict:
+        values_dict = {}
+        values_dict['wait_time'] = self.wait_time
+        values_dict['files_per_cicle'] = self.file_per_cicle
+        values_dict['month_name_list'] = self.month_name_list
+        values_dict['directory_list'] = [directory_value.convert_to_dict() for directory_value in self.directory_list]
+        return values_dict
 
 
     def directory_list_add(self, move_settings=Move_Settings) -> None:
@@ -116,7 +135,7 @@ def __load_configuration(config_path=str) -> dict:
     '''
     try:
         config_template = """{
-        "wait_time_min" : 15,
+        "wait_time" : 15,
         "files_per_cicle" : 1500,
         "month_name" : [
             "01 January",
@@ -138,7 +157,7 @@ def __load_configuration(config_path=str) -> dict:
                     "destin" : "./Destin",
                     "extension" : "",
                     "days_from_today" : 0,
-                    "copy" : "False"
+                    "copy" : False
                 }
             ]
         }"""
