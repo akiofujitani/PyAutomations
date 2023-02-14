@@ -3,7 +3,7 @@
     "log_format": "[%(asctime)s -%(levelname)s] %(name)s - %(message)s",
     "logger_level": 10,
     "console_level": 10,
-    "gui_level" : 20,
+    "gui_level" : 10,
     "file_level": 20,
     "path": "Log/",
     "log_name": "Log_",

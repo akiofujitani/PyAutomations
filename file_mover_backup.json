@@ -23,6 +23,38 @@
             "days_from_today": 0,
             "copy": false,
             "path_organization": "Daily"
+        },
+        {
+            "source": "//192.168.5.2/Arquivos/LMS/Import/Backup",
+            "destination": "//192.168.5.8/Arquivo/LMS/HOST_IMPORT",
+            "extention": "vca",
+            "days_from_today": 0,
+            "copy": false,
+            "path_organization": "Daily"
+        },
+        {
+            "source": "//192.168.5.2/Arquivos/LMS/Production/Backup",
+            "destination": "//192.168.5.8/Arquivo/LMS/PRODUCTION",
+            "extention": "",
+            "days_from_today": 0,
+            "copy": false,
+            "path_organization": "Daily"
+        },
+        {
+            "source": "//192.168.5.2/Arquivos/LMS/VOLPE_EXPORT/Backup",
+            "destination": "//192.168.5.8/Arquivo/LMS/VOLPE_HOST_EXPORT",
+            "extention": "vca",
+            "days_from_today": 0,
+            "copy": false,
+            "path_organization": "Daily"
+        },
+        {
+            "source": "//192.168.5.2/Arquivos/LMS/VOLPE_IMPORT/Backup",
+            "destination": "//192.168.5.8/Arquivo/LMS/VOLPE_HOST_IMPORT",
+            "extention": "vca",
+            "days_from_today": 0,
+            "copy": false,
+            "path_organization": "Daily"
         }
     ]
 }

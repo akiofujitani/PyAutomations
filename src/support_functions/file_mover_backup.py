@@ -9,8 +9,37 @@ from tkinter import filedialog
 from tkinter import ttk
 
 
-
 logger = log.logger('file_mover_backup')
+
+config_template = """{
+"wait_time" : 15,
+"files_per_cicle" : 1500,
+"month_name_list" : [
+    "01 January",
+    "02 February",
+    "03 March",
+    "04 April",
+    "05 May",
+    "06 June",
+    "07 July",
+    "08 August",
+    "09 September",
+    "10 October",
+    "11 November",
+    "12 December"
+    ],
+    "directory_list" : [
+        {
+            "source" : "./Source",
+            "destination" : "./Destin",
+            "extention" : "",
+            "days_from_today" : 0,
+            "copy" : "False"
+            "path_organization" : "Daily"
+        }
+    ]
+}"""
+
 
 @dataclass
 class Move_Settings:
@@ -32,6 +61,20 @@ class Move_Settings:
                     return False
             return True
     
+
+    @classmethod
+    def check_type_insertion(cls, source=str, destination=str, extention=str, days_from_today=int, copy=bool, path_organization=str):
+        try:
+            source = normpath(abspath(str(source)))
+            destination = normpath(abspath(str(destination)))
+            extention = str(extention)
+            days_from_today = int(days_from_today)
+            copy = eval(str(copy))
+            path_organization = str(path_organization)
+            return cls(source, destination, extention, days_from_today, copy, path_organization)
+        except Exception as error:
+            raise error
+
 
     def convert_to_dict(self) -> dict:
         values_dict = {}
@@ -61,6 +104,24 @@ class Configuration_Values:
                     return False
             return True
     
+
+    @classmethod
+    def check_type_insertion(cls, config_file_path=str, template=str):
+        try:
+            config = json_config.load_json_config(config_file_path, template)
+            wait_time = int(config['wait_time'])
+            files_per_cicle = int(config['files_per_cicle'])
+            month_name_list = list(config['month_name_list'])
+            directory_list = [Move_Settings.check_type_insertion(item['source'],
+                            item['destination'],
+                            item['extention'],
+                            item['days_from_today'],
+                            item['copy'],
+                            item['path_organization']) for item in config['directory_list']]
+            return cls(wait_time, files_per_cicle, month_name_list, directory_list)
+        except Exception as error:
+            raise error
+
 
     def convert_to_dict(self) -> dict:
         values_dict = {}
@@ -172,7 +233,6 @@ class Edit_Values(tkinter.Toplevel):
 
     def __click_button_save(self, event=None):
         logger.debug('Button save')
-
         new_record = []
         diff_found = False        
         entry_dict_keys = list(self.entry_dict.keys())
@@ -319,7 +379,7 @@ class Main_Frame(tkinter.Frame):
             if self.month_edit.state() == 'normal':
                 self.month_edit.focus_force()
         except Exception as error:
-            logger.debug(error)
+            logger.info(error)
             try:
                 self.months_naming_tree.selection()[0]
                 self.month_edit = Edit_Values(self.months_naming_tree, 
@@ -399,11 +459,13 @@ class File_Settings(tkinter.Frame):
 
 
     def return_config_updated(self) -> list:
+        logger.debug('Return configuration values for file settings')
         move_settings_list = [self.file_manag_tree.item(value)['values'] for value in self.file_manag_tree.get_children()]
         return move_settings_list
 
 
     def __click_button_add(self):
+        logger.debug('Click button add')
         empty_values = []
         for _ in range(len(self.file_manag_descri)):
             empty_values.append('')
@@ -414,6 +476,7 @@ class File_Settings(tkinter.Frame):
 
 
     def __click_button_edit(self):
+        logger.debug('Click button edit')
         self.__tree_item_edit(self)
 
 
@@ -443,7 +506,7 @@ class Config_Window(tkinter.Toplevel):
         self.columnconfigure(0, weight=1)
         self.tab_control = ttk.Notebook(self)
 
-        # Tab Main
+        # Tabs 
         self.tab_main = Main_Frame(self.config, master=self.tab_control)
         self.tab_file_settings = File_Settings(self.config, master=self.tab_control)
         self.tab_control.add(self.tab_main, text='Main')
@@ -455,10 +518,11 @@ class Config_Window(tkinter.Toplevel):
                         padx=(5, 0), 
                         pady=(5, 0))
 
-        # Tab File Settings
         self.tab_file_settings.columnconfigure(1, weight=1)
         self.tab_file_settings.rowconfigure(0, weight=1)
         
+        # Buttons
+
         cancel_button = tkinter.Button(self, text='Cancel', command=self.__click_button_cancel, width=15)
         cancel_button.grid(column=4, row=1, padx=(5), pady=(0, 5))    
         save_button = tkinter.Button(self, text='Save', command=self.__click_button_save, width=15)
@@ -474,7 +538,6 @@ class Config_Window(tkinter.Toplevel):
 
     def __click_button_save(self):
         logger.debug('Save click')
-        logger.debug('')
         main_config = self.tab_main.return_config_updated()
         file_settings = self.tab_file_settings.return_config_updated()
         new_config = Configuration_Values(int(main_config[0]),
@@ -488,19 +551,23 @@ class Config_Window(tkinter.Toplevel):
                         item[5]) for item in file_settings])
         if not self.config.__eq__(new_config):
             logger.debug('Not equals')
-            json_config.save_json_config(self.config_path, new_config.convert_to_dict())
+            try:
+                json_config.save_json_config(self.config_path, new_config.convert_to_dict())
+                logger.info(f'New config saved to {self.config_path}')
+            except Exception as error:
+                messagebox.showerror('Configuration save', 'Error saving configuration')
+                logger.error(error)
         self.destroy()
 
 
     def __on_window_close(self):
-        logger.debug('On close click')
+        logger.debug('Window close click')
         self.destroy()
 
 class Main_App(tkinter.Tk):
-    def __init__(self, title=str, config=Configuration_Values, config_file_name=str, *args, **kwargs) -> None:
+    def __init__(self, title=str, config_file_name=str, *args, **kwargs) -> None:
         tkinter.Tk.__init__(self, *args, **kwargs)
         self.title(title)
-        self.config = config
         self.config_file_name = config_file_name
         self.minsize(width=500, height=500)
         self.grid_rowconfigure(0, minsize=40)
@@ -540,8 +607,13 @@ class Main_App(tkinter.Tk):
 
     def __click_button_config(self):
         logger.debug('Button config clicked')
-        event.set()
-        Config_Window(self.config, self.config_file_name)
+        try:
+            if self.config_window.state() == 'normal':
+                self.config_window.focus_force()
+        except Exception as error:
+            logger.info(error)
+            event.set()
+            self.config_window = Config_Window(Configuration_Values.check_type_insertion(self.config_file_name), self.config_file_name)
 
 
     def __on_window_close(self):
@@ -552,57 +624,9 @@ class Main_App(tkinter.Tk):
             sys.exit()
 
 
-def __load_configuration(config_path=str) -> dict:
-    '''
-    Load configuration from .json file. If json file do not exists it will be created using the template values.
-    '''
-    try:
-        config_template = """{
-        "wait_time" : 15,
-        "files_per_cicle" : 1500,
-        "month_name_list" : [
-            "01 January",
-            "02 February",
-            "03 March",
-            "04 April",
-            "05 May",
-            "06 June",
-            "07 July",
-            "08 August",
-            "09 September",
-            "10 October",
-            "11 November",
-            "12 December"
-            ],
-            "directory_list" : [
-                {
-                    "source" : "./Source",
-                    "destination" : "./Destin",
-                    "extention" : "",
-                    "days_from_today" : 0,
-                    "copy" : "False"
-                    "path_organization" : "Daily"
-                }
-            ]
-        }"""
-        config = json_config.load_json_config(config_path, config_template)
-        return Configuration_Values(int(config['wait_time']),
-                int(config['files_per_cicle']),
-                config['month_name_list'], 
-                [Move_Settings(normpath(abspath(item['source'])), 
-                        normpath(abspath(item['destination'])),
-                        item['extention'],
-                        int(item['days_from_today']),
-                        eval(str(item['copy'])),
-                        item['path_organization']) for item in config['directory_list']])
-    except Exception as error:
-        logger.critical(f'Error loading configuration file. {error}')
-        sleep(3)
-        quit()
-
-
 def main(event=threading.Event):
-    config = __load_configuration('file_mover_backup.json')
+    config = Configuration_Values.check_type_insertion('file_mover_backup.json', config_template)
+    path_type = {'Yealy' : 1, 'Monthly' : 2, 'Daily' : 3}
 
     while True:
         if len(config.directory_list) > 0:
@@ -611,6 +635,7 @@ def main(event=threading.Event):
                     if event.is_set():
                         raise ThreadEventException('Event set')
                     logger.info(f'Listing files from {move_settings.source}')
+                    path_organization = path_type[move_settings.path_organization]
                     file_list = file_handler.listFilesInDirSubDir(move_settings.source, move_settings.extention)
                     if len(file_list) > 0:
                         logger.info(f'Starting moving files')
@@ -618,7 +643,11 @@ def main(event=threading.Event):
                         for file in file_list:
                             file_last_modification = file_handler.fileCreationDate(file)
                             if datetime.datetime.today().date() - datetime.timedelta(days=move_settings.days_from_today) > file_last_modification:
-                                file_destination = f'{move_settings.destination}/{file_last_modification.year}/{config.month_name_list[int(file_last_modification.month) - 1]}/{"{:02d}".format(file_last_modification.day)}'
+                                file_date_tuple = (file_last_modification.year, config.month_name_list[int(file_last_modification.month) - 1], "{:02d}".format(file_last_modification.day))     
+                                path_date = ''
+                                for i in range(path_organization):
+                                    path_date = f'{path_date}/{file_date_tuple[i]}'
+                                file_destination = f'{move_settings.destination}{path_date}'
                                 file_destination_path = normpath(file_destination)
                                 source_path, file_name = path_split(abspath(file))
                                 file_handler.file_move_copy(source_path, file_destination_path, file_name, move_settings.copy, True)
@@ -649,7 +678,7 @@ def main(event=threading.Event):
 
 
 if __name__ == '__main__':
-    window = Main_App('File Mover Backup', __load_configuration('file_mover_backup.json'), 'file_mover_backup.json')
+    window = Main_App('File Mover Backup', 'file_mover_backup.json')
     event = threading.Event()
     thread = threading.Thread(target=main, args=(event, ), daemon=True, name='File_Mover')
     thread.start()
