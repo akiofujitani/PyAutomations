@@ -120,18 +120,3 @@
 # # run the app
 # root.mainloop()
 
-
-seconds = 5000
-
-while seconds > 0:
-    if int(seconds / 3600) >= 0 and seconds % 3600 == 0:
-        print('More than a hour')
-    if int(seconds / 1800) >= 1 and seconds < 3600 and seconds % 1800 == 0:
-        print('More than 30 minutes')
-    if int(seconds / 900) >= 1 and seconds < 1800 and seconds % 900 == 0:
-        print('More than 15 minutes')
-    if int(seconds / 60) >= 1 and seconds < 900 and seconds % 60 == 0:
-        print(f'{int(seconds / 60)} minutes')
-    if seconds < 60:
-        print(seconds)
-    seconds -= 1

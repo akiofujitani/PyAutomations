@@ -24,17 +24,13 @@ config_template = """{
                 "source" : "C:/LMS/HOST_EXPORT/VCA/read",
                 "destination" : "C:/LMS/HOST_EXPORT/VCA/NOVO_LMS",
                 "extension" : "vca",
-                "days_from_today" : 0,
                 "copy" : "True",
-                "path_organization": "Daily"
             },
             {
                 "source" : "C:/LMS/HOST_EXPORT/VCA/read",
                 "destination" : "C:/LMS/HOST_EXPORT/VCA/MID_READ",
                 "extension" : "vca",
-                "days_from_today" : 0,
                 "copy" : "False",
-                "path_organization" : "Daily"
             }
     ]
 }"""
