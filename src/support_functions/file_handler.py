@@ -1,7 +1,8 @@
-import csv, os, shutil, datetime, time, chardet, logger
+import csv, os, shutil, datetime, time, chardet, logging
+import logger as log
 from ntpath import join
 
-logger = logger.logger('file_handler')
+logger = logging.getLogger('file_handler')
 
 
 def file_list(path=str, file_extention=str) -> list:
@@ -141,7 +142,8 @@ def file_move_copy(path_from, path_to, file_name, copy=bool, overwrite=False):
         path_from = os.path.normpath(path_from)
         path_to = os.path.normpath(path_to)
         move_copy = 'copied' if copy == True else 'moved'
-        logger.debug(f'From {path_from} \nto {path_to} \nfile {file_name} {move_copy}')
+        logger.debug(f'From {path_from} to {path_to}')
+        logger.debug(f'File {file_name} {move_copy}')
         check_create_dir(path_to)
         new_file_name = __file_name_check(path_to, file_name) if overwrite is False else file_name
         if copy == True:

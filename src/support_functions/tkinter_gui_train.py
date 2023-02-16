@@ -1,6 +1,9 @@
 import tkinter
 import tkinter.ttk
 import tkinter.scrolledtext
+import pystray
+from PIL import Image
+from os.path import abspath
 
 
 
@@ -12,8 +15,45 @@ if __name__ == '__main__':
     window.title('Test fuck the name')
     window.geometry('700x400')
 
-    #Create label with text
 
+    def new_command():
+        print('Menu New clicked')
+
+
+    def open_command():
+            print('Menu New clicked')
+    
+
+    def save_command():
+        print('Menu New clicked')
+
+
+    def help_index_command():
+        print('Menu New clicked')
+
+
+    def about_command():
+        print('Menu New clicked')
+
+
+    menu_bar = tkinter.Menu(window)
+    file_menu = tkinter.Menu(menu_bar, tearoff=0)
+    file_menu.add_command(label='New', command=new_command)
+    file_menu.add_command(label='Open', command=open_command)
+    file_menu.add_command(label='Save', command=save_command)
+    file_menu.add_separator()
+    file_menu.add_command(label='Exit', command=window.quit)
+    menu_bar.add_cascade(label='File', menu=file_menu)
+
+    help_menu = tkinter.Menu(menu_bar, tearoff=0)
+    help_menu.add_command(label='Help Index', command=help_index_command)
+    help_menu.add_command(label='About', command=about_command)
+    menu_bar.add_cascade(label='Help', menu=help_menu)
+
+
+    window.config(menu=menu_bar)
+
+    #Create label with text
     label = tkinter.Label(window, text='Please enter your name and click in the Button OK', font=('Arial', 10))
     label.grid(column=0, row=0)
 
@@ -131,6 +171,27 @@ if __name__ == '__main__':
     msgbox_button = tkinter.Button(window, text='Msgbox', command=msgbox_click)
     msgbox_button.grid(column=2, row=5)
     
+
+    def quit_window(tray_icon):
+        tray_icon.stop()
+        window.destroy()
+    
+
+    def show_window(tray_icon):
+        tray_icon.stop()
+        window.after(150, window.deiconify)
+
+
+    def __hide_window_to_tray():
+        window.withdraw()
+        icon_image = Image.open(abspath('./Icon/tiger.ico'))
+        tray_menu = (pystray.MenuItem('Quit', lambda: quit_window), pystray.MenuItem('Show', lambda: show_window))
+        tray_icon = pystray.Icon('Tkinter GUI', icon_image, 'System tray icon', tray_menu)
+        tray_icon.run()
+
+
+    hide_window_button = tkinter.Button(window, text='Hide window', width= 10, command=__hide_window_to_tray).grid(column=1, row=7)
+    window.protocol('WM_DELETE_WINDOW', __hide_window_to_tray)
 
     # Run GUI
 

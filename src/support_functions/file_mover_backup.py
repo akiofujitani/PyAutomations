@@ -1,5 +1,5 @@
 from time import sleep
-import file_handler, json_config, datetime, tkinter, threading, sys
+import file_handler, json_config, datetime, tkinter, threading, pystray, logging
 import logger as log
 from dataclasses import dataclass
 from os.path import normpath, abspath, exists
@@ -7,9 +7,12 @@ from os.path import split as path_split
 from tkinter import messagebox
 from tkinter import filedialog
 from tkinter import ttk
+from PIL import Image
+from queue import Queue
 
 
-logger = log.logger('file_mover_backup')
+logger = logging.getLogger('file_mover_backup')
+
 
 config_template = """{
 "wait_time" : 15,
@@ -576,6 +579,20 @@ class Main_App(tkinter.Tk):
         self.grid_columnconfigure(2, weight=1, minsize=50)
         self.grid_columnconfigure(3, weight=0, minsize=50)
 
+        menu_bar = tkinter.Menu(self)
+        file_menu = tkinter.Menu(menu_bar, tearoff=0)
+        file_menu.add_command(label='Start   ', command=self.__click_button_start)
+        file_menu.add_command(label='Stop    ', command=self.__click_button_stop)        
+        file_menu.add_separator()
+        file_menu.add_command(label='Exit   ', command=self.__quit_window)
+        menu_bar.add_cascade(label='File   ', menu=file_menu)
+
+        help_menu = tkinter.Menu(menu_bar, tearoff=0)
+        help_menu.add_command(label='About   ', command=self.__about_command)
+        menu_bar.add_cascade(label='Help   ', menu=help_menu)
+
+        self.config(menu=menu_bar)
+
         start_button = tkinter.Button(self, text='Start', command=self.__click_button_start, width=25)
         start_button.grid(column=0, row=0, padx=(3), pady=(3), sticky='nesw')
 
@@ -584,12 +601,39 @@ class Main_App(tkinter.Tk):
 
         config_button = tkinter.Button(self, text='Configuration', command=self.__click_button_config, width=25)
         config_button.grid(column=3, row=0, padx=(3), pady=(3), sticky='nesw')
-
-        scrolled_text = tkinter.scrolledtext.ScrolledText(self, state='disabled')
-        scrolled_text.configure(wrap=tkinter.WORD, font=('Arial', 9))
-        scrolled_text.grid(column=0, row=1, columnspan=4, sticky='nesw', padx=(3), pady=(3))
-        logger.addHanlder(log.TextHandler(scrolled_text))
+        self.log_queue = Queue()
+        self.scrolled_text = tkinter.scrolledtext.ScrolledText(self, state='disabled')
+        self.scrolled_text.configure(wrap=tkinter.WORD, font=('Arial', 9))
+        self.scrolled_text.grid(column=0, row=1, columnspan=4, sticky='nesw', padx=(3), pady=(3))
+        logger.addHandler(log.LogQueuer(self.log_queue))
         self.protocol('WM_DELETE_WINDOW', self.__on_window_close)
+        self.after(100, self.__pull_log_queue)
+
+        # Set tray icon values
+        icon_image = Image.open('./Icon/tiger.ico')
+        tray_menu = (pystray.MenuItem('Open', self.__show_window), pystray.MenuItem('Quit', self.__quit_window))
+        self.tray_icon = pystray.Icon('Tkinter GUI', icon_image, 'File Mover Backup', tray_menu)
+
+
+    def __display(self, message):
+        self.scrolled_text.configure(state='normal')
+        line_count = int(float(self.scrolled_text.index('end')))
+        if line_count > 300:
+            self.scrolled_text.delete('1.0', str("{:0.1f}".format(line_count - 299)))
+        self.scrolled_text.insert(tkinter.END, f'{message}\n')
+        self.scrolled_text.configure(state='disabled')
+        self.scrolled_text.yview(tkinter.END)
+
+
+    def __about_command(event_value):
+        logger.info('About clicked')
+
+
+    def __pull_log_queue(self):
+        while not self.log_queue.empty():
+            message = self.log_queue.get(block=False)
+            self.__display(message)
+        self.after(100, self.__pull_log_queue)
 
 
     def __click_button_start(self):
@@ -617,11 +661,30 @@ class Main_App(tkinter.Tk):
 
 
     def __on_window_close(self):
+        self.__hide_window_to_tray()
+
+
+    def __quit_window(self):
         if messagebox.askokcancel('Quit', 'Do you want to quit?'):
             event.set()
             logger.info('Forcing kill thread if it is open')
+            try:
+                self.tray_icon.stop()
+            except:
+                logger.warning('Tray icon is not started')
+            self.after(150, self.deiconify)
             self.destroy()
-            sys.exit()
+    
+
+    def __show_window(self):
+        self.tray_icon.stop()
+        self.after(150, self.deiconify)
+
+
+    def __hide_window_to_tray(self):
+        logger.debug('Run tray icon')
+        self.withdraw()
+        self.tray_icon.run()
 
 
 def main(event=threading.Event):
@@ -651,8 +714,6 @@ def main(event=threading.Event):
                                 file_destination_path = normpath(file_destination)
                                 source_path, file_name = path_split(abspath(file))
                                 file_handler.file_move_copy(source_path, file_destination_path, file_name, move_settings.copy, True)
-                                logger.debug(f'File {counter} "{file_name}" moved')
-                                logger.debug(f'From "{source_path}" to "{file_destination_path}"')
                             counter += 1
                             if counter >= config.file_per_cicle:
                                 logger.info(f'Number {config.file_per_cicle} of files per cicle reached.')
@@ -687,6 +748,7 @@ def main(event=threading.Event):
 
 
 if __name__ == '__main__':
+    logger = log.logger(logging.getLogger())
     window = Main_App('File Mover Backup', 'file_mover_backup.json')
     event = threading.Event()
     thread = threading.Thread(target=main, args=(event, ), daemon=True, name='File_Mover')

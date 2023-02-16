@@ -121,17 +121,42 @@
 # root.mainloop()
 
 
-seconds = 5000
+# Import the required libraries
+from tkinter import *
+from pystray import MenuItem as item
+import pystray
+from PIL import Image
 
-while seconds > 0:
-    if int(seconds / 3600) >= 0 and seconds % 3600 == 0:
-        print('More than a hour')
-    if int(seconds / 1800) >= 1 and seconds < 3600 and seconds % 1800 == 0:
-        print('More than 30 minutes')
-    if int(seconds / 900) >= 1 and seconds < 1800 and seconds % 900 == 0:
-        print('More than 15 minutes')
-    if int(seconds / 60) >= 1 and seconds < 900 and seconds % 60 == 0:
-        print(f'{int(seconds / 60)} minutes')
-    if seconds < 60:
-        print(seconds)
-    seconds -= 1
+# Create an instance of tkinter frame or window
+win=Tk()
+win.title("System Tray Application")
+
+# Set the size of the window
+win.geometry("700x350")
+
+
+
+
+
+# Define a function for quit the window
+def quit_window(icon, item):
+   icon.stop()
+   win.destroy()
+
+# Define a function to show the window again
+def show_window(icon, item):
+    win.after(150, win.deiconify)
+    icon.stop()
+
+# Hide the window and show on the system taskbar
+def hide_window():
+   win.withdraw()
+   image=Image.open("./Icon/tiger.ico")
+   menu=(item('Quit', quit_window), item('Show', show_window))
+   icon=pystray.Icon("name", image, "My System Tray Icon", menu)
+   icon.run()
+
+win.protocol('WM_DELETE_WINDOW', hide_window)
+
+win.mainloop()
+
