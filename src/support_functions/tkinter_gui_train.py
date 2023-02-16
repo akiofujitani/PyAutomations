@@ -104,9 +104,15 @@ if __name__ == '__main__':
 
     scroll_text = tkinter.scrolledtext.ScrolledText(window, width=40, height=15)
     scroll_text.grid(column=0, row=5)
-    scroll_text.insert(tkinter.INSERT, 'Your text goes here')
-    scroll_text.delete(1.0, tkinter.END) # clear scroll text field contents.
-
+    counter = 0
+    for i in range(30):
+        scroll_text.insert(tkinter.INSERT, f'{"{:02d}".format(i)}: Your text goes here\n')
+        counter += 1
+    # scroll_text.delete(1.0, tkinter.END) # clear scroll text field contents.
+    num_lines = scroll_text.index('end')
+    scroll_text_value = scroll_text.get('1.0', '2.0')
+    scroll_text.delete('1.0', '5.0')
+    print(scroll_text_value)
 
     list_box = tkinter.ttk.Treeview(window, columns=('lang', 'status', 'like'), show='headings')
     list_box.heading('lang', text='Language')

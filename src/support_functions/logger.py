@@ -132,6 +132,9 @@ class TextHandler(logging.Handler):
         message = self.format(record)
         def append():
             self.text.configure(state='normal')
+            line_count = int(float(self.text.index('end')))
+            if line_count > 300:
+                self.text.delete('1.0', str("{:0.1f}".format(line_count - 299)))
             self.text.insert(tkinter.END, f'{message}\n')
             self.text.configure(state='disabled')
             self.text.yview(tkinter.END)        

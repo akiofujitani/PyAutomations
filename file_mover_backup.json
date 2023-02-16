@@ -1,5 +1,5 @@
 {
-    "wait_time": 1,
+    "wait_time": 15,
     "files_per_cicle": 1500,
     "month_name_list": [
         "01 January",
@@ -16,22 +16,6 @@
         "12 December"
     ],
     "directory_list": [
-        {
-            "source": "//192.168.5.2/Arquivos/LMS/Export/Backup",
-            "destination": "//192.168.5.8/Arquivo/LMS/HOST_EXPORT",
-            "extention": "vca",
-            "days_from_today": 0,
-            "copy": false,
-            "path_organization": "Daily"
-        },
-        {
-            "source": "//192.168.5.2/Arquivos/LMS/Import/Backup",
-            "destination": "//192.168.5.8/Arquivo/LMS/HOST_IMPORT",
-            "extention": "vca",
-            "days_from_today": 0,
-            "copy": false,
-            "path_organization": "Daily"
-        },
         {
             "source": "//192.168.5.2/Arquivos/LMS/Production/Backup",
             "destination": "//192.168.5.8/Arquivo/LMS/PRODUCTION",

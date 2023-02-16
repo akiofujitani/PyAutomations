@@ -2,7 +2,6 @@ import cv2
 import pytesseract
 from ntpath import join
 from pdf2image import convert_from_path
-from urllib3 import Retry
 
 pytesseract.pytesseract.tesseract_cmd = 'c:/Program Files/Tesseract-OCR/tesseract'
 

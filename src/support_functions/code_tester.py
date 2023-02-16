@@ -72,50 +72,66 @@
 
 # =====================================================================================================================
 
-import tkinter as tk
-from tkinter import ttk
-from tkinter.messagebox import showinfo
+# import tkinter as tk
+# from tkinter import ttk
+# from tkinter.messagebox import showinfo
 
-root = tk.Tk()
-root.title('Treeview demo')
-root.geometry('620x200')
+# root = tk.Tk()
+# root.title('Treeview demo')
+# root.geometry('620x200')
 
-# define columns
-columns = ('first_name', 'last_name', 'email')
+# # define columns
+# columns = ('first_name', 'last_name', 'email')
 
-tree = ttk.Treeview(root, columns=columns, show='headings')
+# tree = ttk.Treeview(root, columns=columns, show='headings')
 
-# define headings
-tree.heading('first_name', text='First Name')
-tree.heading('last_name', text='Last Name')
-tree.heading('email', text='Email')
+# # define headings
+# tree.heading('first_name', text='First Name')
+# tree.heading('last_name', text='Last Name')
+# tree.heading('email', text='Email')
 
-# generate sample data
-contacts = []
-for n in range(1, 100):
-    contacts.append((f'first {n}', f'last {n}', f'email{n}@example.com'))
+# # generate sample data
+# contacts = []
+# for n in range(1, 100):
+#     contacts.append((f'first {n}', f'last {n}', f'email{n}@example.com'))
 
-# add data to the treeview
-for contact in contacts:
-    tree.insert('', tk.END, values=contact)
-
-
-def item_selected(event):
-    for selected_item in tree.selection():
-        item = tree.item(selected_item)
-        record = item['values']
-        # show a message
-        showinfo(title='Information', message=','.join(record))
+# # add data to the treeview
+# for contact in contacts:
+#     tree.insert('', tk.END, values=contact)
 
 
-tree.bind('<<TreeviewSelect>>', item_selected)
+# def item_selected(event):
+#     for selected_item in tree.selection():
+#         item = tree.item(selected_item)
+#         record = item['values']
+#         # show a message
+#         showinfo(title='Information', message=','.join(record))
 
-tree.grid(row=0, column=0, sticky='nsew')
 
-# add a scrollbar
-scrollbar = ttk.Scrollbar(root, orient=tk.VERTICAL, command=tree.yview)
-tree.configure(yscroll=scrollbar.set)
-scrollbar.grid(row=0, column=1, sticky='ns')
+# tree.bind('<<TreeviewSelect>>', item_selected)
 
-# run the app
-root.mainloop()
+# tree.grid(row=0, column=0, sticky='nsew')
+
+# # add a scrollbar
+# scrollbar = ttk.Scrollbar(root, orient=tk.VERTICAL, command=tree.yview)
+# tree.configure(yscroll=scrollbar.set)
+# scrollbar.grid(row=0, column=1, sticky='ns')
+
+# # run the app
+# root.mainloop()
+
+
+seconds = 5000
+
+while seconds > 0:
+    if int(seconds / 3600) >= 0 and seconds % 3600 == 0:
+        print('More than a hour')
+    if int(seconds / 1800) >= 1 and seconds < 3600 and seconds % 1800 == 0:
+        print('More than 30 minutes')
+    if int(seconds / 900) >= 1 and seconds < 1800 and seconds % 900 == 0:
+        print('More than 15 minutes')
+    if int(seconds / 60) >= 1 and seconds < 900 and seconds % 60 == 0:
+        print(f'{int(seconds / 60)} minutes')
+    if seconds < 60:
+        print(seconds)
+    seconds -= 1

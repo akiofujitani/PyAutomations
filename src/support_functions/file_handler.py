@@ -9,7 +9,7 @@ def file_list(path=str, file_extention=str) -> list:
     List files ended with choosen extension inside one directory
     '''
     if not os.path.exists(path):
-        os.mkdir(path)
+        os.makedirs(path)
         logger.info(f'Directory {path} created')
     return [file for file in os.listdir(path) if file.lower().endswith(f'.{file_extention.lower()}')]
 

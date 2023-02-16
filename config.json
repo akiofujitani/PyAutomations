@@ -1,21 +1,25 @@
 {
-    "path" : "C:/LMS/HOST_IMPORT/VCA/IMPORT_TEMP",
-    "path_done" : "C:/LMS/HOST_IMPORT/VCA/NOVO_LMS",
-    "path_new_file": "C:/LMS/HOST_IMPORT/VCA/359",
-    "extension" : "vca",
-    "sleep_time" : "5",
-    "move_groups" : [
-            {
-                "source_directory" : "C:/LMS/HOST_EXPORT/VCA/read",
-                "destin_directory" : "C:/LMS/HOST_EXPORT/VCA/NOVO_LMS",
-                "source_destin_extention" : "vca",
-                "copy" : "True"
-            },
-            {
-                "source_directory" : "C:/LMS/HOST_EXPORT/VCA/read",
-                "destin_directory" : "C:/LMS/HOST_EXPORT/VCA/MID_READ",
-                "source_destin_extention" : "vca",
-                "copy" : "False"
-            }
+    "wait_time": "5",
+    "vca_path": "C:/LMS/HOST_IMPORT/VCA/IMPORT_TEMP",
+    "vca_done": "C:/LMS/HOST_IMPORT/VCA/NOVO_LMS",
+    "vca_new_file": "C:/LMS/HOST_IMPORT/VCA/359",
+    "extension": "vca",
+    "directory_list": [
+        {
+            "source": "C:/LMS/HOST_EXPORT/VCA/read",
+            "destination": "C:/LMS/HOST_EXPORT/VCA/NOVO_LMS",
+            "extension": "vca",
+            "days_from_today": 0,
+            "copy": "True",
+            "path_organization": "Daily"
+        },
+        {
+            "source": "C:/LMS/HOST_EXPORT/VCA/read",
+            "destination": "C:/LMS/HOST_EXPORT/VCA/MID_READ",
+            "extension": "vca",
+            "days_from_today": 0,
+            "copy": "False",
+            "path_organization": "Daily"
+        }
     ]
 }

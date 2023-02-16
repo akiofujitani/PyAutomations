@@ -668,13 +668,22 @@ def main(event=threading.Event):
                     logger.warning(f'Error processing files {error}')
         wait_time = config.min_to_seconds()
         logger.info(f'Wait time ... {wait_time}')
-        for second in range(wait_time):
-            sleep(1)
-            if second % 15 == 0 and not second == 0:
-                logger.info(f'Time to next cicle {wait_time - second}')
+        while wait_time > 0:
+            if int(wait_time / 3600) >= 0 and wait_time % 3600 == 0:
+                logger.info('More than a hour')
+            if int(wait_time / 1800) >= 1 and wait_time < 3600 and wait_time % 1800 == 0:
+                logger.info('More than 30 minutes')
+            if int(wait_time / 900) >= 1 and wait_time < 1800 and wait_time % 900 == 0:
+                logger.info('More than 15 minutes')
+            if int(wait_time / 60) >= 1 and wait_time < 900 and wait_time % 60 == 0:
+                logger.info(f'{int(wait_time / 60)} minutes')
+            if wait_time < 60:
+                logger.info(f'Time to next cicle {wait_time} seconds')
             if event.is_set():
-                logger.info(f'Wait time interrupted at {second}')
+                logger.info(f'Wait time interrupted at {wait_time}')
                 return
+            wait_time -= 1
+            sleep(1)
 
 
 if __name__ == '__main__':
