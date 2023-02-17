@@ -1,10 +1,9 @@
-from shutil import ExecError
-import logger
-import win_handler, erp_volpe_handler, pyautogui, keyboard, datetime, calendar, file_handler, data_communication, data_organizer, json_config, os
+import logger as log
+import win_handler, erp_volpe_handler, pyautogui, keyboard, datetime, calendar, file_handler, data_communication, data_organizer, json_config, os, logging
 from ntpath import join
 from time import sleep
 
-logger = logger.logger('warranty')
+logger = logging.getLogger('warranty')
 
 '''
 ==================================================================================================================================
@@ -188,6 +187,7 @@ def warranty_add_quantity(warranty_list):
 
 
 if __name__ == '__main__':
+    logger = log.logger(logging.getLogger)
     try:
         config = json_config.load_json_config('C:/PyAutomations_Reports/config_volpe.json')
     except:

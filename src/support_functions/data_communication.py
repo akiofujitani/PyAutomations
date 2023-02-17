@@ -1,7 +1,8 @@
-import sheets_API, datetime, file_handler, json_config, logger
+import sheets_API, datetime, file_handler, json_config, logging
+import logger as log
 
 
-logger = logger.logger('data_communication')
+logger = logging.getLogger('data_communication')
 
 
 template_data = '''
@@ -226,6 +227,7 @@ def convert_number_to_letter(column_int):
 
 
 if __name__ == '__main__':
+    logger = log.logger(logging.getLogger())
     try:
         config = json_config.load_json_config('config_volpe.json')
     except:

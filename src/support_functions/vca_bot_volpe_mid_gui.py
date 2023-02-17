@@ -1,11 +1,11 @@
-import file_handler, vca_handler, vca_handler_frame_size, json_config, tkinter
+import file_handler, vca_handler, vca_handler_frame_size, json_config, tkinter, logging
 import logger as log
 from time import sleep
 from ntpath import join
 from os.path import normpath
 
 
-logger = log.logger('vca_bot_volpe_mid')
+logger = logging.getLogger('vca_bot_volpe_mid')
 
 
 def __resize_both_sides(trcfmt=dict, hbox=int, vbox=int) -> dict:

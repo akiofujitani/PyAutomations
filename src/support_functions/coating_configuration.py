@@ -1,8 +1,9 @@
-import datetime, file_handler, data_communication, win_handler, data_organizer, json_config, erp_volpe_handler, pyautogui, logger
+import datetime, file_handler, data_communication, win_handler, data_organizer, json_config, erp_volpe_handler, pyautogui, logging
+import logger as log
 from ntpath import join
 from time import sleep
 
-logger = logger.logger('coating_config')  
+logger = logging.getLogger('coating_config')  
 
 '''
 ==================================================================================================================================
@@ -123,6 +124,7 @@ def load_table_list(file_path=str, file_path_done=str, file_name=str) -> dict:
 
 
 if __name__ == '__main__':
+    logger = log.logger(logging.getLogger())
     # erp_volpe_handler.volpe_back_to_main()
     try:
         config = json_config.load_json_config('c:/PyAutomations_Reports/coating_config.json')

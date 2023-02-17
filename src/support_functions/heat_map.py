@@ -1,9 +1,10 @@
-import datetime, heat_map_classes, win_handler, erp_volpe_handler, pyautogui, keyboard, file_handler, data_communication, json_config, os, logger
+import datetime, heat_map_classes, win_handler, erp_volpe_handler, pyautogui, keyboard, file_handler, data_communication, json_config, os, logging
+import logger as log
 from ntpath import join
 from time import sleep
 import tkinter.messagebox
 
-logger = logger.logger('heat_map')
+logger = logging.getLogger('heat_map')
 
 
 '''
@@ -317,6 +318,7 @@ def complete_date_in_list(status_dict):
 
 
 if __name__ == '__main__':
+    logger = log.logger(logging.getLogger())
     try:
         config = json_config.load_json_config('C:/PyAutomations_Reports/config_volpe.json')
     except:

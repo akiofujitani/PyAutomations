@@ -1,11 +1,11 @@
 '''
 Build file handler and frame resizer/rebuilder.
 '''
-import math, logger
+import math, logging
 from collections import namedtuple
 from PIL import Image, ImageDraw
 
-logger = logger.logger('vca_handler_frame')
+logger = logging.getLogger('vca_handler_frame')
 
 Point = namedtuple('Point', 'x y')
 Frame_Box = namedtuple('Frame_Box', 'hbox vbox')

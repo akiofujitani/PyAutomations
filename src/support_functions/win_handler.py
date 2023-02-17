@@ -1,10 +1,10 @@
-import subprocess, pyscreeze, logger, pyautogui, screeninfo, constants, os
+import subprocess, pyscreeze, pyautogui, screeninfo, constants, os, logging
 from ntpath import join
 from time import sleep
 from win32 import win32gui
 
 
-logger = logger.logger('win_handler')
+logger = logging.getLogger('win_handler')
 
 
 class BaseException(Exception):

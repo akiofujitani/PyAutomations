@@ -1,8 +1,9 @@
-import file_handler, datetime, calendar, data_organizer, os, json_config, data_communication, logger
+import file_handler, datetime, calendar, data_organizer, os, json_config, data_communication, logging
+import logger as log
 from vca_handler import VCA_to_dict
 
 
-logger = logger.logger('production_details')
+logger = logging.getLogger('production_details')
 
 
 def read_vca(path, extension, start_date, end_date):
@@ -54,6 +55,7 @@ def values_merger(path_list=list, base_list=list, base_search_tag=str, *args, st
 
 
 if __name__ == '__main__':
+    logger = log.logger(logging.getLogger())
     # date_target = week_date(datetime.datetime.now().date(), 1)
 
     try:

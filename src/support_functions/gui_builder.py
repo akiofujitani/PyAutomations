@@ -1,4 +1,4 @@
-import tkinter, json_config
+import tkinter, json_config, logging
 from file_mover_backup import *
 from tkinter import ttk
 import logger as log
@@ -8,8 +8,11 @@ from time import sleep
 from tkinter import filedialog
 from tkinter import messagebox
 
+# for testing
+import threading
 
-logger = log.logger('gui_builder')
+
+logger = logging.getLogger('gui_builder')
 
 class Edit_Values(tkinter.Toplevel):
     '''
@@ -311,12 +314,21 @@ class Main_Frame(tkinter.Frame):
             return False
 
 class File_Settings(tkinter.Frame):
-    def __init__(self, config=Configuration_Values, config_path=str, *args, **kwargs) -> None:
+    def __init__(self, 
+                 config=Configuration_Values, 
+                 file_manag_values=dict, 
+                 values_type=tuple, 
+                 edit_win_title=str | None, 
+                 drop_down_list=None | dict, 
+                 config_path=str, *args, **kwargs) -> None:
         tkinter.Frame.__init__(self, *args, **kwargs)
         self.config = config
         self.config_path = config_path
-        file_manag_column = ('source', 'destin', 'extention', 'wait_days', 'copy', 'path_organization')
-        self.file_manag_descri = ('Souce', 'Destination', 'Extention', 'Period to move/copy', 'Make copy', 'Path Organization')
+        self.values_type = values_type
+        self.edit_win_title = edit_win_title
+        self.drop_down_list = drop_down_list
+        file_manag_column = tuple(list(file_manag_values.keys()))
+        self.file_manag_descri = tuple(list(file_manag_values.values()))
         self.file_manag_tree = ttk.Treeview(self, columns=file_manag_column, show='headings')
         for i in range(len(file_manag_column)):
             self.file_manag_tree.heading(file_manag_column[i], text=self.file_manag_descri[i])
@@ -358,9 +370,9 @@ class File_Settings(tkinter.Frame):
                 self.file_manag_tree.selection()[0]
                 self.file_config = Edit_Values(self.file_manag_tree, 
                                 self.file_manag_descri,
-                                ('path', 'path', 'str', 'int', 'boolean', 'combo_box'),
-                                'Edit file move settings',
-                                drop_down_list={'Path Organization': ('Yearly', 'Monthly', 'Daily')})
+                                self.values_type,
+                                self.edit_win_title if not self.edit_win_title == None else 'Edit values',
+                                drop_down_list=self.drop_down_list)
             except:
                 messagebox.showerror('Edit error', 'No row is selected')
         logger.debug('Double click')
@@ -402,6 +414,9 @@ class File_Settings(tkinter.Frame):
 
 class Config_Window(tkinter.Tk):
     def __init__(self, config=Configuration_Values, config_path=str, *args, **kwargs) -> None:
+        '''
+        Default main configuration window        
+        ''' 
         tkinter.Tk.__init__(self, *args, **kwargs)
         self.config = config
         self.config_path = config_path
@@ -414,6 +429,12 @@ class Config_Window(tkinter.Tk):
         # Tab Main
         self.tab_main = Main_Frame(self.config)
         self.tab_file_settings = File_Settings(self.config)
+
+        # Tab File Settings
+        self.tab_file_settings.columnconfigure(1, weight=1)
+        self.tab_file_settings.rowconfigure(0, weight=1)
+
+        # Add tabs to tab control
         self.tab_control.add(self.tab_main, text='Main')
         self.tab_control.add(self.tab_file_settings, text='File Settings')
         self.tab_control.grid(column=0, 
@@ -422,17 +443,15 @@ class Config_Window(tkinter.Tk):
                         sticky='nesw', 
                         padx=(5, 0), 
                         pady=(5, 0))
-
-        # Tab File Settings
-        self.tab_file_settings.columnconfigure(1, weight=1)
-        self.tab_file_settings.rowconfigure(0, weight=1)
         
+        # Buttons
         cancel_button = tkinter.Button(self, text='Cancel', command=self.__click_button_cancel, width=15)
         cancel_button.grid(column=4, row=1, padx=(5), pady=(0, 5))    
         save_button = tkinter.Button(self, text='Save', command=self.__click_button_save, width=15)
         save_button.grid(column=5, row=1, padx=(5), pady=(0, 5))
+
+
         self.protocol('WM_DELETE_WINDOW', self.__on_window_close)
-        self.month_edit = None
         
 
     def __click_button_cancel(self):
@@ -464,6 +483,145 @@ class Config_Window(tkinter.Tk):
         logger.debug('On close click')
         self.destroy()
     
+
+class Main_App(tkinter.Tk):
+    '''
+    Main window for file processing automation with log queue
+    '''
+    def __init__(self, title=str, config_file_name=str, icon_path=str, *args, **kwargs) -> None:
+        tkinter.Tk.__init__(self, *args, **kwargs)
+        self.title(title)
+        self.config_file_name = config_file_name
+        self.minsize(width=500, height=500)
+        self.grid_rowconfigure(0, minsize=40)
+        self.grid_columnconfigure(0, weight=0, minsize=50)
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1, minsize=50)
+        self.grid_columnconfigure(3, weight=0, minsize=50)
+
+        # basic menu bar
+        menu_bar = tkinter.Menu(self)
+        file_menu = tkinter.Menu(menu_bar, tearoff=0)
+        file_menu.add_command(label='Start   ', command=self.__click_button_start)
+        file_menu.add_command(label='Stop    ', command=self.__click_button_stop)        
+        file_menu.add_separator()
+        file_menu.add_command(label='Exit   ', command=self.__quit_window)
+        menu_bar.add_cascade(label='File   ', menu=file_menu)
+
+        help_menu = tkinter.Menu(menu_bar, tearoff=0)
+        help_menu.add_command(label='About   ', command=self.__about_command)
+        menu_bar.add_cascade(label='Help   ', menu=help_menu)
+        self.config(menu=menu_bar)
+
+        # Main buttons
+        start_button = tkinter.Button(self, text='Start', command=self.__click_button_start, width=20)
+        start_button.grid(column=0, row=0, padx=(3), pady=(3), sticky='nesw')
+
+        stop_button = tkinter.Button(self, text='Stop', command=self.__click_button_stop, width=20)
+        stop_button.grid(column=1, row=0, padx=(3), pady=(3), sticky='nesw')
+
+        config_button = tkinter.Button(self, text='Configuration', command=self.__click_button_config, width=20)
+        config_button.grid(column=3, row=0, padx=(3), pady=(3), sticky='nesw')
+
+        # Scrolled text field
+        self.scrolled_text = tkinter.scrolledtext.ScrolledText(self, state='disabled')
+        self.scrolled_text.configure(wrap=tkinter.WORD, font=('Arial', 9))
+        self.scrolled_text.grid(column=0, row=1, columnspan=4, sticky='nesw', padx=(3), pady=(3))
+
+        # Set log queuer
+        self.log_queue = Queue()
+        logger.addHandler(log.LogQueuer(self.log_queue))
+        self.protocol('WM_DELETE_WINDOW', self.__on_window_close)
+        self.after(100, self.__pull_log_queue)
+
+        # Set tray icon values
+        icon_image = Image.open(icon_path)
+        tray_menu = (pystray.MenuItem('Open', self.__show_window), pystray.MenuItem('Quit', self.__quit_window))
+        self.tray_icon = pystray.Icon('Tkinter GUI', icon_image, title, tray_menu)
+
+
+    def __display(self, message):
+        # Add value to scrolled text field
+        self.scrolled_text.configure(state='normal')
+        line_count = int(float(self.scrolled_text.index('end')))
+        # Define maximum number of lines and delete the old ones
+        if line_count > 300:
+            self.scrolled_text.delete('1.0', str("{:0.1f}".format(line_count - 299)))
+        self.scrolled_text.insert(tkinter.END, f'{message}\n')
+        self.scrolled_text.configure(state='disabled')
+        self.scrolled_text.yview(tkinter.END)
+
+
+    def __about_command(event_value):
+        # Window will be created
+        logger.info('About clicked')
+
+
+    def __pull_log_queue(self):
+        # Get value from log_queue
+        while not self.log_queue.empty():
+            message = self.log_queue.get(block=False)
+            self.__display(message)
+        self.after(100, self.__pull_log_queue)
+
+
+    def __click_button_start(self):
+        # Start main thread and clear event
+        logger.debug('Button start clicked')
+        if event.is_set():
+            thread = threading.Thread(target=main, args=(event,), daemon=True,  name='File_Mover')
+            thread.start()
+            event.clear()
+
+
+    def __click_button_stop(self):
+        # Set event to stop thread execution
+        logger.debug('Button stop clicked')
+        event.set()
+
+
+    def __click_button_config(self):
+        # Stop thread execution and open configuration window
+        logger.debug('Button config clicked')
+        try:
+            if self.config_window.state() == 'normal':
+                self.config_window.focus_force()
+        except Exception as error:
+            logger.info(error)
+            event.set()
+            self.config_window = Config_Window(Configuration_Values.check_type_insertion(self.config_file_name), self.config_file_name)
+
+
+    def __on_window_close(self):
+        # Hide window to tray
+        self.__hide_window_to_tray()
+
+
+    def __quit_window(self):
+        # Quit application
+        if messagebox.askokcancel('Quit', 'Do you want to quit?'):
+            event.set()
+            logger.info('Forcing kill thread if it is open')
+            try:
+                self.tray_icon.stop()
+            except:
+                logger.warning('Tray icon is not started')
+            self.after(150, self.deiconify)
+            self.destroy()
+    
+
+    def __show_window(self):
+        # Show window hidden in tray
+        self.tray_icon.stop()
+        self.after(150, self.deiconify)
+
+
+    def __hide_window_to_tray(self):
+        # Hide window to tray
+        logger.debug('Run tray icon')
+        self.withdraw()
+        self.tray_icon.run()
+
 
 def __load_configuration(config_path=str) -> dict:
     '''
@@ -515,6 +673,6 @@ def __load_configuration(config_path=str) -> dict:
 
 
 if __name__ == '__main__':
-    config = __load_configuration('file_mover_backup.json')
-    window = Config_Window(config, 'file_mover_backup.json')
+    event = threading.Event()
+    window = Main_App('GUI Builder', 'file_mover_backup.json', './Icon/tiger.ico')
     window.mainloop()

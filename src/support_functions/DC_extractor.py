@@ -1,7 +1,10 @@
-import datetime, data_organizer, win_handler, erp_volpe_handler, pyautogui, keyboard, file_handler, data_communication, json_config, os, calendar
+import datetime, data_organizer, win_handler, erp_volpe_handler, pyautogui, keyboard, file_handler, data_communication, json_config, os, calendar, logging
 from ntpath import join
 from time import sleep
 import tkinter.messagebox
+import logger as log
+
+logger = logging.getLogger('DC_extractor')
 
 '''
 ================================================================================================================
@@ -113,6 +116,7 @@ def define_start_date(date_1, date_2):
 
 
 if __name__ == '__main__':
+    logger = log.logger(logging.getLogger())
     try:
         config = json_config.load_json_config('C:/Users/fausto.akio/Documents/Reports/config_volpe.json')
     except:

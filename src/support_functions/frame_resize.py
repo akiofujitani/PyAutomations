@@ -1,7 +1,7 @@
-import file_handler, vca_handler, vca_handler_frame_size, json_config, os, logger
+import file_handler, vca_handler, vca_handler_frame_size, json_config, os, logging
 from time import sleep
 
-logger = logger.logger('frame_resize')
+logger = logging.getLogger('frame_resize')
 
 
 def __resize_both_sides(trcfmt=dict, hbox=int, vbox=int) -> dict:
@@ -24,6 +24,7 @@ def __resize_both_sides(trcfmt=dict, hbox=int, vbox=int) -> dict:
 
 
 if __name__ == '__main__':
+    logger = log.logger(logging.getLogger())
     try:
         config = json_config.load_json_config('frame_resize.json')
     except Exception as error:

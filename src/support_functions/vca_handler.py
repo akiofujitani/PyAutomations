@@ -1,6 +1,6 @@
-import os, logger
+import os, logging
 
-logger = logger.logger('vca_handler')
+logger = logging.getLogger('vca_handler')
 
 
 def VCAtoObject(VCAFileContent):

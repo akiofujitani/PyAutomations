@@ -1,10 +1,10 @@
-import pyautogui, win_handler, keyboard, tkinter, datetime, file_handler, os, pyscreeze, logger
+import pyautogui, win_handler, keyboard, tkinter, datetime, file_handler, os, pyscreeze, logging
 from time import sleep
 from ocr_text_reader import return_text
 from ntpath import join
 
 
-logger = logger.logger('erp_volpe_handler')
+logger = logging.getLogger('erp_volpe_handler')
 
 
 def volpe_login(user_name=str, password=str):
@@ -487,6 +487,7 @@ def delete_from_table(column_pos=pyscreeze.Box, delete_value=str, deactivate_mid
         
 
 if __name__ == '__main__':
+    logger = log.logger(logging.getLogger())
     try:
         win_handler.activate_window('Volpe')
         prog_maint_open_fill_os('5627')

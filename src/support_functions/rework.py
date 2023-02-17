@@ -1,8 +1,9 @@
-import erp_volpe_handler, datetime, calendar, file_handler, data_communication, data_organizer, json_config, os, logger
+import erp_volpe_handler, datetime, calendar, file_handler, data_communication, data_organizer, json_config, os, logging
+import logger as log 
 from ntpath import join
 from copy import deepcopy
 
-logger = logger.logger('rework')
+logger = logging('rework')
 
 
 '''
@@ -110,7 +111,7 @@ def convert_rework_list(rework_list, template):
 
 
 if __name__ == '__main__':
-
+    logger = log.logger(logging.getLogger())
     # volpe_back_to_main()
     try:
         config = json_config.load_json_config('C:/Users/fausto.akio/Documents/Reports/config_volpe.json')

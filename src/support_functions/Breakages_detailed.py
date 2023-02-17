@@ -1,9 +1,10 @@
-import win_handler, erp_volpe_handler, pyautogui, keyboard, datetime, calendar, file_handler, data_communication, data_organizer, json_config, os, logger
+import win_handler, erp_volpe_handler, pyautogui, keyboard, datetime, calendar, file_handler, data_communication, data_organizer, json_config, os, logging
+import logger as log
 from ntpath import join
 from time import sleep
 
 
-logger = logger.logger('breakages_detailed')
+logger = logging.getLogger('breakages_detailed')
 
 '''
 ==================================================================================================================================
@@ -181,6 +182,7 @@ def breakage_date_hour(values_dict=dict):
 
 
 if __name__ == '__main__':
+    logger = log.logger(logging.getLogger())
         # volpe_back_to_main()
     try:
         config = json_config.load_json_config('C:/PyAutomations_Reports/config_volpe.json')

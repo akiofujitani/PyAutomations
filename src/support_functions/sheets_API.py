@@ -1,12 +1,12 @@
 from shutil import ExecError
-import google.auth, os, json_config, logger
+import google.auth, os, json_config, logging
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-logger = logger.logger('sheets_API')
+logger = logging.getLogger('sheets_API')
 
 
 def load_creds() -> google.oauth2.credentials.Credentials:

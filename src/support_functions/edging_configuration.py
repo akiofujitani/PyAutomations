@@ -1,8 +1,9 @@
-import datetime, data_communication, win_handler, json_config, erp_volpe_handler, pyautogui, keyboard, logger
+import datetime, data_communication, win_handler, json_config, erp_volpe_handler, pyautogui, keyboard, logging
+import logger as log
 from ntpath import join
 from time import sleep
 
-logger = logger.logger('edging_configurator')
+logger = logging.getLogger('edging_configurator')
 
 
 '''
@@ -136,6 +137,7 @@ def wait_time(seconds=int):
 
 
 if __name__ == '__main__':
+    logger = log.logger(logging.getLogger())
     # erp_volpe_handler.volpe_back_to_main()
     try:
         config = json_config.load_json_config('edging_config.json')

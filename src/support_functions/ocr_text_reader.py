@@ -1,8 +1,9 @@
 import numpy
-import pytesseract
+import pytesseract, logging
 from PIL import ImageGrab
 import pyautogui
 
+logger = logging.getLogger('OCR text reader')
 pytesseract.pytesseract.tesseract_cmd = 'c:/Program Files/Tesseract-OCR/tesseract'
 
 

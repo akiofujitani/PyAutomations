@@ -1,7 +1,8 @@
-import datetime, file_handler, data_communication, data_organizer, json_config, os, Production_Details, logger
+import datetime, file_handler, data_communication, data_organizer, json_config, os, Production_Details, logging
+import logger as log
 from ntpath import join
 
-logger = logger.logger('warranty_detailed')
+logger = logging.getLogger('warranty_detailed')
 
 '''
 ==================================================================================================================================
@@ -30,6 +31,7 @@ def warranty_add_quantity(warranty_list):
 
 
 if __name__ == '__main__':
+    logger = log.logger(logging.getLogger())
         # volpe_back_to_main()
     try:
         config = json_config.load_json_config('C:/PyAutomations_Reports/config_volpe.json')

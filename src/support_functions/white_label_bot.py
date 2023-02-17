@@ -1,8 +1,9 @@
-import datetime, file_handler, data_communication, win_handler, data_organizer, json_config, erp_volpe_handler, pyautogui, keyboard, logger
+import datetime, file_handler, data_communication, win_handler, data_organizer, json_config, erp_volpe_handler, pyautogui, keyboard, logging
+import logger as log
 from ntpath import join
 from time import sleep
 
-logger = logger.logger('white_label_bot')
+logger = logging.getLogger('white_label_bot')
 
 '''
 ==================================================================================================================================
@@ -151,6 +152,7 @@ def create_white_label_description(white_label, shorten_list, swap_list, done_li
 
 
 if __name__ == '__main__':
+    logger = log.logger(logging.getLogger())
     try:
         config = json_config.load_json_config('white_label.json')
     except:

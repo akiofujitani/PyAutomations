@@ -1,9 +1,8 @@
 from ntpath import join
-from cv2 import sort
-import file_handler, datetime, calendar, logger
+import file_handler, datetime, calendar, logging
 from collections import Counter
 
-logger = logger.logger('data_organizer')
+logger = logging.getLogger('data_organizer')
 
 '''
 filter_tag

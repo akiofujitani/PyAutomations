@@ -1,4 +1,4 @@
-import file_handler, vca_handler, vca_handler_frame_size, json_config, datetime, tkinter, threading, sys
+import file_handler, vca_handler, vca_handler_frame_size, json_config, datetime, tkinter, threading, sys, logging
 from time import sleep
 from tkinter import messagebox
 from ntpath import join
@@ -10,7 +10,7 @@ from tkinter import filedialog
 from tkinter import ttk
 
 
-logger = log.logger('vca_bot_volpe_mid')
+logger = logging.getLogger('vca_bot_volpe_mid')
 
 
 config_template = """{
@@ -678,6 +678,7 @@ def main(event=threading.Event):
 
 
 if __name__ == '__main__':
+    logger = log.logger(logging.getLogger())
     window = Main_App('VCA Data Process', 'config.json')
     event = threading.Event()
     thread = threading.Thread(target=main, args=(event, ), daemon=True, name='VCA_Data_Process')

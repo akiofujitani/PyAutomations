@@ -1,10 +1,10 @@
 from webbrowser import open as web_open
 import logger as log
-import tkinter
+import tkinter, logging
 import tkinter.messagebox
 import tkinter.scrolledtext
 
-logger = log.logger('middleware_job_visualizer')
+logger = logging.getLogger('middleware_job_visualizer')
 
 class Main_App(tkinter.Tk):
     # Build main GUI
@@ -53,5 +53,6 @@ class Main_App(tkinter.Tk):
 
 
 if __name__ == '__main__':
+    logger = log.logger(logging.getLogger())
     window = Main_App()
     window.mainloop()
