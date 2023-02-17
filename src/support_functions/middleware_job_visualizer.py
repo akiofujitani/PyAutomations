@@ -32,7 +32,7 @@ class Main_App(tkinter.Tk):
         scrolled_text.grid(column=0, row=2, columnspan=2, sticky='nesw', padx=(3), pady=(3))
         text_handler = log.TextHandler(scrolled_text)
 
-        logger.addHanlder(text_handler)
+        logger.addHandler(text_handler)
 
     # Button ok click action
     def click_button_ok(self):
@@ -53,6 +53,7 @@ class Main_App(tkinter.Tk):
 
 
 if __name__ == '__main__':
-    logger = log.logger(logging.getLogger())
+    logger = logging.getLogger()
+    log.logger_setup(logger)
     window = Main_App()
     window.mainloop()

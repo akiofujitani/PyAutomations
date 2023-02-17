@@ -1,11 +1,12 @@
 import logging, json_config, tkinter
 from datetime import datetime
-from os.path import exists
+from os.path import exists, abspath, splitext
 from os import makedirs
 from dataclasses import dataclass
 from ntpath import join
 from tkinter.scrolledtext import ScrolledText
 from queue import Queue
+from logging.config import dictConfig
 
 @dataclass
 class LogConfig:
@@ -54,60 +55,67 @@ except Exception as error:
     exit()
 
 
-def logger(current_logger=logging.Logger):
-    if len(current_logger.handlers) == 0:
-        current_date = datetime.strftime(datetime.now().date(), "%Y%m%d")
-        formatter = logging.Formatter(logger_config.log_format, datefmt='%Y/%m/%d %H:%M:%S')
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logger_config.console_level)
-        console_handler.setFormatter(formatter)
-        log_file_handler = __new_file_handler(current_date, formatter)
-        current_logger.addHandler(console_handler)
-        current_logger.addHandler(log_file_handler)
-        current_logger.setLevel(logger_config.logger_level)
-    return current_logger
+def logger_setup(logger=logging.Logger | None, log_queue=Queue | None):
+    config = json_config.load_json_config('logger_config.json')
+    dictConfig(config)
+    if not logger == None:
+        logger = add_log_queuer(logger, log_queue)
 
 
-def check_change_date(current_logger=logging.Logger):
-    current_date = datetime.now().date()
-    if not __current_file_handler_date(current_logger) == current_date:
-        for logger_handler in current_logger.handlers:
-            if isinstance(logger_handler, logging.FileHandler):
-                current_date = datetime.strftime(current_date, "%Y%m%d")
-                current_logger.handlers.remove(logger_handler)
-                formatter = logging.Formatter(logger_config.log_format, datefmt='%Y/%m/%d %H:%M:%S')
-                new_log_file_handler = __new_file_handler(current_date, formatter)
-                current_logger.addHandler(new_log_file_handler)
-    return
+# def logger(current_logger=logging.Logger):
+#     if len(current_logger.handlers) == 0:
+#         current_date = datetime.strftime(datetime.now().date(), "%Y%m%d")
+#         formatter = logging.Formatter(logger_config.log_format, datefmt='%Y/%m/%d %H:%M:%S')
+#         console_handler = logging.StreamHandler()
+#         console_handler.setLevel(logger_config.console_level)
+#         console_handler.setFormatter(formatter)
+#         log_file_handler = __new_file_handler(current_date, formatter)
+#         current_logger.addHandler(console_handler)
+#         current_logger.addHandler(log_file_handler)
+#         current_logger.setLevel(logger_config.logger_level)
+#     return current_logger
 
 
-def __current_file_handler_date(current_logger=logging.Logger):
-    for handler in current_logger.handlers:
-        if isinstance(handler, logging.FileHandler):
-            current_file_handler = handler.baseFilename
-            path_splitted = current_file_handler.replace('\\', '/').split('/')
-            file_handler_date = datetime.strptime(path_splitted[-1].split('.')[0].split('_')[1], '%Y%m%d').date()
-            print(file_handler_date)
-            return file_handler_date
+# def check_change_date(current_logger=logging.Logger):
+#     current_date = datetime.now().date()
+#     if not __current_file_handler_date(current_logger) == current_date:
+#         for logger_handler in current_logger.handlers:
+#             if isinstance(logger_handler, logging.FileHandler):
+#                 current_date = datetime.strftime(current_date, "%Y%m%d")
+#                 current_logger.handlers.remove(logger_handler)
+#                 formatter = logging.Formatter(logger_config.log_format, datefmt='%Y/%m/%d %H:%M:%S')
+#                 new_log_file_handler = __new_file_handler(current_date, formatter)
+#                 current_logger.addHandler(new_log_file_handler)
+#     return
 
 
-def __new_file_handler(current_date, formatter):
-    if not exists(logger_config.path):
-        makedirs(logger_config.path)
-    log_file_handler = logging.FileHandler(join(logger_config.path, f'{logger_config.log_name}{current_date}.{logger_config.log_extension}'))
-    log_file_handler.setLevel(logger_config.file_level)
-    log_file_handler.setFormatter(formatter)
-    return log_file_handler
+# def __current_file_handler_date(current_logger=logging.Logger):
+#     for handler in current_logger.handlers:
+#         if isinstance(handler, logging.FileHandler):
+#             current_file_handler = handler.baseFilename
+#             path_splitted = current_file_handler.replace('\\', '/').split('/')
+#             file_handler_date = datetime.strptime(path_splitted[-1].split('.')[0].split('_')[1], '%Y%m%d').date()
+#             print(file_handler_date)
+#             return file_handler_date
 
 
-def addHanlder(current_logger, handler=logging.Handler):
-    return current_logger.addHandler(handler)
+# def __new_file_handler(current_date, formatter):
+#     if not exists(logger_config.path):
+#         makedirs(logger_config.path)
+#     log_file_handler = logging.FileHandler(join(logger_config.path, f'{logger_config.log_name}{current_date}.{logger_config.log_extension}'))
+#     log_file_handler.setLevel(logger_config.file_level)
+#     log_file_handler.setFormatter(formatter)
+#     return log_file_handler
 
 
-def removeHandler(current_logger=logging.Logger, handler=logging.Handler):
-    for current_handler in current_logger.handlers:
-        if isinstance(current_handler, type(handler)):
-            current_logger.handlers.remove(current_handler)
+# def addHanlder(current_logger, handler=logging.Handler):
+#     return current_logger.addHandler(handler)
+
+
+# def removeHandler(current_logger=logging.Logger, handler=logging.Handler):
+#     for current_handler in current_logger.handlers:
+#         if isinstance(current_handler, type(handler)):
+#             current_logger.handlers.remove(current_handler)
 
 
 # class logger:
@@ -180,6 +188,25 @@ def removeHandler(current_logger=logging.Logger, handler=logging.Handler):
 #                 self.current_logger.handlers.remove(handler)
 #         return
 
+
+def add_log_queuer(current_logger=logging.Logger, log_queue=Queue()):
+    formatter =''
+    level = ''
+    for handler in current_logger.handlers:
+        if isinstance(handler, LogQueuer):
+            formatter = handler.formatter
+            level = handler.level
+            current_logger.handlers.remove(handler)
+    if not formatter and not level:
+        formatter = current_logger.handlers[0].formatter
+        level = current_logger.handlers[0].level
+    log_handler = LogQueuer(log_queue)
+    log_handler.setFormatter(formatter)
+    log_handler.setLevel(level)
+    current_logger.handlers.append(log_handler)
+    return current_logger
+    
+
 class TextHandler(logging.Handler):
     def __init__(self, text=ScrolledText):
         logging.Handler.__init__(self)
@@ -204,9 +231,6 @@ class TextHandler(logging.Handler):
 class LogQueuer(logging.Handler):
     def __init__(self, log_queue=Queue()) -> None:
         logging.Handler.__init__(self)
-        formatter = logging.Formatter(logger_config.log_format, datefmt='%Y/%m/%d %H:%M:%S')
-        logging.Handler.setFormatter(self, formatter)
-        logging.Handler.setLevel(self, logger_config.gui_level)
         self.log_queue = log_queue
 
     
@@ -214,3 +238,18 @@ class LogQueuer(logging.Handler):
         if self.log_queue.qsize() >= 100:
             self.log_queue.get(block=False)
         self.log_queue.put(self.format(record))
+
+
+class TimeStampedFileHandler(logging.FileHandler):
+    def __init__(self, filename: str, mode: str = "a", encoding: str | None = None, delay: bool = False, errors: str | None = None) -> None:
+        filename, extension = splitext(filename)
+        filename = abspath(f'{filename}_{datetime.strftime(datetime.now().date(), "%Y%m%d")}{extension}')
+        super().__init__(filename, mode, encoding, delay, errors)
+
+
+if __name__ == '__main__':
+    logger_setup()
+    loggers = logging.getLogger()
+
+    loggers.debug('Test')
+    loggers.info('Done')

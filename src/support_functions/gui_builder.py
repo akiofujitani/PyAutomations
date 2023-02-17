@@ -1,4 +1,4 @@
-import tkinter, json_config, logging
+import tkinter, json_config, logging, pystray
 from file_mover_backup import *
 from tkinter import ttk
 import logger as log
@@ -7,6 +7,7 @@ from os.path import exists
 from time import sleep
 from tkinter import filedialog
 from tkinter import messagebox
+from PIL import Image, ImageTk
 
 # for testing
 import threading
@@ -621,6 +622,33 @@ class Main_App(tkinter.Tk):
         logger.debug('Run tray icon')
         self.withdraw()
         self.tray_icon.run()
+
+
+class About(tkinter.Toplevel):
+    def __init__(self, title='About', label_values=str, image_file=str, *args, **kwargs) -> None:
+        tkinter.Toplevel.__init__(self, *args, **kwargs)
+        self.geometry('500 x 400')
+        self.title = title
+        self.resizable(width=False, height=False)
+        image = ImageTk.PhotoImage(Image.open(image_file))
+        image_label = tkinter.Label(self, image=image)
+        image_label.grid(column=0, row=0, columnspan=3)
+        image_label.configure(width=450)
+
+        text_label = tkinter.Label(self, label_values)
+        text_label.grid(column=0, row=1, columnspan=3)
+
+        ok_button = tkinter.Button(text='Ok', width=15, command=self.__pressed_ok_button)
+        ok_button.grid(column=3, row=2)
+        self.protocol('WM_DELETE_WINDOW', self.__on_window_close)    
+
+
+    def __pressed_ok_button(self):
+        self.__on_window_close()
+    
+
+    def __on_window_close(self):
+        self.destroy()
 
 
 def __load_configuration(config_path=str) -> dict:

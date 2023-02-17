@@ -1,23 +1,38 @@
 {
     "version": 1,
+    "disable_existing_loggers": false,
     "formatters": {
         "brief": {
-            "format": "%(levelname)-8s: %(name)-15s %(message)s"
+            "format" : "[%(asctime)s - %(levelname)s] %(name)-12s %(message)s",
+            "datefmt" : "%Y-%m-%d %H:%M:%S"
         },
         "precise": {
-            "format": "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
+            "format": "[%(asctime)s - %(levelname)s] %(name)-12s %(funcName)-30s %(message)s",
+            "datefmt" : "%Y-%m-%d %H:%M:%S"
         }
     },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "brief",
-            "level": "DEBUG"
+            "level": "DEBUG",
+            "stream": "ext://sys.stdout"
+        },
+        "file_handler": {
+            "class" : "logger.TimeStampedFileHandler",
+            "formatter" : "precise",
+            "level" : "DEBUG",
+            "filename" : "./Log/Log.log"
+        },
+        "queue_handler" : {
+            "class" : "logger.LogQueuer",
+            "formatter" : "brief",
+            "level" : "DEBUG"
         }
     },
     "root": {
         "handlers": [
-            "console"
+            "console", "file_handler", "queue_handler"
         ],
         "level": "DEBUG"
     }

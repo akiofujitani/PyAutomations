@@ -7,7 +7,7 @@ from os.path import split as path_split
 from tkinter import messagebox
 from tkinter import filedialog
 from tkinter import ttk
-from PIL import Image
+from PIL import Image, ImageTk
 from queue import Queue
 
 
@@ -379,21 +379,17 @@ class Main_Frame(tkinter.Frame):
 
     def __tree_item_edit(self, event):
         try:
-            if self.month_edit.state() == 'normal':
-                self.month_edit.focus_force()
-        except Exception as error:
-            logger.info(error)
-            try:
-                self.months_naming_tree.selection()[0]
-                self.month_edit = Edit_Values(self.months_naming_tree, 
-                                ('Month number', 
-                                'Month Description'),
-                                ('int', 'str'), 
-                                'Edit month description', 
-                                ['Month number'], 
-                                focus_force='Month Description')
-            except:
-                messagebox.showerror('Edit error', 'No row is selected')
+            self.months_naming_tree.selection()[0]
+            self.month_edit = Edit_Values(self.months_naming_tree, 
+                            ('Month number', 
+                            'Month Description'),
+                            ('int', 'str'), 
+                            'Edit month description', 
+                            ['Month number'], 
+                            focus_force='Month Description')
+            self.month_edit.grab_set()
+        except:
+            messagebox.showerror('Edit error', 'No row is selected')
         logger.debug('Double click')
     
 
@@ -456,6 +452,7 @@ class File_Settings(tkinter.Frame):
                                 ('path', 'path', 'str', 'int', 'boolean', 'combo_box'),
                                 'Edit file move settings',
                                 drop_down_list={'Path Organization': ('Yearly', 'Monthly', 'Daily')})
+                self.file_config.grab_set()
             except:
                 messagebox.showerror('Edit error', 'No row is selected')
         logger.debug('Double click')
@@ -568,8 +565,9 @@ class Config_Window(tkinter.Toplevel):
         self.destroy()
 
 class Main_App(tkinter.Tk):
-    def __init__(self, title=str, config_file_name=str, *args, **kwargs) -> None:
+    def __init__(self, title=str, config_file_name=str, log_queue=Queue, *args, **kwargs) -> None:
         tkinter.Tk.__init__(self, *args, **kwargs)
+        self.log_queue = log_queue
         self.title(title)
         self.config_file_name = config_file_name
         self.minsize(width=500, height=500)
@@ -601,11 +599,10 @@ class Main_App(tkinter.Tk):
 
         config_button = tkinter.Button(self, text='Configuration', command=self.__click_button_config, width=25)
         config_button.grid(column=3, row=0, padx=(3), pady=(3), sticky='nesw')
-        self.log_queue = Queue()
         self.scrolled_text = tkinter.scrolledtext.ScrolledText(self, state='disabled')
         self.scrolled_text.configure(wrap=tkinter.WORD, font=('Arial', 9))
         self.scrolled_text.grid(column=0, row=1, columnspan=4, sticky='nesw', padx=(3), pady=(3))
-        logger.addHandler(log.LogQueuer(self.log_queue))
+        # logger.addHandler(log.LogQueuer(self.log_queue))
         self.protocol('WM_DELETE_WINDOW', self.__on_window_close)
         self.after(100, self.__pull_log_queue)
 
@@ -625,8 +622,15 @@ class Main_App(tkinter.Tk):
         self.scrolled_text.yview(tkinter.END)
 
 
-    def __about_command(event_value):
+    def __about_command(self):
         logger.info('About clicked')
+        self.about = About('About', '''
+        Application name: File Mover Backup
+        Version: 0.10.00
+        Developed by: Akio Fujitani
+        e-mail: akiofujitani@gmail.com
+        ''', './Icon/Bedo.jpg')
+        self.about.grab_set()
 
 
     def __pull_log_queue(self):
@@ -650,14 +654,10 @@ class Main_App(tkinter.Tk):
 
 
     def __click_button_config(self):
-        logger.debug('Button config clicked')
-        try:
-            if self.config_window.state() == 'normal':
-                self.config_window.focus_force()
-        except Exception as error:
-            logger.info(error)
-            event.set()
-            self.config_window = Config_Window(Configuration_Values.check_type_insertion(self.config_file_name), self.config_file_name)
+        event.set()
+        self.config_window = Config_Window(Configuration_Values.check_type_insertion(self.config_file_name), self.config_file_name)
+        self.config_window.grab_set()
+        logger.debug(self.winfo_children)
 
 
     def __on_window_close(self):
@@ -682,9 +682,48 @@ class Main_App(tkinter.Tk):
 
 
     def __hide_window_to_tray(self):
+        window_close_list = []
+        for children in self.children:
+            if isinstance(self.children[children], tkinter.Toplevel):
+                window_close_list.append(children)
+        for children in window_close_list:
+            self.children[children].destroy()
         logger.debug('Run tray icon')
         self.withdraw()
         self.tray_icon.run()
+
+
+class About(tkinter.Toplevel):
+    def __init__(self, title=str, label_values=str, image_file=str, *args, **kwargs) -> None:
+        tkinter.Toplevel.__init__(self, *args, **kwargs)
+        self.geometry('450x400')
+        self.title(title)
+        self.resizable(width=False, height=False)
+        image = Image.open(image_file)
+        image_tk = ImageTk.PhotoImage(image=image)
+        image_label = tkinter.Label(self, image=image_tk, justify='center')
+        image_label.image = image_tk
+        image_label.grid(column=0, row=0, columnspan=2, padx=(10), pady=(5, 0))
+
+        text_label = tkinter.Label(self, text=label_values, justify='left')
+        text_label.grid(column=0, row=1, rowspan=2, sticky='nw', padx=(5), pady=(5, 0))
+
+        ok_button = tkinter.Button(self, text='Ok', width=15, command=self.__pressed_ok_button)
+        ok_button.grid(column=1, row=2, sticky='se', padx=(10), pady=(5, 10))
+
+        self.columnconfigure(0, weight=2)
+        self.columnconfigure(1, weight=1)
+        self.rowconfigure(1, weight=1)
+        self.rowconfigure(2, weight=2)
+        self.protocol('WM_DELETE_WINDOW', self.__on_window_close)    
+        
+
+    def __pressed_ok_button(self):
+        self.__on_window_close()
+    
+
+    def __on_window_close(self):
+        self.destroy()
 
 
 def main(event=threading.Event):
@@ -748,11 +787,13 @@ def main(event=threading.Event):
 
 
 if __name__ == '__main__':
-    logger = log.logger(logging.getLogger())
-    window = Main_App('File Mover Backup', 'file_mover_backup.json')
+    # logger = log.logger(logging.getLogger())
+    log_queue = Queue()
+    logger = logging.getLogger()
+    log.logger_setup(logger, log_queue)
+    window = Main_App('File Mover Backup', 'file_mover_backup.json', log_queue)
     event = threading.Event()
     thread = threading.Thread(target=main, args=(event, ), daemon=True, name='File_Mover')
     thread.start()
     window.mainloop()
-
 

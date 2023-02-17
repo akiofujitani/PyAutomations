@@ -1,5 +1,4 @@
 import csv, os, shutil, datetime, time, chardet, logging
-import logger as log
 from ntpath import join
 
 logger = logging.getLogger('file_handler')
