@@ -1,4 +1,4 @@
-import file_handler, vca_handler, vca_handler_frame_size, json_config, datetime, tkinter, threading, sys, logging
+import file_handler, vca_handler, vca_handler_frame_size, json_config, tkinter, threading, sys, logging
 from time import sleep
 from tkinter import messagebox
 from ntpath import join
@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from os.path import normpath, abspath, exists
 from tkinter import filedialog
 from tkinter import ttk
+from queue import Queue
 
 
 logger = logging.getLogger('vca_bot_volpe_mid')
@@ -149,6 +150,8 @@ class Edit_Values(tkinter.Toplevel):
                     drop_down_list=None,
                     *args, **kwargs) -> None:
         tkinter.Toplevel.__init__(self, *args, **kwargs)
+        self.last_grab = self.grab_current()
+        self.grab_set()
         self.parent = parent
         self.title(edit_title)
         self.transient()
@@ -204,6 +207,11 @@ class Edit_Values(tkinter.Toplevel):
         cancel_button.grid(column=1, row=key_index + 1, padx=(5), pady=(5))    
         save_button = tkinter.Button(self, text='Save', command=self.__click_button_save, width=15)
         save_button.grid(column=2, row=key_index + 1, padx=(5), pady=(5))       
+
+    def destroy(self) -> None:
+        if self.last_grab:
+            self.last_grab.grab_set()
+        return super().destroy()
 
 
     def __click_radio_bool(self, variable):
@@ -458,6 +466,8 @@ class File_Settings(tkinter.Frame):
 class Config_Window(tkinter.Toplevel):
     def __init__(self, config=Configuration_Values, config_path=str, *args, **kwargs) -> None:
         tkinter.Toplevel.__init__(self, *args, **kwargs)
+        self.last_grab = self.grab_current()
+        self.grab_set()
         self.config = config
         self.config_path = config_path
         self.title('Configuration')
@@ -490,6 +500,13 @@ class Config_Window(tkinter.Toplevel):
         self.protocol('WM_DELETE_WINDOW', self.__on_window_close)
         self.month_edit = None
         
+
+    # destroy override
+    def destroy(self) -> None:
+        if self.last_grab:
+            self.last_grab.grab_set()
+        return super().destroy()
+
 
     def __click_button_cancel(self):
         logger.debug('Cancel click')
@@ -535,6 +552,19 @@ class Main_App(tkinter.Tk):
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(2, weight=1, minsize=50)
         self.grid_columnconfigure(3, weight=0, minsize=50)
+
+        menu_bar = tkinter.Menu(self)
+        file_menu = tkinter.Menu(menu_bar, tearoff=0)
+        file_menu.add_command(label='Start   ', command=self.__click_button_start)
+        file_menu.add_command(label='Stop    ', command=self.__click_button_stop)        
+        file_menu.add_separator()
+        file_menu.add_command(label='Exit   ', command=self.__quit_window)
+        menu_bar.add_cascade(label='File   ', menu=file_menu)
+
+        help_menu = tkinter.Menu(menu_bar, tearoff=0)
+        help_menu.add_command(label='About   ', command=self.__about_command)
+        menu_bar.add_cascade(label='Help   ', menu=help_menu)
+
 
         start_button = tkinter.Button(self, text='Start', command=self.__click_button_start, width=25)
         start_button.grid(column=0, row=0, padx=(3), pady=(3), sticky='nesw')
@@ -582,6 +612,34 @@ class Main_App(tkinter.Tk):
             logger.info('Forcing kill thread if it is open')
             self.destroy()
             sys.exit()
+
+
+    def __display(self, message):
+        self.scrolled_text.configure(state='normal')
+        line_count = int(float(self.scrolled_text.index('end')))
+        if line_count > 300:
+            self.scrolled_text.delete('1.0', str("{:0.1f}".format(line_count - 299)))
+        self.scrolled_text.insert(tkinter.END, f'{message}\n')
+        self.scrolled_text.configure(state='disabled')
+        self.scrolled_text.yview(tkinter.END)
+
+
+    def __pull_log_queue(self):
+        while not self.log_queue.empty():
+            message = self.log_queue.get(block=False)
+            self.__display(message)
+        self.after(100, self.__pull_log_queue)
+
+
+    def __about_command(self):
+        logger.info('About clicked')
+        self.about = About('About', '''
+        Application name: File Mover Backup
+        Version: 0.10.00
+        Developed by: Akio Fujitani
+        e-mail: akiofujitani@gmail.com
+        ''', './Icon/Bedo.jpg')
+        logger.debug(f'About {self.grab_status}')
 
 
 def __resize_both_sides(trcfmt=dict, hbox=int, vbox=int) -> dict:
@@ -678,7 +736,9 @@ def main(event=threading.Event):
 
 
 if __name__ == '__main__':
-    logger = log.logger(logging.getLogger())
+    log_queue = Queue()
+    logger = logging.getLogger()
+    log.logger_setup(logger, log_queue)
     window = Main_App('VCA Data Process', 'config.json')
     event = threading.Event()
     thread = threading.Thread(target=main, args=(event, ), daemon=True, name='VCA_Data_Process')
