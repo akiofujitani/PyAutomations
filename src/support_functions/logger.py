@@ -23,43 +23,55 @@ class LogConfig:
 
 try:
     template = """{
-        "version" : 1,
-        "log_format" : "[%(asctime)s -%(levelname)s] %(name)s - %(message)s",
-        "logger_level" : 10,
-        "console_level" : 10,
-        "gui_level" : 20,
-        "file_level" : 20,
-        "path" : "Log/",
-        "log_name" : "Log_",
-        "log_extension" : "log",
-        "critical" : 50,
-        "error" : 40,
-        "warning" : 30,
-        "info" : 20,
-        "debug" : 10,
-        "notset" : 0
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+        "brief": {
+            "format" : "[%(asctime)s - %(levelname)s] %(name)-12s %(message)s",
+            "datefmt" : "%Y-%m-%d %H:%M:%S"
+        },
+        "precise": {
+            "format": "[%(asctime)s - %(levelname)s] %(name)-12s %(funcName)-30s %(message)s",
+            "datefmt" : "%Y-%m-%d %H:%M:%S"
+        }
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "brief",
+            "level": "DEBUG",
+            "stream": "ext://sys.stdout"
+        },
+        "file_handler": {
+            "class" : "logger.TimeStampedFileHandler",
+            "formatter" : "precise",
+            "level" : "DEBUG",
+            "filename" : "./Log/Log.log"
+        },
+        "queue_handler" : {
+            "class" : "logger.LogQueuer",
+            "formatter" : "brief",
+            "level" : "DEBUG"
+        }
+    },
+    "root": {
+        "handlers": [
+            "console", "file_handler", "queue_handler"
+        ],
+        "level": "DEBUG"
     }
-    """
-    config = json_config.load_json_config('logging_config.json', template)
-    logger_config = LogConfig(config['version'], 
-                            config['log_format'],
-                            config['logger_level'],
-                            config['console_level'],
-                            config['gui_level'],
-                            config['file_level'],
-                            config['path'],
-                            config['log_name'],
-                            config['log_extension'])
+}"""
+    config = json_config.load_json_config('logger_config.json', template)
 except Exception as error:
     print(f'Config loading error {error}')
     exit()
 
 
 def logger_setup(logger=logging.Logger | None, log_queue=Queue | None):
-    config = json_config.load_json_config('logger_config.json')
     dictConfig(config)
     if not logger == None:
-        logger = add_log_queuer(logger, log_queue)
+        # logger = add_log_queuer(logger, log_queue)
+        logger = add_handler(logger, LogQueuer, log_queue)
 
 
 # def logger(current_logger=logging.Logger):
@@ -187,6 +199,25 @@ def logger_setup(logger=logging.Logger | None, log_queue=Queue | None):
 #             if isinstance(handler, handler_class):
 #                 self.current_logger.handlers.remove(handler)
 #         return
+def add_handler(current_logger=logging.Logger, handler_class=logging.Handler, log_queue=None | Queue):
+    formatter =''
+    level = ''
+    for handler in current_logger.handlers:
+        if isinstance(handler, handler_class):
+            formatter = handler.formatter
+            level = handler.level
+            current_logger.handlers.remove(handler)
+    if not formatter and not level:
+        formatter = current_logger.handlers[0].formatter
+        level = current_logger.handlers[0].level
+    if log_queue == None:
+        log_handler = handler_class()
+    else:
+        log_handler = handler_class(log_queue)
+    log_handler.setFormatter(formatter)
+    log_handler.setLevel(level)
+    current_logger.handlers.append(log_handler)
+    return current_logger
 
 
 def add_log_queuer(current_logger=logging.Logger, log_queue=Queue()):

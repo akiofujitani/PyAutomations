@@ -142,11 +142,9 @@ class Configuration_Values:
     def min_to_seconds(self) -> int:
         return self.wait_time * 60
 
-
 class ThreadEventException(Exception):
     '''Thread event exception'''
     pass
-
 
 class Edit_Values(tkinter.Toplevel):
     def __init__(self, 
@@ -159,6 +157,8 @@ class Edit_Values(tkinter.Toplevel):
                     drop_down_list=None,
                     *args, **kwargs) -> None:
         tkinter.Toplevel.__init__(self, *args, **kwargs)
+        self.last_grab = self.grab_current()
+        self.grab_set()
         self.parent = parent
         self.title(edit_title)
         self.transient()
@@ -214,6 +214,11 @@ class Edit_Values(tkinter.Toplevel):
         cancel_button.grid(column=1, row=key_index + 1, padx=(5), pady=(5))    
         save_button = tkinter.Button(self, text='Save', command=self.__click_button_save, width=15)
         save_button.grid(column=2, row=key_index + 1, padx=(5), pady=(5))       
+
+    def destroy(self) -> None:
+        if self.last_grab:
+            self.last_grab.grab_set()
+        return super().destroy()
 
 
     def __click_radio_bool(self, variable):
@@ -364,7 +369,7 @@ class Main_Frame(tkinter.Frame):
 
         self.columnconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
-    
+
 
     def return_config_updated(self) -> dict:
         new_config = [int(self.wait_time_entry.get()),
@@ -387,7 +392,7 @@ class Main_Frame(tkinter.Frame):
                             'Edit month description', 
                             ['Month number'], 
                             focus_force='Month Description')
-            self.month_edit.grab_set()
+            logger.debug(f'Main frame {self.grab_status}')
         except:
             messagebox.showerror('Edit error', 'No row is selected')
         logger.debug('Double click')
@@ -452,7 +457,7 @@ class File_Settings(tkinter.Frame):
                                 ('path', 'path', 'str', 'int', 'boolean', 'combo_box'),
                                 'Edit file move settings',
                                 drop_down_list={'Path Organization': ('Yearly', 'Monthly', 'Daily')})
-                self.file_config.grab_set()
+                logger.debug(f'Main grab {self.grab_status}')
             except:
                 messagebox.showerror('Edit error', 'No row is selected')
         logger.debug('Double click')
@@ -498,6 +503,9 @@ class File_Settings(tkinter.Frame):
 class Config_Window(tkinter.Toplevel):
     def __init__(self, config=Configuration_Values, config_path=str, *args, **kwargs) -> None:
         tkinter.Toplevel.__init__(self, *args, **kwargs)
+        # workaround for grab_set
+        self.last_grab = self.grab_current()
+        self.grab_set()
         self.config = config
         self.config_path = config_path
         self.title('Configuration')
@@ -530,6 +538,13 @@ class Config_Window(tkinter.Toplevel):
         self.protocol('WM_DELETE_WINDOW', self.__on_window_close)
         self.month_edit = None
         
+    # destroy override
+    def destroy(self) -> None:
+        if self.last_grab:
+            self.last_grab.grab_set()
+        return super().destroy()
+
+
 
     def __click_button_cancel(self):
         logger.debug('Cancel click')
@@ -607,9 +622,8 @@ class Main_App(tkinter.Tk):
         self.after(100, self.__pull_log_queue)
 
         # Set tray icon values
-        icon_image = Image.open('./Icon/tiger.ico')
-        tray_menu = (pystray.MenuItem('Open', self.__show_window), pystray.MenuItem('Quit', self.__quit_window))
-        self.tray_icon = pystray.Icon('Tkinter GUI', icon_image, 'File Mover Backup', tray_menu)
+        self.icon_image = Image.open('./Icon/tiger.ico')
+        self.tray_menu = (pystray.MenuItem('Open', self.__show_window), pystray.MenuItem('Quit', self.__quit_window))
 
 
     def __display(self, message):
@@ -630,7 +644,7 @@ class Main_App(tkinter.Tk):
         Developed by: Akio Fujitani
         e-mail: akiofujitani@gmail.com
         ''', './Icon/Bedo.jpg')
-        self.about.grab_set()
+        logger.debug(f'About {self.grab_status}')
 
 
     def __pull_log_queue(self):
@@ -656,7 +670,7 @@ class Main_App(tkinter.Tk):
     def __click_button_config(self):
         event.set()
         self.config_window = Config_Window(Configuration_Values.check_type_insertion(self.config_file_name), self.config_file_name)
-        self.config_window.grab_set()
+        logger.debug(f'Config {self.grab_status}')
         logger.debug(self.winfo_children)
 
 
@@ -690,12 +704,14 @@ class Main_App(tkinter.Tk):
             self.children[children].destroy()
         logger.debug('Run tray icon')
         self.withdraw()
+        self.tray_icon = pystray.Icon('Tkinter GUI', self.icon_image, 'File Mover Backup', self.tray_menu)
         self.tray_icon.run()
-
 
 class About(tkinter.Toplevel):
     def __init__(self, title=str, label_values=str, image_file=str, *args, **kwargs) -> None:
         tkinter.Toplevel.__init__(self, *args, **kwargs)
+        self.last_grab = self.grab_current()
+        self.grab_set()
         self.geometry('450x400')
         self.title(title)
         self.resizable(width=False, height=False)
@@ -717,6 +733,11 @@ class About(tkinter.Toplevel):
         self.rowconfigure(2, weight=2)
         self.protocol('WM_DELETE_WINDOW', self.__on_window_close)    
         
+    def destroy(self) -> None:
+        if self.last_grab:
+            self.last_grab.grab_set()
+        return super().destroy()
+
 
     def __pressed_ok_button(self):
         self.__on_window_close()
@@ -787,13 +808,16 @@ def main(event=threading.Event):
 
 
 if __name__ == '__main__':
-    # logger = log.logger(logging.getLogger())
     log_queue = Queue()
     logger = logging.getLogger()
     log.logger_setup(logger, log_queue)
-    window = Main_App('File Mover Backup', 'file_mover_backup.json', log_queue)
+
     event = threading.Event()
+
+    window = Main_App('File Mover Backup', 'file_mover_backup.json', log_queue)
+    window.mainloop()
+    
     thread = threading.Thread(target=main, args=(event, ), daemon=True, name='File_Mover')
     thread.start()
-    window.mainloop()
+
 
