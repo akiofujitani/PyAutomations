@@ -1,5 +1,5 @@
 {
-    "wait_time": 15,
+    "wait_time": 10,
     "files_per_cicle": 1500,
     "month_name_list": [
         "01 January",
@@ -37,6 +37,62 @@
             "destination": "//192.168.5.8/Arquivo/LMS/VOLPE_HOST_IMPORT",
             "extention": "vca",
             "days_from_today": 0,
+            "copy": false,
+            "path_organization": "Daily"
+        },
+        {
+            "source": "//192.168.5.2/Arquivos/LMS/VOLPE_EXPORT/Backup",
+            "destination": "//192.168.5.8/Arquivo/LMS/VOLPE_HOST_EXPORT",
+            "extention": "vca",
+            "days_from_today": 0,
+            "copy": false,
+            "path_organization": "Daily"
+        },
+        {
+            "source": "//192.168.5.2/Arquivos/LMS/VOLPE_IMPORT",
+            "destination": "//192.168.5.8/Arquivo/LMS/VOLPE_HOST_IMPORT",
+            "extention": "vca",
+            "days_from_today": 0,
+            "copy": false,
+            "path_organization": "Daily"
+        },
+        {
+            "source": "//192.168.5.2/Arquivos/LMS/VOLPE_PRINT/Backup",
+            "destination": "//192.168.5.8/Arquivo/LMS/VOLPE_PRINT",
+            "extention": "",
+            "days_from_today": 0,
+            "copy": false,
+            "path_organization": "Daily"
+        },
+        {
+            "source": "//192.168.5.2/Arquivos/IOT/Images/Backup",
+            "destination": "//192.168.5.8/Arquivo/LMS/IOT_IMAGES",
+            "extention": "",
+            "days_from_today": 0,
+            "copy": false,
+            "path_organization": "Daily"
+        },
+        {
+            "source": "//192.168.5.2/Arquivos/IOT/Log/Backup",
+            "destination": "//192.168.5.8/Arquivo/LMS/IOT_LOG",
+            "extention": "",
+            "days_from_today": 0,
+            "copy": false,
+            "path_organization": "Daily"
+        },
+        {
+            "source": "//192.168.5.2/Dados/Montagem/Facetadora/In2/Imported",
+            "destination": "//192.168.5.8/Arquivo/Montagem/IN_IMPORTED",
+            "extention": "vca",
+            "days_from_today": 30,
+            "copy": false,
+            "path_organization": "Daily"
+        },
+        {
+            "source": "//192.168.5.2/Dados/Montagem/Facetadora/Out",
+            "destination": "//192.168.5.8/Arquivo/Montagem/OUT",
+            "extention": "vca",
+            "days_from_today": 30,
             "copy": false,
             "path_organization": "Daily"
         }

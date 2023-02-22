@@ -774,10 +774,10 @@ def main(event=threading.Event):
                                 file_destination_path = normpath(file_destination)
                                 source_path, file_name = path_split(abspath(file))
                                 file_handler.file_move_copy(source_path, file_destination_path, file_name, move_settings.copy, True)
-                            counter += 1
-                            if counter >= config.file_per_cicle:
-                                logger.info(f'Number {config.file_per_cicle} of files per cicle reached.')
-                                break
+                                counter += 1
+                                if counter >= config.file_per_cicle:
+                                    logger.info(f'Number {config.file_per_cicle} of files per cicle reached.')
+                                    break
                             if event.is_set():
                                 logger.info(f'Counter at {counter}')
                                 logger.info(f'Moving from "{source_path}" to "{file_destination_path}"')

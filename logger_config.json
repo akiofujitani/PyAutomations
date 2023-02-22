@@ -15,13 +15,13 @@
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "brief",
-            "level": "DEBUG",
+            "level": "ERROR",
             "stream": "ext://sys.stdout"
         },
         "file_handler": {
             "class" : "logger.TimeStampedFileHandler",
             "formatter" : "precise",
-            "level" : "DEBUG",
+            "level" : "INFO",
             "filename" : "./Log/Log.log"
         },
         "queue_handler" : {
