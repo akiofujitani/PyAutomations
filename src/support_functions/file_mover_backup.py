@@ -619,9 +619,12 @@ class Main_App(tkinter.Tk):
         self.scrolled_text.grid(column=0, row=1, columnspan=4, sticky='nesw', padx=(3), pady=(3))
         # logger.addHandler(log.LogQueuer(self.log_queue))
         self.protocol('WM_DELETE_WINDOW', self.__on_window_close)
+
+        # Insert a loop for logging execution
         self.after(100, self.__pull_log_queue)
 
         # Set tray icon values
+
         self.icon_image = Image.open('./Icon/tiger.ico')
         self.tray_menu = (pystray.MenuItem('Open', self.__show_window), pystray.MenuItem('Quit', self.__quit_window))
 
@@ -814,10 +817,9 @@ if __name__ == '__main__':
 
     event = threading.Event()
 
-    window = Main_App('File Mover Backup', 'file_mover_backup.json', log_queue)
-    window.mainloop()
-    
     thread = threading.Thread(target=main, args=(event, ), daemon=True, name='File_Mover')
     thread.start()
 
+    window = Main_App('File Mover Backup', 'file_mover_backup.json', log_queue)
+    window.mainloop()
 

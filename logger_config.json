@@ -19,10 +19,13 @@
             "stream": "ext://sys.stdout"
         },
         "file_handler": {
-            "class" : "logger.TimeStampedFileHandler",
+            "class" : "logger.TimedRotatingFileHandlerCustomNamer",
             "formatter" : "precise",
-            "level" : "INFO",
-            "filename" : "./Log/Log.log"
+            "level" : "DEBUG",
+            "when" : "d",
+            "interval" : 1,
+            "filename" : "./Log/Log",
+            "extension" : "log"
         },
         "queue_handler" : {
             "class" : "logger.LogQueuer",

@@ -1,12 +1,12 @@
-import logging, json_config, tkinter
+import logging, json_config, tkinter, file_handler
 from datetime import datetime
-from os.path import exists, abspath, splitext
-from os import makedirs
+from os.path import abspath, splitext
 from dataclasses import dataclass
-from ntpath import join
 from tkinter.scrolledtext import ScrolledText
 from queue import Queue
 from logging.config import dictConfig
+from logging.handlers import TimedRotatingFileHandler
+from os.path import dirname
 
 @dataclass
 class LogConfig:
@@ -43,7 +43,7 @@ try:
             "stream": "ext://sys.stdout"
         },
         "file_handler": {
-            "class" : "logger.TimeStampedFileHandler",
+            "class" : "logging.handlers.RotatingFileHandler",
             "formatter" : "precise",
             "level" : "DEBUG",
             "filename" : "./Log/Log.log"
@@ -62,6 +62,9 @@ try:
     }
 }"""
     config = json_config.load_json_config('logger_config.json', template)
+    for handler in config['handlers'].values():
+        if 'filename' in handler.keys():
+            file_handler.check_create_dir(dirname(handler['filename']))
 except Exception as error:
     print(f'Config loading error {error}')
     exit()
@@ -277,6 +280,13 @@ class TimeStampedFileHandler(logging.FileHandler):
         filename = abspath(f'{filename}_{datetime.strftime(datetime.now().date(), "%Y%m%d")}{extension}')
         super().__init__(filename, mode, encoding, delay, errors)
 
+class TimedRotatingFileHandlerCustomNamer(TimedRotatingFileHandler):
+    def __init__(self, filename: str, when: str = "h", interval: int = 1, backupCount: int = 0, encoding: str | None = None, delay: bool = False, utc: bool = False, atTime: None = None, errors: str | None = None) -> None:
+        extension = filename.split('.')[-1]
+        self.namer = lambda filename : f'{filename.replace(f".{extension}", "")}.{extension}'
+        super().__init__(filename, when, interval, backupCount, encoding, delay, utc, atTime, errors)
+
+        
 
 if __name__ == '__main__':
     logger_setup()
