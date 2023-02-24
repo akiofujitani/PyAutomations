@@ -24,8 +24,7 @@
             "level" : "DEBUG",
             "when" : "d",
             "interval" : 1,
-            "filename" : "./Log/Log",
-            "extension" : "log"
+            "filename" : "./Log/Log.log"
         },
         "queue_handler" : {
             "class" : "logger.LogQueuer",
