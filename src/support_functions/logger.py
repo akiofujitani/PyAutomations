@@ -242,11 +242,11 @@ def add_log_queuer(current_logger=logging.Logger, log_queue=Queue()):
     
 
 class TextHandler(logging.Handler):
-    def __init__(self, text=ScrolledText):
+    def __init__(self, text=ScrolledText, log_format=str, log_level=int):
         logging.Handler.__init__(self)
-        formatter = logging.Formatter(logger_config.log_format, datefmt='%Y/%m/%d %H:%M:%S')
+        formatter = logging.Formatter(log_format, datefmt='%Y/%m/%d %H:%M:%S')
         logging.Handler.setFormatter(self, formatter)
-        logging.Handler.setLevel(self, logger_config.gui_level)
+        logging.Handler.setLevel(self, log_level)
         self.text = text
     
 
