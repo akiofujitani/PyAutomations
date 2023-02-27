@@ -1,35 +1,134 @@
-import tkinter, json_config, logging, pystray
-from file_mover_backup import *
-from tkinter import ttk
-import logger as log
-from os.path import normpath
-from os.path import exists
-from time import sleep
-from tkinter import filedialog
+import tkinter, logging, json_config
 from tkinter import messagebox
+from tkinter import ttk
+from tkinter import filedialog
+from dataclasses import dataclass
 from PIL import Image, ImageTk
+from os.path import normpath, exists
 
-# for testing
-import threading
+logger = logging.getLogger('gui_classes')
 
 
-logger = logging.getLogger('gui_builder')
+@dataclass
+class Configuration_Values:
+    '''
+    Configuration values dataclass, customize it for your needings
+    '''
+    def __init__(self) -> None:
+        pass
+
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        else:
+            self_values = self.__dict__
+            for key in self_values.keys():
+                if not getattr(self, key) == getattr(other, key):
+                    return False
+            return True
+
+
+    def check_create_insertion(cls, dict_values=dict):
+        '''
+        Receive values and transforms it in class
+        '''
+        pass
+
+
+    def __dict__(self) -> dict:
+        '''
+        Custom dict converter
+        '''
+        pass
+
+
+@dataclass
+class Configuration_Frame:
+
+
+    def __init__(self) -> None:
+        pass
+
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        else:
+            self_values = self.__dict__
+            for key in self_values.keys():
+                if not getattr(self, key) == getattr(other, key):
+                    return False
+            return True
+    
+
+    def check_create_insertion(cls, dict_values=dict):
+        '''
+        Receive values and transforms it in class
+        '''
+        pass
+
+
+    def __dict__(self) -> dict:
+        '''
+        Custom dict converter
+        '''
+        pass
+
+@dataclass
+class Tree_Settings:
+    '''
+    Tree settings dataclass, customize it for your needings
+    '''
+    pass
+
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        else:
+            self_values = self.__dict__
+            for key in self_values.keys():
+                if not getattr(self, key) == getattr(other, key):
+                    return False
+            return True
+
+
+@dataclass
+class Config_Frame_Values:
+    '''
+    - labels_entry_type must use the Keys as Labels to be inserted in Config_Frame GUI and the values must be the type of the entry (str, int, boolean, treeview, path)
+    - treeview_columns must be present only in case of treeview entry type, use the referent label name as key to be used to create the treeview columns.
+    '''
+    labels_entry_type : dict
+    treeview_columns : None | dict
+
+
+    def add_label(self, key=str, value=any):
+        if key in self.labels_entry_type.keys():
+            raise Exception('Key already exists error')
+        self.labels_entry_type[key] = value
+    
+
+    def add_treview_columns(self, key, value_list=tuple):
+        if key not in self.labels_entry_type.keys():
+            raise Exception('Key dont exist in labels')
+        self.treeview_columns[key] = value_list
+
 
 class Edit_Values(tkinter.Toplevel):
-    '''
-    Auto create a GUI based on the values passed.
-    drop_down_list values are obrigatory if combo_box is in type_list
-    '''
     def __init__(self, 
                     parent=ttk.Treeview, 
                     key_list=tuple, 
                     type_list=tuple,
                     edit_title=str, 
-                    values_disabled=None | list, 
-                    focus_force=None | str, 
-                    drop_down_list=None | dict,
+                    values_disabled=None, 
+                    focus_force=None, 
+                    drop_down_list=None,
                     *args, **kwargs) -> None:
         tkinter.Toplevel.__init__(self, *args, **kwargs)
+        self.last_grab = self.grab_current()
+        self.grab_set()
         self.parent = parent
         self.title(edit_title)
         self.transient()
@@ -87,6 +186,12 @@ class Edit_Values(tkinter.Toplevel):
         save_button.grid(column=2, row=key_index + 1, padx=(5), pady=(5))       
 
 
+    def destroy(self) -> None:
+        if self.last_grab:
+            self.last_grab.grab_set()
+        return super().destroy()
+
+
     def __click_radio_bool(self, variable):
         logger.debug(variable.get())
 
@@ -107,7 +212,6 @@ class Edit_Values(tkinter.Toplevel):
 
     def __click_button_save(self, event=None):
         logger.debug('Button save')
-
         new_record = []
         diff_found = False        
         entry_dict_keys = list(self.entry_dict.keys())
@@ -159,15 +263,14 @@ class Edit_Values(tkinter.Toplevel):
         self.lift()
         logger.debug(f'File path {file_path}')
 
-
-class Main_Frame(tkinter.Frame):
-    def __init__(self, config=Configuration_Values, labels=tuple, entry_type=type, treeview_columns=None | dict, *args, **kwargs) -> None:
+class Config_Frame(tkinter.Frame):
+    def __init__(self, config=Configuration_Values, config_frame_value=Config_Frame_Values, *args, **kwargs) -> None:
         tkinter.Frame.__init__(self, *args, **kwargs)
         self.config = config
+        self.labels = config_frame_value.labels_entry_type.keys()
+        self.entry_type = config_frame_value.labels_entry_type.values()
+        self.treeview_columns = config_frame_value.treeview_columns
         self.entry_list = {}
-        self.labels = labels
-        self.entry_type = entry_type
-        self.treeview_columns = treeview_columns
         button_dict = {}
         config_values = list(self.config.__dict__.values())
 
@@ -203,15 +306,16 @@ class Main_Frame(tkinter.Frame):
                         radio_bool_button[i].grid(column=1 + i, row=row_value)
                 case 'treeview':
                     entry = ttk.Treeview(self, columns=tuple(self.treeview_columns.keys()), show='headings')
-                    for key, value in treeview_columns.items():
+                    for key, value in self.treeview_columns.items():
                         entry.heading(key, text=value)
                         entry.column(key, minwidth=10, width=100)
-                    for move_settings in config_values[i]:
-                        entry.insert('', tkinter.END, values=(tuple(move_settings.__dict__.values())))
+                    for tree_settings in config_values[i]:
+                        entry.insert('', tkinter.END, values=(tuple(tree_settings.__dict__.values())))
                     entry.grid(column=1, row=row_value, columnspan=3, sticky='nesw', padx=(5), pady=(5, 0))
                     entry.bind('<Double-1>', lambda info=self.labels[i]: self.__tree_item_edit(info))
                     entry.bind("<Return>", lambda info=self.labels[i]: self.__tree_item_edit(info))
                     row_value += 1
+
                     add_button = tkinter.Button(self, text='Add', command=lambda info=self.labels[i]: self.__click_button_add(info), width=15)
                     add_button.grid(column=2, row=row_value, padx=(5, 0), pady=(0,5))
                     button_dict[f'{self.labels[i]}_add']
@@ -279,18 +383,41 @@ class Main_Frame(tkinter.Frame):
         logger.debug(variable.get())
 
 
+    # Return updated config values in list form
+    # def return_config_updated(self) -> dict:
+    #     new_config = []
+    #     for i in range(len(self.labels)):
+    #         match self.entry_type[i]:
+    #             case 'str':
+    #                 new_config.append(str(self.entry_list[self.labels[i]].get()))
+    #             case 'int':
+    #                 new_config.append(int(self.entry_list[self.labels[i]].get()))
+    #             case 'path':
+    #                 new_config.append(normpath(self.entry_list[self.labels[i]].get()))
+    #             case 'boolean':
+    #                 new_config.append(eval(str(self.entry_list[self.labels[i]].get())))
+    #             case 'treeview':
+    #                 treeview_entry = self.entry_list[self.labels[i]]
+    #                 new_config.append([treeview_entry.item(value)['values'] for value in treeview_entry.get_children()])
+    #     return new_config
+
+
+    # Return updated config values in dict form
     def return_config_updated(self) -> dict:
-        new_config = []
+        new_config = {}
         for i in range(len(self.labels)):
             match self.entry_type[i]:
                 case 'str':
-                    new_config.append(str(self.entry_list[self.labels[i]].get()))
+                    new_config[self.labels[i]] = str(self.entry_list[self.labels[i]].get())
                 case 'int':
-                    new_config.append(int(self.entry_list[self.labels[i]].get()))
+                    new_config[self.labels[i]] = int(self.entry_list[self.labels[i]].get())
                 case 'path':
-                    new_config.append(normpath(self.entry_list[self.labels[i]].get()))
+                    new_config[self.labels[i]] = normpath(self.entry_list[self.labels[i]].get())
                 case 'boolean':
-                    new_config.append(eval(str(self.entry_list[self.labels[i]].get())))
+                    new_config[self.labels[i]] = eval(str(self.entry_list[self.labels[i]].get()))
+                case 'treeview':
+                    treeview_entry = self.entry_list[self.labels[i]]
+                    new_config[self.labels[i]] = [treeview_entry.item(value)['values'] for value in treeview_entry.get_children()]
         return new_config
 
 
@@ -314,17 +441,16 @@ class Main_Frame(tkinter.Frame):
             logger.debug(f'{value} is false')
             return False
 
-class File_Settings(tkinter.Frame):
+class Tree_Config_Frame(tkinter.Frame):
     def __init__(self, 
-                 config=Configuration_Values, 
-                 file_manag_values=dict, 
-                 values_type=tuple, 
-                 edit_win_title=str | None, 
-                 drop_down_list=None | dict, 
-                 config_path=str, *args, **kwargs) -> None:
+                config=Configuration_Values, 
+                file_manag_values=dict, 
+                values_type=tuple, 
+                edit_win_title=str | None, 
+                drop_down_list=None | dict,
+                *args, **kwargs) -> None:
         tkinter.Frame.__init__(self, *args, **kwargs)
         self.config = config
-        self.config_path = config_path
         self.values_type = values_type
         self.edit_win_title = edit_win_title
         self.drop_down_list = drop_down_list
@@ -409,12 +535,12 @@ class File_Settings(tkinter.Frame):
         except:
             messagebox.showerror('Edit error', 'No row is selected')
 
-
-    def add_item(self) -> None:
-        pass
-
 class Config_Window(tkinter.Tk):
-    def __init__(self, config=Configuration_Values, config_path=str, *args, **kwargs) -> None:
+    def __init__(self, config=Configuration_Values, 
+                min_size=tuple,
+                config_path=str,
+                frame_dict=dict,
+                *args, **kwargs) -> None:
         '''
         Default main configuration window        
         ''' 
@@ -422,29 +548,31 @@ class Config_Window(tkinter.Tk):
         self.config = config
         self.config_path = config_path
         self.title('Configuration')
-        self.minsize(width=400, height=300)
+        self.minsize(width=min_size[0], height=min_size[1])
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
-        self.tab_control = ttk.Notebook(self)
 
-        # Tab Main
-        self.tab_main = Main_Frame(self.config)
-        self.tab_file_settings = File_Settings(self.config)
+        self.config_frame_dict = {}
+        if len(frame_dict.keys()) > 1:
+            self.tab_control = ttk.Notebook(self)
+            for frame_name, frame_value in frame_dict.items():
+                self.config_frame_dict[frame_name] = Config_Frame(self.config[frame_name], frame_value)
+                self.tab_control.add(self.config_frame_dict[frame_name], text=frame_name)
+            self.tab_control.grid(column=0, 
+                            row=0, 
+                            columnspan=6, 
+                            sticky='nesw', 
+                            padx=(5, 0), 
+                            pady=(5, 0))    
+        else:
+            self.config_frame_dict[frame_name] = Config_Frame(self.config, frame_dict.values()[0])
+            self.config_frame_dict[frame_name].grid(column=0, 
+                            row=0, 
+                            columnspan=6, 
+                            sticky='nesw', 
+                            padx=(5, 0), 
+                            pady=(5, 0))        
 
-        # Tab File Settings
-        self.tab_file_settings.columnconfigure(1, weight=1)
-        self.tab_file_settings.rowconfigure(0, weight=1)
-
-        # Add tabs to tab control
-        self.tab_control.add(self.tab_main, text='Main')
-        self.tab_control.add(self.tab_file_settings, text='File Settings')
-        self.tab_control.grid(column=0, 
-                        row=0, 
-                        columnspan=6, 
-                        sticky='nesw', 
-                        padx=(5, 0), 
-                        pady=(5, 0))
-        
         # Buttons
         cancel_button = tkinter.Button(self, text='Cancel', command=self.__click_button_cancel, width=15)
         cancel_button.grid(column=4, row=1, padx=(5), pady=(0, 5))    
@@ -461,19 +589,18 @@ class Config_Window(tkinter.Tk):
 
 
     def __click_button_save(self):
-        logger.debug('Save click')
-        logger.debug('')
-        main_config = self.tab_main.return_config_updated()
-        file_settings = self.tab_file_settings.return_config_updated()
-        new_config = Configuration_Values(int(main_config[0]),
-                int(main_config[1]),
-                main_config[2], 
-                [Move_Settings(normpath(item[0]), 
-                        normpath(item[1]),
-                        item[2],
-                        int(item[3]),
-                        eval(item[4]),
-                        item[5]) for item in file_settings])
+        logger.debug('Save clicked')
+
+        if len(self.config_frame_dict) > 1:
+            configuration_values = {}
+            for key, value in self.config_frame_dict.items():
+                configuration_values[key] = Configuration_Frame.check_create_insertion(value.return_config_updated)
+            new_config = Configuration_Values.check_create_insertion(configuration_values)
+        else:
+            new_config = Configuration_Values.check_create_insertion(self.config_frame_dict[0])
+            '''
+            Build universal way to save configuration values
+            '''
         if not self.config.__eq__(new_config):
             logger.debug('Not equals')
             json_config.save_json_config(self.config_path, new_config.convert_to_dict())
@@ -483,164 +610,38 @@ class Config_Window(tkinter.Tk):
     def __on_window_close(self):
         logger.debug('On close click')
         self.destroy()
-    
 
-class Main_App(tkinter.Tk):
-    '''
-    Main window for file processing automation with log queue
-    '''
-    def __init__(self, title=str, config_file_name=str, icon_path=str, *args, **kwargs) -> None:
-        tkinter.Tk.__init__(self, *args, **kwargs)
-        self.title(title)
-        self.config_file_name = config_file_name
-        self.minsize(width=500, height=500)
-        self.grid_rowconfigure(0, minsize=40)
-        self.grid_columnconfigure(0, weight=0, minsize=50)
-        self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure(2, weight=1, minsize=50)
-        self.grid_columnconfigure(3, weight=0, minsize=50)
-
-        # basic menu bar
-        menu_bar = tkinter.Menu(self)
-        file_menu = tkinter.Menu(menu_bar, tearoff=0)
-        file_menu.add_command(label='Start   ', command=self.__click_button_start)
-        file_menu.add_command(label='Stop    ', command=self.__click_button_stop)        
-        file_menu.add_separator()
-        file_menu.add_command(label='Exit   ', command=self.__quit_window)
-        menu_bar.add_cascade(label='File   ', menu=file_menu)
-
-        help_menu = tkinter.Menu(menu_bar, tearoff=0)
-        help_menu.add_command(label='About   ', command=self.__about_command)
-        menu_bar.add_cascade(label='Help   ', menu=help_menu)
-        self.config(menu=menu_bar)
-
-        # Main buttons
-        start_button = tkinter.Button(self, text='Start', command=self.__click_button_start, width=20)
-        start_button.grid(column=0, row=0, padx=(3), pady=(3), sticky='nesw')
-
-        stop_button = tkinter.Button(self, text='Stop', command=self.__click_button_stop, width=20)
-        stop_button.grid(column=1, row=0, padx=(3), pady=(3), sticky='nesw')
-
-        config_button = tkinter.Button(self, text='Configuration', command=self.__click_button_config, width=20)
-        config_button.grid(column=3, row=0, padx=(3), pady=(3), sticky='nesw')
-
-        # Scrolled text field
-        self.scrolled_text = tkinter.scrolledtext.ScrolledText(self, state='disabled')
-        self.scrolled_text.configure(wrap=tkinter.WORD, font=('Arial', 9))
-        self.scrolled_text.grid(column=0, row=1, columnspan=4, sticky='nesw', padx=(3), pady=(3))
-
-        # Set log queuer
-        self.log_queue = Queue()
-        logger.addHandler(log.LogQueuer(self.log_queue))
-        self.protocol('WM_DELETE_WINDOW', self.__on_window_close)
-        self.after(100, self.__pull_log_queue)
-
-        # Set tray icon values
-        icon_image = Image.open(icon_path)
-        tray_menu = (pystray.MenuItem('Open', self.__show_window), pystray.MenuItem('Quit', self.__quit_window))
-        self.tray_icon = pystray.Icon('Tkinter GUI', icon_image, title, tray_menu)
-
-
-    def __display(self, message):
-        # Add value to scrolled text field
-        self.scrolled_text.configure(state='normal')
-        line_count = int(float(self.scrolled_text.index('end')))
-        # Define maximum number of lines and delete the old ones
-        if line_count > 300:
-            self.scrolled_text.delete('1.0', str("{:0.1f}".format(line_count - 299)))
-        self.scrolled_text.insert(tkinter.END, f'{message}\n')
-        self.scrolled_text.configure(state='disabled')
-        self.scrolled_text.yview(tkinter.END)
-
-
-    def __about_command(event_value):
-        # Window will be created
-        logger.info('About clicked')
-
-
-    def __pull_log_queue(self):
-        # Get value from log_queue
-        while not self.log_queue.empty():
-            message = self.log_queue.get(block=False)
-            self.__display(message)
-        self.after(100, self.__pull_log_queue)
-
-
-    def __click_button_start(self):
-        # Start main thread and clear event
-        logger.debug('Button start clicked')
-        if event.is_set():
-            thread = threading.Thread(target=main, args=(event,), daemon=True,  name='File_Mover')
-            thread.start()
-            event.clear()
-
-
-    def __click_button_stop(self):
-        # Set event to stop thread execution
-        logger.debug('Button stop clicked')
-        event.set()
-
-
-    def __click_button_config(self):
-        # Stop thread execution and open configuration window
-        logger.debug('Button config clicked')
-        try:
-            if self.config_window.state() == 'normal':
-                self.config_window.focus_force()
-        except Exception as error:
-            logger.info(error)
-            event.set()
-            self.config_window = Config_Window(Configuration_Values.check_type_insertion(self.config_file_name), self.config_file_name)
-
-
-    def __on_window_close(self):
-        # Hide window to tray
-        self.__hide_window_to_tray()
-
-
-    def __quit_window(self):
-        # Quit application
-        if messagebox.askokcancel('Quit', 'Do you want to quit?'):
-            event.set()
-            logger.info('Forcing kill thread if it is open')
-            try:
-                self.tray_icon.stop()
-            except:
-                logger.warning('Tray icon is not started')
-            self.after(150, self.deiconify)
-            self.destroy()
-    
-
-    def __show_window(self):
-        # Show window hidden in tray
-        self.tray_icon.stop()
-        self.after(150, self.deiconify)
-
-
-    def __hide_window_to_tray(self):
-        # Hide window to tray
-        logger.debug('Run tray icon')
-        self.withdraw()
-        self.tray_icon.run()
-
-
+# Basic About class
 class About(tkinter.Toplevel):
-    def __init__(self, title='About', label_values=str, image_file=str, *args, **kwargs) -> None:
+    def __init__(self, title=str, label_values=str, image_file=str, *args, **kwargs) -> None:
         tkinter.Toplevel.__init__(self, *args, **kwargs)
-        self.geometry('500 x 400')
-        self.title = title
+        self.last_grab = self.grab_current()
+        self.grab_set()
+        self.geometry('450x400')
+        self.title(title)
         self.resizable(width=False, height=False)
-        image = ImageTk.PhotoImage(Image.open(image_file))
-        image_label = tkinter.Label(self, image=image)
-        image_label.grid(column=0, row=0, columnspan=3)
-        image_label.configure(width=450)
+        image = Image.open(image_file)
+        image_tk = ImageTk.PhotoImage(image=image)
+        image_label = tkinter.Label(self, image=image_tk, justify='center')
+        image_label.image = image_tk
+        image_label.grid(column=0, row=0, columnspan=2, padx=(10), pady=(5, 0))
 
-        text_label = tkinter.Label(self, label_values)
-        text_label.grid(column=0, row=1, columnspan=3)
+        text_label = tkinter.Label(self, text=label_values, justify='left')
+        text_label.grid(column=0, row=1, rowspan=2, sticky='nw', padx=(5), pady=(5, 0))
 
-        ok_button = tkinter.Button(text='Ok', width=15, command=self.__pressed_ok_button)
-        ok_button.grid(column=3, row=2)
+        ok_button = tkinter.Button(self, text='Ok', width=15, command=self.__pressed_ok_button)
+        ok_button.grid(column=1, row=2, sticky='se', padx=(10), pady=(5, 10))
+
+        self.columnconfigure(0, weight=2)
+        self.columnconfigure(1, weight=1)
+        self.rowconfigure(1, weight=1)
+        self.rowconfigure(2, weight=2)
         self.protocol('WM_DELETE_WINDOW', self.__on_window_close)    
+        
+    def destroy(self) -> None:
+        if self.last_grab:
+            self.last_grab.grab_set()
+        return super().destroy()
 
 
     def __pressed_ok_button(self):
@@ -649,58 +650,3 @@ class About(tkinter.Toplevel):
 
     def __on_window_close(self):
         self.destroy()
-
-
-def __load_configuration(config_path=str) -> dict:
-    '''
-    Load configuration from .json file. If json file do not exists it will be created using the template values.
-    '''
-    try:
-        config_template = """{
-        "wait_time" : 15,
-        "files_per_cicle" : 1500,
-        "month_name_list" : [
-            "01 January",
-            "02 February",
-            "03 March",
-            "04 April",
-            "05 May",
-            "06 June",
-            "07 July",
-            "08 August",
-            "09 September",
-            "10 October",
-            "11 November",
-            "12 December"
-            ],
-            "directory_list" : [
-                {
-                    "source" : "./Source",
-                    "destination" : "./Destin",
-                    "extention" : "",
-                    "days_from_today" : 0,
-                    "copy" : "False"
-                    "path_organization" : "Daily"
-                }
-            ]
-        }"""
-        config = json_config.load_json_config(config_path, config_template)
-        return Configuration_Values(int(config['wait_time']),
-                int(config['files_per_cicle']),
-                config['month_name_list'], 
-                [Move_Settings(normpath(item['source']), 
-                        normpath(item['destination']),
-                        item['extention'],
-                        int(item['days_from_today']),
-                        eval(str(item['copy'])),
-                        item['path_organization']) for item in config['directory_list']])
-    except Exception as error:
-        logger.critical(f'Error loading configuration file. {error}')
-        sleep(3)
-        quit()
-
-
-if __name__ == '__main__':
-    event = threading.Event()
-    window = Main_App('GUI Builder', 'file_mover_backup.json', './Icon/tiger.ico')
-    window.mainloop()
