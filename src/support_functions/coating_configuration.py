@@ -124,7 +124,8 @@ def load_table_list(file_path=str, file_path_done=str, file_name=str) -> dict:
 
 
 if __name__ == '__main__':
-    logger = log.logger(logging.getLogger())
+    logger = logging.getLogger()
+    log.logger_setup(logger)
     # erp_volpe_handler.volpe_back_to_main()
     try:
         config = json_config.load_json_config('c:/PyAutomations_Reports/coating_config.json')
