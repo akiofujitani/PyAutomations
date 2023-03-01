@@ -70,9 +70,10 @@ except Exception as error:
     exit()
 
 
-def logger_setup(logger=logging.Logger | None, log_queue=Queue | None):
+def logger_setup(logger=logging.Logger | None, log_queue=None | Queue):
     dictConfig(config)
-    if not logger == None:
+    if not log_queue:
+
         # logger = add_log_queuer(logger, log_queue)
         logger = add_handler(logger, LogQueuer, log_queue)
 

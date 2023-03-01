@@ -3,7 +3,7 @@ import logger as log
 from ntpath import join
 from copy import deepcopy
 
-logger = logging('rework')
+logger = logging.getLogger('rework')
 
 
 '''
@@ -111,10 +111,11 @@ def convert_rework_list(rework_list, template):
 
 
 if __name__ == '__main__':
-    logger = log.logger(logging.getLogger())
+    logger = logging.getLogger()
+    log.logger_setup(logger)
     # volpe_back_to_main()
     try:
-        config = json_config.load_json_config('C:/Users/fausto.akio/Documents/Reports/config_volpe.json')
+        config = json_config.load_json_config('C:/PyAutomations_Reports/config_volpe.json')
     except:
         logger.critical('Could not load config file')
         exit()

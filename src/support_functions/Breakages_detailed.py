@@ -3,7 +3,6 @@ import logger as log
 from ntpath import join
 from time import sleep
 
-
 logger = logging.getLogger('breakages_detailed')
 
 '''
@@ -182,7 +181,9 @@ def breakage_date_hour(values_dict=dict):
 
 
 if __name__ == '__main__':
-    logger = log.logger(logging.getLogger())
+    logger = logging.getLogger()
+    log.logger_setup(logger)
+    
         # volpe_back_to_main()
     try:
         config = json_config.load_json_config('C:/PyAutomations_Reports/config_volpe.json')

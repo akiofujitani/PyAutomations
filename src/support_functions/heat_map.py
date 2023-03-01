@@ -281,28 +281,46 @@ def define_start_date(date_1, date_2):
     return start_date
 
 
-def complete_date_in_list(status_dict):
+def complete_date_in_list(status_dict=dict, status_list_by_job_type=list):
     '''
     Get status values and complete missing dates.
     '''
+
+    #get first and last date
+    start_date = None
+    end_date = None
+    for value in status_dict.values():
+        first_date = datetime.datetime.strptime(value[0]['DATE'], '%d/%m/%Y').date()
+        last_date = datetime.datetime.strptime(value[-1]['DATE'], '%d/%m/%Y').date()
+        if start_date == None or first_date < start_date:
+            start_date = first_date
+        if end_date == None or last_date > end_date:
+            end_date = last_date
+    date_diff = (end_date - start_date) + datetime.timedelta(days=1)
+
+    # Merge status
+    status_set = set(status_dict.keys()).union(set(status_list_by_job_type))
+
     temp_list = {}
-    for status in status_dict.keys():
-        date_list = [datetime.datetime.strptime(date['DATE'], '%d/%m/%Y') for date in status_dict[status]]
-        start_date = date_list[0]
-        end_date = date_list[len(date_list) - 1]
+    for status in status_set:
         for_loop_date = start_date
         temp_date_list = []
-        date_diff = end_date.date() - start_date.date()
-        for _ in range(date_diff.days):
-            if for_loop_date in date_list:
-                for date_values in status_dict[status]:
-                    if for_loop_date == datetime.datetime.strptime(date_values['DATE'], '%d/%m/%Y'):
-                        temp_date = date_values
-                        break
-            else:
-                temp_date = machine_with_date(for_loop_date.strftime('%Y%m%d'), heat_map_classes.machine('COUNTER'))
-            temp_date_list.append(temp_date)
-            for_loop_date = for_loop_date + datetime.timedelta(days=1)
+        if status in status_dict.keys():
+            date_list = [datetime.datetime.strptime(value['DATE'], '%d/%m/%Y').date() for value in status_dict[status]]
+            for _ in range(date_diff.days):
+                if for_loop_date in date_list:
+                    for value in status_dict[status]:
+                        if for_loop_date == datetime.datetime.strptime(value['DATE'], '%d/%m/%Y').date():
+                            temp_date = value
+                else:
+                    temp_date = machine_with_date(for_loop_date.strftime('%Y%m%d'), heat_map_classes.machine('COUNTER'))
+                temp_date_list.append(temp_date)
+                for_loop_date = for_loop_date + datetime.timedelta(days=1)
+        else:
+            for_loop_date = start_date
+            for _ in range(date_diff.days):
+                temp_date_list.append(machine_with_date(for_loop_date.strftime('%Y%m%d'), heat_map_classes.machine('COUNTER')))
+                for_loop_date = for_loop_date + datetime.timedelta(days=1)
         temp_list[status] = temp_date_list
     return temp_list
 
@@ -318,7 +336,9 @@ def complete_date_in_list(status_dict):
 
 
 if __name__ == '__main__':
-    logger = log.logger(logging.getLogger())
+    logger = logging.getLogger()
+    log.logger_setup(logger)
+
     try:
         config = json_config.load_json_config('C:/PyAutomations_Reports/config_volpe.json')
     except:
@@ -348,7 +368,7 @@ if __name__ == '__main__':
 
 
         # Defining start and end date
-        if not sheets_date_plus_one == datetime.datetime.now().date():
+        if not sheets_date_plus_one.date() == datetime.datetime.now().date():
             file_date = file_handler.file_list_last_date(path, extension_str, file_name_pattern, '%Y%m%d')
             if file_date == None:
                 start_date = sheets_date_plus_one
@@ -405,11 +425,13 @@ if __name__ == '__main__':
 
                 # Filtering and organizing values in csv
                 try:
+                    status_list_by_jobtype = data_communication.column_to_list(data_communication.get_values(status_jobtype_sheets_name , status_jobtype, sheets_id=sheets_id))
+                    
                     productivity_dict = convert_productivity(path, extension_str)
                     filled_productiviry_dict = fill_values(productivity_dict)
                     flatten_productivity = sum_values_by_status(filled_productiviry_dict)
                     status_dict = simple_dict_by_status(flatten_productivity)
-                    completed_list = complete_date_in_list(status_dict)
+                    completed_list = complete_date_in_list(status_dict, status_list_by_jobtype)
 
                     # Storing data in sheets of csv file if error
                     count_status = 0
