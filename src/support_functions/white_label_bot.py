@@ -3,6 +3,8 @@ import logger as log
 from ntpath import join
 from time import sleep
 
+
+
 logger = logging.getLogger('white_label_bot')
 
 '''
@@ -64,9 +66,7 @@ def open_white_label_descr():
 def insert_white_label_values(description=str, code=str, engraving=str):
     try:
         pyautogui.press('i')
-        sleep(0.3)
-        include_descr_pos = win_handler.image_search('Include_description.png', path='Images/Registry')
-        sleep(0.3)
+        sleep(0.6)
         pyautogui.write(code)
         sleep(0.3)
         pyautogui.press('tab')
@@ -76,7 +76,9 @@ def insert_white_label_values(description=str, code=str, engraving=str):
         pyautogui.press('tab')
         sleep(0.3)
         pyautogui.write(engraving)
-        win_handler.icon_click('Button_Ok.png')
+        pyautogui.press('tab')
+        sleep(0.5)
+        pyautogui.press('space')
         sleep(0.5)
         pyautogui.press('s')
         sleep(0.3)
@@ -123,7 +125,10 @@ def create_white_label_description(white_label, shorten_list, swap_list, done_li
         descr_pos = win_handler.image_search('Header_descr.png', path='Images/Registry')
         code_pos = win_handler.image_search('Header_code.png', path='Images/Registry')
         type_pos = win_handler.image_search('Header_type.png', path='Images/Registry')
-        selected_pos = win_handler.image_search('Volpe_Table_selected.png', region=(erp_volpe_handler.region_definer(header_pos.left - 15, header_pos.top, 200)))
+        try:
+            selected_pos = win_handler.image_search('Volpe_Table_selected.png', region=(erp_volpe_handler.region_definer(header_pos.left - 15, header_pos.top, 200)))
+        except Exception as error:
+            return
         code_value = erp_volpe_handler.ctrl_d(code_pos.left + 35, selected_pos.top + 4)
         while not code_value == last_code_value: 
             base_descr = erp_volpe_handler.ctrl_d(descr_pos.left + 15, selected_pos.top + 4)
@@ -146,13 +151,15 @@ def create_white_label_description(white_label, shorten_list, swap_list, done_li
             sleep(0.3)
             selected_pos = win_handler.image_search('Volpe_Table_selected.png', region=(erp_volpe_handler.region_definer(header_pos.left - 15, header_pos.top, 200)))
             code_value = erp_volpe_handler.ctrl_d(code_pos.left + 35, selected_pos.top + 4)
+        return True
     except Exception as error:
         logger.error(f'Create white laber error {error}')
         raise error
 
 
 if __name__ == '__main__':
-    logger = log.logger(logging.getLogger())
+    logger = logging.getLogger()
+    log.logger_setup(logger)
     try:
         config = json_config.load_json_config('white_label.json')
     except:
@@ -184,7 +191,7 @@ if __name__ == '__main__':
 
     # erp_volpe_handler.volpe_back_to_main()
     # erp_volpe_handler.volpe_load_tab('Tab_Reg', 'Icon_Logins_web.png')
-    # erp_volpe_handler.volpe_open_window('Icon_Products.png', 'Products.png', path='Images/Registry')
+    erp_volpe_handler.volpe_open_window('Icon_Products.png', 'Products.png', path='Images/Registry')
 
     white_label_list = data_communication.matrix_into_dict(white_label_data['values'], 'BASE', 'TYPE', 'DESCRIPTION', 'ENG', 'CUSTOMER', 'CODE', 'DETAILS_NAMING', 'STATUS','BRANCH')
     shorten_list = data_communication.matrix_into_dict(description_shorten['values'], 'DESCRIPTION', 'SHORTEN')
@@ -201,8 +208,12 @@ if __name__ == '__main__':
                     logger.error(f'Error {error}')
                     raise error
                 registry_load_by_description(white_label['BASE'])
-                create_white_label_description(white_label, shorten_list, swap_list, [white_label['WHITE_LABEL'] for white_label in white_label_done_list], config)
-                data_communication.data_update_value(sheets_name, f'H{i + 2}', [['DONE']], sheets_id)
+                white_label_status = create_white_label_description(white_label, shorten_list, swap_list, [white_label['WHITE_LABEL'] for white_label in white_label_done_list], config)
+                if white_label_list:
+                    data_communication.data_update_value(sheets_name, f'H{i + 2}', [['DONE']], sheets_id)
         logger.info('Done')
+    except Exception as error:
+        logger.critical(f'Error {error}')
+        quit()
     except KeyboardInterrupt:
         logger.critical('Script interrupted')

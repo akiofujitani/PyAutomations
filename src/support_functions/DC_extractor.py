@@ -3,6 +3,7 @@ from ntpath import join
 from time import sleep
 import tkinter.messagebox
 import logger as log
+from datetime import datetime
 
 logger = logging.getLogger('DC_extractor')
 
@@ -33,38 +34,8 @@ def get_time(string_value):
 ==================================================================================================================
 '''
 
-
-def machine_to_dict(status_name, machine):
-    '''
-    Convert machine object to dictionary
-    '''
-    machine_dict = {}
-    machine_dict['STATUS'] = status_name
-    machine_dict['MACHINE'] = machine.machine_name
-    machine_dict.update(machine.lens_per_hour)
-    return machine_dict
-
-
-def machine_with_date(date, machine):
-    '''
-    
-    '''
-    machine_dict = {}
-    machine_dict['DATE'] = datetime.datetime.strptime(date, '%Y%m%d').strftime('%d/%m/%Y')
-    machine_dict['MACHINE'] = machine.machine_name
-    machine_dict.update(machine.lens_per_hour)
-    return machine_dict
-
-
-def organized_values_to_simples_dict(organized_values=dict):
-    '''
-    Create list of simplified dictionaries to csv conversion
-    '''
-    simple_dict = []
-    for status_name in organized_values.keys():
-        for machine in organized_values[status_name]:
-            simple_dict.append(machine_to_dict(status_name, machine))
-    return simple_dict
+def complete_date(dc_dict=dict, start_date=datetime.date, end_date=datetime.date) -> dict:
+    pass
 
 
 def done_file_move(path=str, done_path=str, extension=str):
@@ -72,20 +43,6 @@ def done_file_move(path=str, done_path=str, extension=str):
     for file in file_list:
         file_handler.file_move_copy(path, done_path, file)
     return
-
-
-def simple_dict_by_status(productivity_dict=dict):
-    '''
-    Converts machine productivity dictionary by status to date
-    '''
-    simple_dict_by_status = {}
-    for date_value in productivity_dict.keys():
-        for status in productivity_dict[date_value].keys():
-            if status not in simple_dict_by_status.keys():
-                simple_dict_by_status[status] = []
-            for machine in productivity_dict[date_value][status]:
-                simple_dict_by_status[status].append(machine_with_date(date_value, machine))
-    return simple_dict_by_status
 
 
 def get_maximum_in_items(productivity_dict=dict):
@@ -116,32 +73,33 @@ def define_start_date(date_1, date_2):
 
 
 if __name__ == '__main__':
-    logger = log.logger(logging.getLogger())
+    logger = logging.getLogger()
+    log.logger_setup(logger)
+
     try:
-        config = json_config.load_json_config('C:/Users/fausto.akio/Documents/Reports/config_volpe.json')
+        config = json_config.load_json_config('c:/PyAutomations_Reports/dc_config.json')
     except:
-        print('Could not load config file')
+        logger.error('Could not load config file')
         exit()
 
 
-    extension_str = config['dc']['extension']
-    file_name_pattern = config['dc']['file_name_pattern']
-    sheets_date_pos = config['dc']['sheets_date_pos']
-    sheets_id = config['dc']['sheets_id']
-    status_jobtype_sheets_name = config['dc']['status_list']['sheets_name']
+    extension_str = config['extension']
+    file_name_pattern = config['file_name_pattern']
+    sheets_date_pos = config['sheets_date_pos']
+    sheets_id = config['sheets_id']
+    status_jobtype_sheets_name = config['status_list']['sheets_name']
 
     # Selecting by job type
     # Free form or external (coating)
 
-    for jobtype in config['dc']['job_type']:
-        path = file_handler.check_create_dir(os.path.normpath(config['dc']['path_output'][jobtype]))
-        path_done = file_handler.check_create_dir(os.path.normpath(config['dc']['path_done'][jobtype]))
-        print(config['dc']['job_type'][jobtype])
-        print(config['dc']['sheets_type_name'][jobtype])
+    for jobtype in config['job_type']:
+        path = file_handler.check_create_dir(os.path.normpath(config['path_output'][jobtype]))
+        path_done = file_handler.check_create_dir(os.path.normpath(config['path_done'][jobtype]))
+        logger.info(config['job_type'][jobtype])
+        logger.info(config['sheets_type_name'][jobtype])
 
-        status_jobtype = config['dc']['status_list'][jobtype]
-        sheets_name = config["dc"]["sheets_type_name"][f'date_source_{config["dc"]["sheets_type_name"][jobtype]}']
-        sheets_date_plus_one = data_communication.get_last_date(f'{sheets_name} {config["dc"]["sheets_type_name"][jobtype]}', sheets_date_pos, config['dc']['minimum_date'], sheets_id=sheets_id) + datetime.timedelta(days=1)
+        sheets_name = f'{config["sheets_name"]} {config["sheets_type_name"][jobtype]}'
+        sheets_date_plus_one = data_communication.get_last_date(sheets_name, sheets_date_pos, config['minimum_date'], sheets_id=sheets_id) + datetime.timedelta(days=1)
         end_date = datetime.datetime.now() - datetime.timedelta(days=1)
 
 
@@ -153,10 +111,10 @@ if __name__ == '__main__':
             else:
                 start_date = define_start_date(sheets_date_plus_one, file_date)
 
-            print(datetime.datetime.strftime(start_date, '%d/%m/%Y'))
-            print(datetime.datetime.strftime(end_date, '%d/%m/%Y'))
+            logger.info(datetime.datetime.strftime(start_date, '%d/%m/%Y'))
+            logger.info(datetime.datetime.strftime(end_date, '%d/%m/%Y'))
 
-            type_list = config['dc']['job_type'][jobtype]
+            type_list = config['job_type'][jobtype]
 
 
             # Running Volpe automation if needed
@@ -190,9 +148,9 @@ if __name__ == '__main__':
                                                 date_until_dist=30,
                                                 load_report_path='Images/Delivery_control')
                             erp_volpe_handler.volpe_save_report(f'{file_name_pattern}{datetime.datetime.strftime(report_date_start, "%Y%m%d")}', path)
-                            print(f'Date {datetime.datetime.strftime(report_date_start, "%d/%m/%Y")} done.')
+                            logger.debug(f'Date {datetime.datetime.strftime(report_date_start, "%d/%m/%Y")} done.')
                         except Exception as error:
-                            print(f'Error {error}')
+                            logger.warning(f'Error {error}')
                             if counter >= 5:
                                 raise Exception('Error: Too many tries.')
                             erp_volpe_handler.volpe_back_to_main()
@@ -200,7 +158,7 @@ if __name__ == '__main__':
                             erp_volpe_handler.volpe_open_window('Icon_Productivity_machine.png', 'Title_Machine_productivity.png')
                     # get_productivity(start_date, end_date, type_list, path, file_name_pattern)
                 except Exception as error:
-                    print('Automation error: {error}')
+                    logger.error('Automation error: {error}')
                     erp_volpe_handler.volpe_back_to_main()
 
 
@@ -216,8 +174,8 @@ if __name__ == '__main__':
                             sheet = data_communication.transform_in_sheet_matrix(ready_list)
                             data_communication.data_append_values(sheets_name ,'A:M', sheet, sheets_id=sheets_id)
                             file_handler.file_move_copy(path, path_done, file, False)
-                            print(f'{file} done')
-                    print("Done")
+                            logger.info(f'{file} done')
+                    logger.info("Done")
                 except Exception as error:
-                    print(f'Error in data processing {error}')
+                    logger.error(f'Error in data processing {error}')
 

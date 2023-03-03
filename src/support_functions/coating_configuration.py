@@ -158,6 +158,9 @@ if __name__ == '__main__':
         index_tint_and_tinticoat_data = data_communication.get_values(config['index_tint_and_tintcoat']['sheets_name'], 
                                     config['index_tint_and_tintcoat']['sheets_pos'], 
                                     sheets_id=sheets_id)
+        family_data = data_communication.get_values(config['family_list']['sheets_name'], 
+                                    config['family_list']['sheets_pos'], 
+                                    sheets_id=sheets_id)
         file_name_pattern = config['parameters']['file_name_pattern']
         report_path = config['parameters']['report_path']
         report_path_done = config['parameters']['report_path_done']
@@ -174,6 +177,8 @@ if __name__ == '__main__':
         index_tint_coat = ''
         if 'values' in index_tint_and_tinticoat_data.keys():
             index_tint_coat = data_communication.list_to_dict_key_and_list(index_tint_and_tinticoat_data['values'], 0)
+        if 'values' in family_data.keys():
+            family_list = data_communication.column_to_list(family_data, 0)
         uv_check_list = __uv_check_list(feature_values_list, ['POLAR'], ['UV', 'BLUECUT', '1.59 POLAR'])
     except Exception as error:
         logger.critical(f'Error converting configuration values {error}')
@@ -196,7 +201,7 @@ if __name__ == '__main__':
 
             done_list_code = [done_product['CODE'] for done_product in done_list]
             for product in codes_list:
-                if not product['CODE'] in done_list_code:
+                if not product['CODE'] in done_list_code and product['FAMILY'] in family_list:
                     product_coating_list = []
                     family_type, product_coating_list = __get_coating(product['FAMILY'], coating_list)
                     if __get_lens_tint(product['DESCRIPTION'], feature_values_list):
