@@ -28,6 +28,8 @@ def activate_window(window_name = str):
             window_name_list[0].maximize()
         if not window_name_list[0].isActive:
             window_name_list[0].activate()
+        sleep(0.3)
+        pyautogui.click(window_name_list[0].center.x, window_name_list[0].box.top + 5)
         return window_name_list[0]
     except:
         logger.error(f'activate window: {window_name} do not exists')
@@ -207,7 +209,7 @@ def loading_wait(image_name = str, path='Images', wait_time_in_sec = 15):
             if root_pos:
                 return root_pos
         except Exception as error:
-            logger.error(f'Not loaded {error}. Count {counter}')
+            logger.info(f'Not loaded {error}. Count {counter}')
             if counter >= wait_time_in_sec:
                 raise Exception('Software frozen or loading too slow')
             counter = counter + 1

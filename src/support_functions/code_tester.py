@@ -120,14 +120,14 @@
 # # run the app
 # root.mainloop()
 
-import ctypes
-import win32gui
+from time import sleep
+import win_handler, win32gui
 
-EnumWindows = ctypes.windll.user32.EnumWindows
-EnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
-GetWindowText = ctypes.windll.user32.GetWindowTextW
-GetWindowTextLength = ctypes.windll.user32.GetWindowTextLengthW
-IsWindowVisible = ctypes.windll.user32.IsWindowVisible
+foreground_win_hWnd = win32gui.GetForegroundWindow()
+active_win_text = win32gui.GetWindowText(foreground_win_hWnd)
+active_win_control = win32gui.FindWindowEx(foreground_win_hWnd, 0, 'static', None)
+control_text = win32gui.GetWindowText(active_win_control)
 
-user32 = ctypes.windll.user32
-print(user32)
+print(f'Window title: {active_win_text}')
+print(active_win_control)
+print()
