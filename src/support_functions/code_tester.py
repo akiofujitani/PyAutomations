@@ -120,14 +120,32 @@
 # # run the app
 # root.mainloop()
 
-from time import sleep
-import win_handler, win32gui
+# from time import sleep
+# import win_handler, win32gui
 
-foreground_win_hWnd = win32gui.GetForegroundWindow()
-active_win_text = win32gui.GetWindowText(foreground_win_hWnd)
-active_win_control = win32gui.FindWindowEx(foreground_win_hWnd, 0, 'static', None)
-control_text = win32gui.GetWindowText(active_win_control)
+# foreground_win = win_handler.activate_window('Volpe')
+# print(foreground_win._hWnd)
+# active_window = win32gui.GetForegroundWindow()
+# print(active_window)
+# active_win_text = win32gui.GetWindowText(active_window)
 
-print(f'Window title: {active_win_text}')
-print(active_win_control)
-print()
+# print(f'Window title: {active_win_text}')
+# print()
+
+import time
+
+import win32gui, pyautogui
+
+while True:
+    window = win32gui.GetForegroundWindow()
+    class_name = win32gui.GetClassName(window)
+    menu = win32gui.GetMenu(window)
+    rect = win32gui.GetWindowRect(window)
+    title = win32gui.GetWindowText(window)
+    pyauto = pyautogui.getWindowsWithTitle(title)
+    control = win32gui.FindWindowEx(window, None, None, None)
+    if control:
+        control_text = win32gui.GetWindowText(control)
+        control_class = win32gui.GetClassName(control)
+    print(f'{title}: {class_name} text {control_text} class {control_class}')
+    time.sleep(1)

@@ -55,13 +55,14 @@ def values_merger(path_list=list, base_list=list, base_search_tag=str, *args, st
 
 
 if __name__ == '__main__':
-    logger = log.logger(logging.getLogger())
+    logger = logging.getLogger()
+    logger = log.logger_setup()
     # date_target = week_date(datetime.datetime.now().date(), 1)
 
     try:
         config = json_config.load_json_config('C:/PyAutomations_Reports/production_config.json')
     except:
-        print('Could not load config file')
+        logger.critical('Could not load config file')
         exit()
 
     path_list = [os.path.normpath(path) for path in config['path_list']]

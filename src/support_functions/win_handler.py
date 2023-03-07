@@ -28,7 +28,7 @@ def activate_window(window_name = str):
             window_name_list[0].maximize()
         if not window_name_list[0].isActive:
             window_name_list[0].activate()
-        sleep(0.3)
+        sleep(0.5)
         pyautogui.click(window_name_list[0].center.x, window_name_list[0].box.top + 5)
         return window_name_list[0]
     except:

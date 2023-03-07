@@ -1,4 +1,5 @@
-import pyautogui, win_handler, keyboard, tkinter, datetime, file_handler, os, pyscreeze, logging
+import pyautogui, win_handler, keyboard, tkinter, datetime, file_handler, os, pyscreeze, logging, win32gui
+import logger as log
 from time import sleep
 from ocr_text_reader import return_text
 from ntpath import join
@@ -187,7 +188,7 @@ def appointments_value(text_string=str, tech_name_list=list):
 
 def volpe_load_tab(tab_name, load_check_image):
     try:
-        win_handler.activate_window('Volpe')
+        win_handler.activate_window('Volpe ')
         volpe_tab_select(tab_name)
         win_handler.loading_wait(load_check_image)
         sleep(0.3)
@@ -216,6 +217,52 @@ def volpe_open_window(icon_name, window_name, path='Images', maximize=True):
 
 
 def volpe_back_to_main(question=False):
+    for _ in range(5):
+        volpe_window = win_handler.activate_window('Volpe ')
+        sleep(0.3)
+        active_window = win32gui.GetForegroundWindow()
+        active_win_text = win32gui.GetWindowText(active_window)
+        control = win32gui.FindWindowEx(active_window, None, None, None)
+        control_text = ''
+        if control:
+            control_text = win32gui.GetWindowText(control)
+        win_pos = volpe_window.box
+        if 'AVISO' in active_win_text:
+            logger.debug('Space pressed')
+            pyautogui.press('space')
+        elif 'Save As' in active_win_text:
+            pyautogui.press('esc')
+        elif 'Confirmar Salvar como' in active_win_text:
+            if question == False:
+                pyautogui.press('n')
+                logger.debug('Fale save canceled')
+            else:
+                pyautogui.press('s')
+                logger.debug('File overwritten')
+            pyautogui.press('esc')
+        elif 'Volpe' in active_win_text:
+            logger.debug('Volpe Main Window')
+            try:
+                pyautogui.press('esc')
+                sleep(0.3)
+                for _ in range(5):
+                    win_handler.icon_click('Volpe_Close_Inactive.png', confidence_value=0.9, region_value=(region_definer(win_pos.left, 
+                                    win_pos.top + 15, 
+                                    width=win_pos.width + 20, 
+                                    height=win_pos.height + 20)))
+                logger.info('Close')
+            except Exception as error:
+                logger.warning(f'Close button not found due {error}')
+        else:
+            if control_text == '&Sim':
+                pyautogui.press('n')
+            else:
+                pyautogui.press('esc')
+    pyautogui.hotkey('ctrl', 'e')
+    return
+
+
+def volpe_back_to_main_old(question=False):
     image_signs = ['Exclamation_mark.png', 'Exclamation_mark_blue.png', 'Question_mark.png']
     close_buttons = ['Volpe_Close.png', 'Volpe_Close_Inactive.png']
     for _ in range(5):
@@ -487,18 +534,9 @@ def delete_from_table(column_pos=pyscreeze.Box, delete_value=str, deactivate_mid
         
 
 if __name__ == '__main__':
-    logger = log.logger(logging.getLogger())
+    logger = logging.getLogger()
+    log.logger_setup(logger)
     try:
-        win_handler.activate_window('Volpe')
-        prog_maint_open_fill_os('5627')
-        appoint_win = enter_appointments()
-        try:
-            win_handler.image_search('Appoint_Final.png', region=(region_definer(appoint_win.left, appoint_win.top)))
-            row_text = get_volpe_row('Volpe_Prog_Tec_Main_Table_Header_Start.png', region_definer(appoint_win.left, appoint_win.top))
-        except Exception as image_search_error:
-            logger.error(f'No appointments {image_search_error}')
-            # return to zero.
-        values = appointments_value(row_text[0], ['GUSTAVO RAMOS', 'MARCOS DEPAULA', 'LEONARDO AIRES', 'FAUSTO AKIO'])
-        logger.info(values)
+        volpe_back_to_main()
     except Exception as error:
         logger.critical(error)
