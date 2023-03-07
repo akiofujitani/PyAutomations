@@ -33,6 +33,7 @@ def volpe_login(user_name=str, password=str):
         logger.info(f'Login done to user {user_name}')
         return
     except Exception as error:
+        logger.error(f'volpe_login error {error}')
         raise(f'Login error {error}')
 
 
@@ -70,7 +71,7 @@ def get_text_square(left=int, top=int, width=int, height=int):
     return row_text 
 
 
-def get_volpe_row(row_image=str, region_start=None , path='Images'):
+def get_volpe_row(row_image=str, region_start=None , path='Images') -> str:
     '''
     Retrieve values from row using OCR processing
     '''
@@ -82,7 +83,7 @@ def get_volpe_row(row_image=str, region_start=None , path='Images'):
         row_text = return_text({'top' : selec_pos.top, 'left' : selec_pos.left, 'width' : window_size.width, 'height' : 19}, True)  
         return row_text, selec_pos 
     except Exception as error:
-        logger.error(f'Could not find {error}')
+        logger.error(f'get_volpe_row error {error}')
         raise error
 
 
@@ -122,9 +123,10 @@ def volpe_tab_select(tab_name = str, confidence_value=0.8, confidence_reduction_
                 pyautogui.moveTo(cursor_pos.x, cursor_pos.y),
                 return
             except Exception as error:
-                logger.error(f'{tab_name} not found {error}')
+                logger.debug(f'{tab_name} not found {error}')
             confidence_value = confidence_value - confidence_reduction_step
     except:
+        logger.error(f'volpe_tab_select error {error}')
         raise Exception('Tab not found error')
     return
 
@@ -262,54 +264,54 @@ def volpe_back_to_main(question=False):
     return
 
 
-def volpe_back_to_main_old(question=False):
-    image_signs = ['Exclamation_mark.png', 'Exclamation_mark_blue.png', 'Question_mark.png']
-    close_buttons = ['Volpe_Close.png', 'Volpe_Close_Inactive.png']
-    for _ in range(5):
-        active_window = win_handler.activate_window('Volpe')
-        win_pos = active_window.box
-        try:
-            for image in image_signs:
-                try:
-                    msgbox_pos = win_handler.image_search(image)
-                except Exception as error:
-                    logger.error(f'{image} not found due {error}')
-                    image = ''
-            match image:
-                case 'Exclamation_mark.png' | 'Question_mark.png':
-                    if question == False:
-                        win_handler.icon_click('Button_No.png', confidence_value=1, region_value=(region_definer(win_pos.left, 
-                                                win_pos.top + 20, 
-                                                width=win_pos.width, 
-                                                height=win_pos.height)))
-                    else:
-                        win_handler.icon_click('Button_yes.png', confidence_value=1, region_value=(region_definer(win_pos.left, 
-                                                win_pos.top + 20, 
-                                                width=win_pos.width, 
-                                                height=win_pos.height)))
-                case 'Exclamation_mark_blue.png':
-                    ok_buttons = ['Ok_button.png', 'OK_button_upper.png']
-                    for button in ok_buttons:         
-                        try:
-                            win_handler.icon_click(button, confidence_value=1, region_value=(region_definer(win_pos.left, 
-                                            win_pos.top + 20, 
-                                            width=win_pos.width, 
-                                            height=win_pos.height)))
-                        except Exception as error:
-                            logger.info(f'{button} not found \n{error}')
-                case _:
-                    for close_button in close_buttons:
-                        try:
-                            win_handler.icon_click(close_button, confidence_value=0.9, region_value=(region_definer(win_pos.left, 
-                                            win_pos.top + 15, 
-                                            width=win_pos.width + 20, 
-                                            height=win_pos.height + 20)))
-                            logger.info('Close')
-                        except Exception as error:
-                            logger.warning(f'{close_button} not found due {error}')
-        except Exception as error:
-            logger.error(f'No window or button found {error}')
-    return
+# def volpe_back_to_main_old(question=False):
+#     image_signs = ['Exclamation_mark.png', 'Exclamation_mark_blue.png', 'Question_mark.png']
+#     close_buttons = ['Volpe_Close.png', 'Volpe_Close_Inactive.png']
+#     for _ in range(5):
+#         active_window = win_handler.activate_window('Volpe')
+#         win_pos = active_window.box
+#         try:
+#             for image in image_signs:
+#                 try:
+#                     msgbox_pos = win_handler.image_search(image)
+#                 except Exception as error:
+#                     logger.error(f'{image} not found due {error}')
+#                     image = ''
+#             match image:
+#                 case 'Exclamation_mark.png' | 'Question_mark.png':
+#                     if question == False:
+#                         win_handler.icon_click('Button_No.png', confidence_value=1, region_value=(region_definer(win_pos.left, 
+#                                                 win_pos.top + 20, 
+#                                                 width=win_pos.width, 
+#                                                 height=win_pos.height)))
+#                     else:
+#                         win_handler.icon_click('Button_yes.png', confidence_value=1, region_value=(region_definer(win_pos.left, 
+#                                                 win_pos.top + 20, 
+#                                                 width=win_pos.width, 
+#                                                 height=win_pos.height)))
+#                 case 'Exclamation_mark_blue.png':
+#                     ok_buttons = ['Ok_button.png', 'OK_button_upper.png']
+#                     for button in ok_buttons:         
+#                         try:
+#                             win_handler.icon_click(button, confidence_value=1, region_value=(region_definer(win_pos.left, 
+#                                             win_pos.top + 20, 
+#                                             width=win_pos.width, 
+#                                             height=win_pos.height)))
+#                         except Exception as error:
+#                             logger.info(f'{button} not found \n{error}')
+#                 case _:
+#                     for close_button in close_buttons:
+#                         try:
+#                             win_handler.icon_click(close_button, confidence_value=0.9, region_value=(region_definer(win_pos.left, 
+#                                             win_pos.top + 15, 
+#                                             width=win_pos.width + 20, 
+#                                             height=win_pos.height + 20)))
+#                             logger.info('Close')
+#                         except Exception as error:
+#                             logger.warning(f'{close_button} not found due {error}')
+#         except Exception as error:
+#             logger.error(f'No window or button found {error}')
+#     return
 
 
 def volpe_load_report(start_date=datetime.datetime, 
@@ -395,43 +397,43 @@ def volpe_save_report(file_name, save_path, reference=None, load_report_path='Im
         pyautogui.press('enter')
         sleep(1.0)
         logger.debug(f'File {file_name} saved')
-        msg_win_list = ['Question_mark.png', 'Exclamation_mark.png']
-        for _ in range(3):
-            for image in msg_win_list:
-                try:
-                    sleep(0.7)
-                    win_handler.image_search(image)
-                    sleep(0.3)
-                    if image == 'Exclamation_mark.png':
-                        sleep(0.3)
-                        pyautogui.press('s')
-                        break
-                        # win_handler.icon_click('Button_yes.png')
-                    if image == 'Question_mark.png':
-                        sleep(0.3)
-                        pyautogui.press('n')
-                        break
-                        # win_handler.icon_click('Button_No.png')
-                except Exception as error:
-                    logger.error(f'Image not found {error}')
+        message_box_confirm()
         sleep(0.5)
     return
 
 
-def message_box_confirm(check_count=3, yes_button=True):
-    button_list = ['Button_yes.png', 'Button_no.png', 'Button_cancel.png' , 'Button_OK_upper.png', 'Button_Ok.png', 'Button_save.png']
-    for _ in range(check_count):
-        for image in button_list:
-            try:
-                sleep(0.7)
-                win_handler.image_search(image)
-                sleep(0.3)
-                if image in ['Button_yes.png', 'Button_save.png'] and yes_button == True or image in ['Button_no.png', 'Button_cancel.png'] and yes_button == False or image in ['Button_OK_upper.png', 'Button_Ok.png']:
-                    win_handler.icon_click(image)
+def message_box_confirm(check_count=3, override=True):
+    try:
+        for _ in range(check_count):
+            active_window = win32gui.GetActiveWindow()
+            win_title = win32gui.GetWindowText(active_window)
+            if 'Volpe' in win_title:
+                return
+            elif 'AVISO' in win_title:
+                logger.debug('Space pressed')
+                pyautogui.press('space')
+            elif 'Save As' in win_title:
+                pyautogui.press('esc')
+            elif 'Confirmar Salvar como' in win_title:
+                if override == True:
+                    pyautogui.press('s')
+                    logger.debug('File overwritten')
                 else:
-                    logger.warning(f'{image} did not meet conditional')
-            except Exception as error:
-                logger.error(f'Image not found {error}')
+                    pyautogui.press('n')
+                    logger.debug('File save cancel')
+            else:
+                control = win32gui.FindWindowEx(active_window, None, None, None)
+                control_text = ''
+                if control:
+                    control_text = win32gui.GetWindowText(control)
+                    if control_text == '&Sim':
+                        pyautogui.press('n')
+                    else:
+                        pyautogui.press('esc')
+            sleep(0.5)
+    except Exception as error:
+        logger.error(f'Message box confirm error due {error}')
+        raise error
     return
 
 
@@ -449,6 +451,7 @@ def load_product_code(code=str, field_pos='Bellow', distance=15, field_name=str,
         win_handler.icon_click(consult_button, path=path)
         return
     except Exception as error:
+        logger.error(f'Load product code error {error}')
         raise Exception(f'Load product code {error}')
 
 
