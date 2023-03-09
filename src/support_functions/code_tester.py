@@ -132,20 +132,64 @@
 # print(f'Window title: {active_win_text}')
 # print()
 
-import time
+# import time
 
-import win32gui, pyautogui
+# import win32gui, pyautogui
 
-while True:
-    window = win32gui.GetForegroundWindow()
-    class_name = win32gui.GetClassName(window)
-    menu = win32gui.GetMenu(window)
-    rect = win32gui.GetWindowRect(window)
-    title = win32gui.GetWindowText(window)
-    pyauto = pyautogui.getWindowsWithTitle(title)
-    control = win32gui.FindWindowEx(window, None, None, None)
-    if control:
-        control_text = win32gui.GetWindowText(control)
-        control_class = win32gui.GetClassName(control)
-    print(f'{title}: {class_name} text {control_text} class {control_class}')
-    time.sleep(1)
+# while True:
+#     window = win32gui.GetForegroundWindow()
+#     class_name = win32gui.GetClassName(window)
+#     menu = win32gui.GetMenu(window)
+#     rect = win32gui.GetWindowRect(window)
+#     title = win32gui.GetWindowText(window)
+#     pyauto = pyautogui.getWindowsWithTitle(title)
+#     control = win32gui.FindWindowEx(window, None, None, None)
+#     if control:
+#         control_text = win32gui.GetWindowText(control)
+#         control_class = win32gui.GetClassName(control)
+#     print(f'{title}: {class_name} text {control_text} class {control_class}')
+#     time.sleep(1)
+
+'''
+Emergency stop
+'''
+
+import keyboard, threading, logging
+from time import sleep
+import logger as log
+
+logger = logging.getLogger('code_tester')
+
+
+def quit_func():
+    logger.info('Quit pressed')
+    event.set()
+    return
+    
+
+def while_test(event):
+    counter = 0
+    while True:
+        try:
+            logger.info(f'While counter in {counter}')
+            counter += 1
+            sleep(1)
+            if event.is_set():
+                logger.info('Event set')
+                raise Exception('Event is set')
+        except Exception as error:
+            logger.info(f'Event set {error}')
+            event.clear()
+            return
+
+
+if __name__ == '__main__':
+    logger = logging.getLogger()
+    log.logger_setup(logger)
+
+    keyboard.add_hotkey('space', quit_func)
+    event = threading.Event()
+
+    thread = threading.Thread(target=while_test, args=(event, ), name='Test')
+    thread.start()
+    thread.join()

@@ -534,7 +534,10 @@ def delete_from_table(column_pos=pyscreeze.Box, delete_value=str, deactivate_mid
     except KeyboardInterrupt:
         logger.error(f'Process interrupted by user')
         raise KeyboardInterrupt
-        
+
+
+
+
 
 if __name__ == '__main__':
     logger = logging.getLogger()
