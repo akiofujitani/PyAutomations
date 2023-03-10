@@ -9,6 +9,42 @@ logger = logging.getLogger('edging_configurator')
 '''
 ==================================================================================================================================
 
+        Classes     Classes     Classes     Classes     Classes     Classes     Classes     Classes     Classes     Classes     
+
+==================================================================================================================================
+'''
+
+
+
+
+template = '''
+{
+    "data" : {
+        "sheets_id" :  "1NWphOasbbKLySuMoCZSbOcXtomn80Cw2zN14s__Rt0g",
+        "sheets_name" : "BELLI",
+        "sheets_pos" : "A:B",
+        "sheets_name_done" : "DONE",
+        "sheets_pos_done" : "A:D"
+    },
+    "index_type" : {
+        "BAIXO" : ["1.49", "1.56"],
+        "MEDIO" : ["1.59", "1.61", "POLI"],
+        "ALTO" : ["1.67" , "1.74"]
+    },
+    "remote_edging" : {
+        "exclude" : ["SOLAR NYLON", "FURADA", "ACETATO COM NYLON", "METAL COM NYLON"]
+    },
+    "parameters" : {
+        "number_tries" : 5
+    }
+}
+'''
+
+
+
+'''
+==================================================================================================================================
+
         Data Processing     Data Processing     Data Processing     Data Processing     Data Processing     Data Processing
 
 ==================================================================================================================================
@@ -137,10 +173,11 @@ def wait_time(seconds=int):
 
 
 if __name__ == '__main__':
-    logger = log.logger(logging.getLogger())
-    # erp_volpe_handler.volpe_back_to_main()
+    logger = logging.getLogger()
+    log.logger_setup(logger)
+
     try:
-        config = json_config.load_json_config('edging_config.json')
+        config = json_config.load_json_config('edging_config.json', template)
     except:
         logger.critical('Could not load config file')
         exit()

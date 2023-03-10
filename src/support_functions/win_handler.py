@@ -1,10 +1,19 @@
-import subprocess, pyscreeze, pyautogui, screeninfo, constants, os, logging
+import subprocess, pyscreeze, pyautogui, screeninfo, constants, os, logging, concurrent.futures
 from ntpath import join
 from time import sleep
 from win32 import win32gui
 
 
 logger = logging.getLogger('win_handler')
+
+
+'''
+==================================================================================================================================
+
+        Classes     Classes     Classes     Classes     Classes     Classes     Classes     Classes     Classes     Classes     
+
+==================================================================================================================================
+'''
 
 
 class BaseException(Exception):
@@ -296,11 +305,13 @@ def get_active_windows_title() -> str:
         raise error
 
 
-if __name__ == '__main__':
-    counter = 0
-    while True:
-        logger.info(f'{counter}') 
-        image_search("Teste_Win.png")
-        counter = counter + 1
+def test_return():
+    print('Running test return')
+    return 'Hello'
 
-        
+
+if __name__ == '__main__':
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(test_return)
+        return_value = future.result()
+        print(f'{return_value} World')

@@ -1,11 +1,85 @@
-import data_communication, win_handler, json_config, erp_volpe_handler, pyautogui, keyboard, logging
+import data_communication, win_handler, json_config, erp_volpe_handler, pyautogui, keyboard, logging, threading
 import logger as log
 from ntpath import join
 from time import sleep
-
+from dataclasses import dataclass
 
 
 logger = logging.getLogger('white_label_bot')
+
+
+'''
+==================================================================================================================================
+
+        Classes     Classes     Classes     Classes     Classes     Classes     Classes     Classes     Classes     Classes     
+
+==================================================================================================================================
+'''
+
+@dataclass
+class Configuration:
+    sheets_id : str
+    main_name : str
+    main_pos : str
+    description_name : str
+    description_pos : str
+    swap_name : str
+    swap_pos : str
+    done_list_name : str
+    done_list_pos : str
+
+
+    def __eq__(self, __o: object) -> bool:
+        if not isinstance(__o, self.__class__):
+            return NotImplemented
+        else:
+            self_values = self.__dict__
+            for key in self_values.keys():
+                if not getattr(self, key) == getattr(__o, key):
+                    return False
+            return True
+    
+
+    @classmethod
+    def init_dict(cls, dict_values=dict):
+        try:
+            sheets_id = dict_values['sheets_id']
+            main_name = dict_values['main_name']
+            main_pos = dict_values['main_pos']
+            description_name = dict_values['description_name']
+            description_pos = dict_values['description_pos']
+            swap_name = dict_values['swap_name']
+            swap_pos = dict_values['swap_pos']
+            done_list_name = dict_values['done_list_name']
+            done_list_pos = dict_values['done_list_pos']
+            return cls(sheets_id, main_name, main_pos, description_name, description_pos, swap_name, swap_pos, done_list_name, done_list_pos)
+        except Exception as error:
+            logger.error(f'Error in {error}')
+
+
+'''
+==================================================================================================================================
+
+        Template Values     Template Values     Template Values     Template Values     Template Values     Template Values     
+
+==================================================================================================================================
+'''
+
+
+template = '''
+{
+    "sheets_id" : "1woQuWByZHNX8H74b9w62fQlV3F91G3iqihlNA7Ldfw4",
+    "main_name" : "WHITE LABEL LIST",
+    "main_pos" : "A2:Z",
+    "description_name" : "DESCRIPTION_SHORTEN",
+    "description_pos" : "A2:B",
+    "swap_name" : "DESCRIPTION_SWAP",
+    "swap_pos" : "A2:C",
+    "done_list_name" : "DONE_LIST",
+    "done_list_pos" : "A:Z"
+}
+'''
+
 
 '''
 ==================================================================================================================================
@@ -102,8 +176,8 @@ def insert_white_label_values(description=str, code=str, engraving=str):
 
 def description_shorten_swap(base_descr, shorten_list):
     for shorten_value in shorten_list:
-        if shorten_value['DESCRIPTION'] in base_descr:
-            base_descr = base_descr.replace(shorten_value['DESCRIPTION'], shorten_value['SHORTEN'])
+        if shorten_value['DESCRIPTION'].strip() in base_descr:
+            base_descr = base_descr.replace(shorten_value['DESCRIPTION'].strip(), shorten_value['SWAP_TO'].strip())
     return base_descr
 
 
@@ -117,7 +191,7 @@ def description_validator(product_description, base_description):
     return False
 
 
-def create_white_label_description(white_label, shorten_list, swap_list, done_list, config):
+def create_white_label_description(event, white_label, shorten_list, swap_list, done_list, sheets_id, done_list_name, done_list_pos):
     try:
         code_value = ''
         last_code_value = 'old'
@@ -131,89 +205,133 @@ def create_white_label_description(white_label, shorten_list, swap_list, done_li
             return
         code_value = erp_volpe_handler.ctrl_d(code_pos.left + 35, selected_pos.top + 4)
         while not code_value == last_code_value: 
+            if event.is_set():
+                return
             base_descr = erp_volpe_handler.ctrl_d(descr_pos.left + 15, selected_pos.top + 4)
             base_type = erp_volpe_handler.ctrl_d(type_pos.left + 15, selected_pos.top + 4)
-            base_descr_shorten = description_shorten_swap(base_descr, shorten_list)
+            converted_descr = base_descr
             if white_label['CODE'] in swap_list.keys():
-                base_descr_shorten = description_shorten_swap(base_descr_shorten, swap_list[white_label['CODE']])
-            white_label_name = base_descr_shorten.replace(white_label['BASE'].strip(), white_label['DESCRIPTION'].strip())
+                converted_descr = description_shorten_swap(converted_descr, swap_list[white_label['CODE']])
+            converted_descr = description_shorten_swap(converted_descr, shorten_list)    
+            white_label_name = converted_descr.replace(white_label['BASE'].strip(), white_label['DESCRIPTION'].strip())
+            logger.debug(f'{white_label_name} - {converted_descr}')
             sleep(0.3)
             if base_type == white_label['TYPE'] and white_label_name not in done_list:
                 open_white_label_descr()
                 insert_white_label_values(white_label_name,
                                         white_label['CODE'], 
                                         white_label['ENG'])
-                data_communication.data_append_values(config['done_list']['sheets_name'], 
-                                        config['done_list']['sheets_pos'], 
-                                        [[code_value, base_descr, white_label_name, white_label['CODE'], white_label['BASE']]], config['done_list']['sheets_id'])
+                data_communication.data_append_values(done_list_name, 
+                                        done_list_pos, 
+                                        [[code_value, base_descr, white_label_name, white_label['CODE'], white_label['BASE']]], sheets_id)
             last_code_value = code_value
             keyboard.press_and_release('down')
             sleep(0.3)
             selected_pos = win_handler.image_search('Volpe_Table_selected.png', region=(erp_volpe_handler.region_definer(header_pos.left - 15, header_pos.top, 200)))
             code_value = erp_volpe_handler.ctrl_d(code_pos.left + 35, selected_pos.top + 4)
+        logger.info('White label done')
         return True
     except Exception as error:
-        logger.error(f'Create white laber error {error}')
+        logger.error(f'Create white label error {error}')
         raise error
 
 
-if __name__ == '__main__':
-    logger = logging.getLogger()
-    log.logger_setup(logger)
+'''
+==================================================================================================================================
+
+        Main        Main        Main        Main        Main        Main        Main        Main        Main        Main        
+
+==================================================================================================================================
+'''
+
+def quit_func():
+    logger.info('Quit pressed')
+    event.set()
+    return
+
+
+def main(event=threading.Event, config=Configuration):
+    if event.is_set():
+        logger.warning('Event set')
+        return
+    
+    # Load white label values
     try:
-        config = json_config.load_json_config('white_label.json')
-    except:
-        logger.critical('Could not load config file')
-        exit()
-
-    # Load config
-
-    sheets_name = config['main_white_label']['sheets_name']
-    sheets_id = config['main_white_label']['sheets_id']
-    sheets_pos = config['main_white_label']['sheets_pos']
-    sheets_name_descr = config['descriptions']['sheets_name']
-    sheets_pos_descr = config['descriptions']['sheets_pos']
-    sheets_name_swap = config['descriptions_swap']['sheets_name']
-    sheets_pos_swap = config['descriptions_swap']['sheets_pos']
-    sheets_done_name = config['done_list']['sheets_name']
-    sheets_done_pos = config['done_list']['sheets_pos']
-
-    # Get last uploaded date
-
-    try:
-        white_label_data = data_communication.get_values(sheets_name, sheets_pos, sheets_id)
-        description_shorten = data_communication.get_values(sheets_name_descr, sheets_pos_descr, sheets_id)
-        description_swap = data_communication.get_values(sheets_name_swap, sheets_pos_swap, sheets_id)
-        
+        white_label_data = data_communication.get_values(config.main_name, config.main_pos, config.sheets_id)
+        description_shorten = data_communication.get_values(config.description_name, config.description_pos, config.sheets_id)
+        description_swap = data_communication.get_values(config.swap_name, config.swap_pos, config.sheets_id)
+        white_label_list = data_communication.matrix_into_dict(white_label_data['values'], 'BASE', 'TYPE', 'DESCRIPTION', 'ENG', 'CUSTOMER', 'CODE', 'DETAILS_NAMING', 'STATUS','BRANCH')
+        shorten_list = data_communication.matrix_into_dict(description_shorten['values'], 'DESCRIPTION', 'SWAP_TO')
+        swap_list = data_communication.list_to_dict_with_key(data_communication.matrix_into_dict(description_swap['values'], 'CUSTOMER_CODE', 'DESCRIPTION', 'SWAP_TO'), 'CUSTOMER_CODE')        
+        if event.is_set():
+            logger.warning('Event set')
+            return
     except Exception as error:
-        logger.critical(f'{error} loading table {sheets_name}')
-        quit()
+        logger.critical(f'Loading table {error}')
+        event.set()
+        return
 
-    # erp_volpe_handler.volpe_back_to_main()
-    # erp_volpe_handler.volpe_load_tab('Tab_Reg', 'Icon_Logins_web.png')
-    erp_volpe_handler.volpe_open_window('Icon_Products.png', 'Products.png', path='Images/Registry')
-
-    white_label_list = data_communication.matrix_into_dict(white_label_data['values'], 'BASE', 'TYPE', 'DESCRIPTION', 'ENG', 'CUSTOMER', 'CODE', 'DETAILS_NAMING', 'STATUS','BRANCH')
-    shorten_list = data_communication.matrix_into_dict(description_shorten['values'], 'DESCRIPTION', 'SHORTEN')
-    swap_list = data_communication.list_to_dict_with_key(data_communication.matrix_into_dict(description_swap['values'], 'CUSTOMER_CODE', 'DESCRIPTION', 'SWAP'), 'CUSTOMER_CODE')
-
+    # Start automation
     try:
+        erp_volpe_handler.volpe_back_to_main()
+        erp_volpe_handler.volpe_load_tab('Tab_Reg', 'Icon_Logins_web.png')
+        erp_volpe_handler.volpe_open_window('Icon_Products.png', 'Products.png', path='Images/Registry')
+        if event.is_set():
+            logger.warning('Event set')
+            return
+
         for i in range(len(white_label_list)):
+            if event.is_set():
+                logger.warning('Event set')
+                return
             white_label = white_label_list[i]
             if not white_label['STATUS'].upper() == 'DONE':
                 try:
-                    done_list_data = data_communication.get_values(sheets_done_name, sheets_done_pos, sheets_id)
+                    done_list_data = data_communication.get_values(config.done_list_name, config.done_list_pos, config.sheets_id)
                     white_label_done_list = data_communication.matrix_into_dict(done_list_data['values'], 'CODE', 'DESCRIPTION', 'WHITE_LABEL', 'CUSTOMER_CODE', 'FAMILY')
                 except Exception as error:
                     logger.error(f'Error {error}')
                     raise error
                 registry_load_by_description(white_label['BASE'])
-                white_label_status = create_white_label_description(white_label, shorten_list, swap_list, [white_label['WHITE_LABEL'] for white_label in white_label_done_list], config)
-                if white_label_list:
-                    data_communication.data_update_value(sheets_name, f'H{i + 2}', [['DONE']], sheets_id)
+                white_label_status = create_white_label_description(event, white_label, 
+                                                                    shorten_list, 
+                                                                    swap_list, 
+                                                                    [white_label['WHITE_LABEL'] for white_label in white_label_done_list], 
+                                                                    config.sheets_id,
+                                                                    config.done_list_name, 
+                                                                    config.done_list_pos)
+                if white_label_status:
+                    data_communication.data_update_value(config.main_name, f'H{i + 2}', [['DONE']], config.sheets_id)
+                if event.is_set():
+                    logger.warning('Event set')
+                    return
         logger.info('Done')
+        event.set()
+        return
     except Exception as error:
         logger.critical(f'Error {error}')
-        quit()
-    except KeyboardInterrupt:
-        logger.critical('Script interrupted')
+        return
+
+
+if __name__ == '__main__':
+    logger = logging.getLogger()
+    log.logger_setup(logger)
+
+    try:
+        config_dict = json_config.load_json_config('white_label.json', template)
+        config = Configuration.init_dict(config_dict)
+    except:
+        logger.critical('Could not load config file')
+        exit()
+
+    keyboard.add_hotkey('space', quit_func)
+    event = threading.Event()
+
+    for _ in range(5):
+        if event.is_set():
+            break
+        thread = threading.Thread(target=main, args=(event, config, ), name='white_label')
+        thread.start()
+        thread.join()
+
+    logger.debug('Done')

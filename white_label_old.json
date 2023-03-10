@@ -1,0 +1,22 @@
+{
+    "main_white_label" : {
+        "sheets_name" : "WHITE LABEL LIST",
+        "sheets_id" : "1woQuWByZHNX8H74b9w62fQlV3F91G3iqihlNA7Ldfw4",
+        "sheets_pos" : "A2:Z"
+    },
+    "descriptions" : {
+        "sheets_name" : "DESCRIPTION_SHORTEN",
+        "sheets_id" : "1woQuWByZHNX8H74b9w62fQlV3F91G3iqihlNA7Ldfw4",
+        "sheets_pos" : "A2:B"
+    },
+    "descriptions_swap" : {
+        "sheets_name" : "DESCRIPTION_SWAP",
+        "sheets_id" : "1woQuWByZHNX8H74b9w62fQlV3F91G3iqihlNA7Ldfw4",
+        "sheets_pos" : "A2:C"
+    },
+    "done_list" : {
+        "sheets_name" : "DONE_LIST",
+        "sheets_id" : "1woQuWByZHNX8H74b9w62fQlV3F91G3iqihlNA7Ldfw4",
+        "sheets_pos" : "A:Z"
+    }
+}

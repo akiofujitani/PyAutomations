@@ -1,9 +1,7 @@
-import data_communication, win_handler, json_config, erp_volpe_handler, pyautogui, logging, keyboard, win32gui
+import data_communication, win_handler, json_config, erp_volpe_handler, pyautogui, logging, keyboard, win32gui, threading
 import logger as log
-from ntpath import join
 from time import sleep
 from dataclasses import dataclass
-from os.path import normpath
 
 logger = logging.getLogger('product_config')  
 
@@ -15,6 +13,7 @@ logger = logging.getLogger('product_config')
 
 ==================================================================================================================================
 '''
+
 @dataclass
 class Config_Values:
     sheets_name : str
@@ -181,8 +180,9 @@ def change_price(pos_x=int, pos_y=int,  product=dict):
                 sleep(0.5)
                 for value in values_list:
                     product_value = getattr(product, value, '')
-                    pyautogui.write(product_value)
-                    sleep(0.5)
+                    if not product_value == '':
+                        pyautogui.write(product_value)
+                        sleep(0.5)
                     pyautogui.press('tab')
                     sleep(0.3)
                     logger.debug(f'{product.description} value: {product_value}')
@@ -204,8 +204,6 @@ def change_price(pos_x=int, pos_y=int,  product=dict):
     except Exception as error:
         logger.warning(f'Error due {error}')
         raise error
-    except KeyboardInterrupt:
-        raise KeyboardInterrupt    
 
 
 '''
@@ -219,7 +217,7 @@ def change_price(pos_x=int, pos_y=int,  product=dict):
 
 def wait_time(seconds=int):
     regressive_count = seconds
-    for i in range(seconds):
+    for _ in range(seconds):
         logger.info(f'Waiting.......{regressive_count}')
         regressive_count = regressive_count - 1
         sleep(1.0)
@@ -251,17 +249,16 @@ def build_product_list(product_data_list=list, keys_list=list) -> list:
 ==========================================================================================================================================
 '''
 
+def quit_func():
+    logger.info('Quit pressed')
+    event.set()
+    return
 
-if __name__ == '__main__':
-    logger = logging.getLogger()
-    log.logger_setup(logger)
-    # erp_volpe_handler.volpe_back_to_main()
-    try:
-        config_dict = json_config.load_json_config('c:/PyAutomations_Reports/product_price_adjust.json', template)
-        config = Config_Values.init_dict(config_dict)
-    except:
-        logger.critical('Could not load config file')
-        exit()
+
+def main(event=threading.Event, config=Config_Values):
+    if event.is_set():
+        logger.warning('Event set')
+        return
 
     # Load config  
     try:
@@ -270,18 +267,22 @@ if __name__ == '__main__':
             product_list = build_product_list(products_sheet['values'], config.values_list)
     except Exception as error:
         logger.critical(f'Error converting configuration values {error}')
-        exit()
+        event.set()
     
     # Get last uploaded date
-
     for try_number in range(config.try_number):
+        if event.is_set():
+            logger.warning('Event set')
+            return
         try:
-            # erp_volpe_handler.volpe_back_to_main()
-            # erp_volpe_handler.volpe_load_tab('Tab_Reg', 'Icon_Reg_par.png')
-            # erp_volpe_handler.volpe_open_window('Icon_Products.png', 'Products.png', path='Images/Registry/')
+            erp_volpe_handler.volpe_back_to_main()
+            erp_volpe_handler.volpe_load_tab('Tab_Reg', 'Icon_Reg_par.png')
+            erp_volpe_handler.volpe_open_window('Icon_Products.png', 'Products.png', path='Images/Registry/')
             win_handler.activate_window('Volpe')
             logger.info('Base automation done')
-
+            if event.is_set():
+                logger.warning('Event set')
+                return
             done_data = data_communication.get_values(config.sheets_name_done, config.sheets_range_done, sheets_id=config.sheets_id)
             done_list = ''
             if 'values' in done_data.keys():
@@ -304,6 +305,9 @@ if __name__ == '__main__':
                                     field_name='Code.png', 
                                     consult_button='Button_Consult.png', 
                                     path='Images/Registry/')
+                    if event.is_set():
+                        logger.warning('Event set')
+                        return
                     change_result = change_price(table_header.left + 15, table_header.top + 20, product)
                     if change_result:
                         try:
@@ -314,7 +318,35 @@ if __name__ == '__main__':
                         except Exception as error:
                             logger.error(f'Could not save values sheets due {error}')
                             raise error
+                if event.is_set():
+                    logger.warning('Event set')
+                    return
         except Exception as error:
             logger.critical(f'Error {error}')
             logger.critical(f'Try number {try_number + 1}')
             wait_time(5)
+    return
+
+
+if __name__ == '__main__':
+    logger = logging.getLogger()
+    log.logger_setup(logger)
+
+    try:
+        config_dict = json_config.load_json_config('c:/PyAutomations_Reports/product_price_adjust.json', template)
+        config = Config_Values.init_dict(config_dict)
+    except:
+        logger.critical('Could not load config file')
+        quit()
+
+    keyboard.add_hotkey('space', quit_func)
+    event = threading.Event()
+
+    for _ in range(3):
+        if event.is_set():
+            break
+        thread = threading.Thread(target=main, args=(event, config, ), name='product_config')
+        thread.start()
+        thread.join()
+
+    logger.debug('Done')
