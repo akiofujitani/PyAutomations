@@ -3,23 +3,14 @@
     "vca_path": "C:/LMS/HOST_IMPORT/VCA/IMPORT_TEMP",
     "vca_done": "C:/LMS/HOST_IMPORT/VCA/NOVO_LMS",
     "vca_new_file": "C:/LMS/HOST_IMPORT/VCA/359",
+    "vca_error": "C:/LMS/HOST_IMPORT/VCA/IMPORT_TEMP/ERROR",
     "extension": "vca",
     "directory_list": [
         {
             "source": "C:/LMS/HOST_EXPORT/VCA/read",
-            "destination": "C:/LMS/HOST_EXPORT/VCA/NOVO_LMS",
-            "extension": "vca",
-            "days_from_today": 0,
-            "copy": "True",
-            "path_organization": "Daily"
-        },
-        {
-            "source": "C:/LMS/HOST_EXPORT/VCA/read",
-            "destination": "C:/LMS/HOST_EXPORT/VCA/MID_READ",
-            "extension": "vca",
-            "days_from_today": 0,
-            "copy": "False",
-            "path_organization": "Daily"
+            "destination_copy": "C:/LMS/HOST_EXPORT/VCA/NOVO_LMS",
+            "destination_move": "C:/LMS/HOST_EXPORT/VCA/MID_READ",
+            "extension": "vca"
         }
     ]
 }
