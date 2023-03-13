@@ -1,11 +1,10 @@
-import file_handler, vca_handler, vca_handler_frame_size, json_config, threading, logging
+import file_handler, vca_handler, vca_handler_frame_size, json_config, logging
 from time import sleep
 from tkinter import messagebox
 from ntpath import join
-from os.path import normpath
+from os.path import normpath, abspath
 import logger as log
 from dataclasses import dataclass
-from os.path import normpath, abspath
 
 
 logger = logging.getLogger('vca_bot_volpe_mid')
@@ -163,8 +162,9 @@ def vca_file_process():
         messagebox.showerror('VCA Bot Volpe/Middleware', f'Error loading configuration json file due \n{error}')
         quit()
 
-    try:
-        while True:
+
+    while True:
+        try:
             # VCA converter
             vca_list = file_handler.file_list(config.vca_path, config.extension)
             if len(vca_list) > 0:
@@ -207,17 +207,17 @@ def vca_file_process():
                         logger.error(f'Error processing files {error}')
             logger.info(f'Waiting... {config.wait_time} seconds')
             sleep(config.wait_time)
-    except Exception as error:
-        logger.critical(error)
-        quit()
+        except Exception as error:
+            logger.critical(error)
+            sleep(config.wait_time)
 
 
-def main(event=threading.Event):
-    vca_file_process(event)
+def main():
+    vca_file_process()
 
 
 if __name__ == '__main__':
     logger = logging.getLogger()
     log.logger_setup(logger)
 
-    vca_file_process()
+    main()

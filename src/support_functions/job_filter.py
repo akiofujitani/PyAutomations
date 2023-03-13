@@ -1,10 +1,48 @@
-from time import sleep
-import file_handler, datetime, calendar, data_organizer, os, json_config
-from vca_handler import VCAtoDict
+import file_handler, datetime, calendar, data_organizer, logging, os, json_config
+import logger as log
+from vca_handler import VCA_to_dict
 from ntpath import join
+from dataclasses import dataclass
 
 
-def read_vca(path, extension, start_date, end_date):
+logger = logging.getLogger('job_filter')
+
+
+'''
+==================================================================================================================================
+
+        Template        Template        Template        Template        Template        Template        Template        Template             
+
+==================================================================================================================================
+'''
+template = '''
+{
+    "source" : [
+        "//192.168.5.103/lms/HOST_IMPORT/VCA/NOVO_LMS/READ"
+    ],
+    "exetension" : "vca",
+    "sheets_id" : "",
+    "sheets_name" : "",
+    "sheets_range" : ""
+}
+
+'''
+
+
+
+
+
+
+
+'''
+==================================================================================================================================
+
+        Data Processing     Data Processing     Data Processing     Data Processing     Data Processing     Data Processing
+
+==================================================================================================================================
+'''
+
+def read_vca(path: str, extension: str, start_date: datetime.date, end_date: datetime.date) -> dict:
     file_list = file_handler.listFilesInDirSubDir(path, extension)
     date_filtered_list = file_handler.listByDate(file_list, start_date, end_date)
     values_dict = {}
@@ -12,7 +50,7 @@ def read_vca(path, extension, start_date, end_date):
         try:
             with open(file, 'r', errors='replace') as contents:
                 fileContents = contents.readlines()
-                temp_vca_contents = VCAtoDict(fileContents)
+                temp_vca_contents = VCA_to_dict(fileContents)
                 values_dict[temp_vca_contents['JOB']] = temp_vca_contents
         except Exception as error:
             print(error)
@@ -49,6 +87,9 @@ def values_merger(path_list=list, base_list=list, base_search_tag=str, *args, st
 
 
 if __name__ == '__main__':
+    logger = logging.getLogger()
+    log.logger_setup(logger)
+
     # date_target = week_date(datetime.datetime.now().date(), 1)
     while True:
         try:

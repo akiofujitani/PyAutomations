@@ -1,46 +1,46 @@
-import os, logging
+import os, logging, file_handler
 
 logger = logging.getLogger('vca_handler')
 
 
-def VCAtoObject(VCAFileContent):
-    dataValue = {}
-    counter = 0
-    for line in VCAFileContent:
-        line = line.replace('\n', '')
-        if len(line) > 0:
-            tagAndValue = line.split('=')
-            if ';' in tagAndValue[1]:
-                valueSplit = tagAndValue[1].split(';')
-            if counter:
-                radiusList = radiusList + valueSplit
-                counter += 1
-            if counter == 37:
-                if 'TRCFMT' in dataValue.keys():
-                    dataValue['TRCFMT'].update({tempObj.side : JobClasses.frameShape(radiusList, (f'TRCFMT_{tempObj.side}'), tempObj.initAngle, tempObj.endAngle, tempObj.char1, tempObj.side, tempObj.char2)})
-                else:
-                    dataValue['TRCFMT'] = {tempObj.side : JobClasses.frameShape(radiusList, (f'TRCFMT_{tempObj.side}'), tempObj.initAngle, tempObj.endAngle, tempObj.char1, tempObj.side, tempObj.char2)}
-                counter = 0
-                tempObj = ''
-                radiusList = ''
-            if 'TRCFMT' in tagAndValue[0]:            
-                tempObj = JobClasses.trcFormat(valueSplit[0], valueSplit[1], valueSplit[2], valueSplit[3], valueSplit[4])
-                counter = 1
-                radiusList = []
-            elif ';' in tagAndValue[1] and tagAndValue[1].count(';') == 1:
-                if tagAndValue[0] in dataValue.keys():
-                    if not isinstance(dataValue[tagAndValue[0]], dict):
-                        tempValue = dataValue[tagAndValue[0]]
-                        dataValue[tagAndValue[0]] = {1 : tempValue}
-                    else:
-                        num = len(dataValue[tagAndValue[0]]) + 1
-                    dataValue[tagAndValue[0]].update({2 : JobClasses.tagRL(tagAndValue[0], valueSplit[0], valueSplit[1])})
-                else:    
-                    dataValue[tagAndValue[0]] = JobClasses.tagRL(tagAndValue[0], valueSplit[0], valueSplit[1])
-            elif tagAndValue[1].count(';') == 0:
-                dataValue[tagAndValue[0]] = JobClasses.tagSingle(tagAndValue[0], tagAndValue[1])
-    print(dataValue)
-    return dataValue
+# def VCAtoObject(VCAFileContent):
+#     dataValue = {}
+#     counter = 0
+#     for line in VCAFileContent:
+#         line = line.replace('\n', '')
+#         if len(line) > 0:
+#             tagAndValue = line.split('=')
+#             if ';' in tagAndValue[1]:
+#                 valueSplit = tagAndValue[1].split(';')
+#             if counter:
+#                 radiusList = radiusList + valueSplit
+#                 counter += 1
+#             if counter == 37:
+#                 if 'TRCFMT' in dataValue.keys():
+#                     dataValue['TRCFMT'].update({tempObj.side : JobClasses.frameShape(radiusList, (f'TRCFMT_{tempObj.side}'), tempObj.initAngle, tempObj.endAngle, tempObj.char1, tempObj.side, tempObj.char2)})
+#                 else:
+#                     dataValue['TRCFMT'] = {tempObj.side : JobClasses.frameShape(radiusList, (f'TRCFMT_{tempObj.side}'), tempObj.initAngle, tempObj.endAngle, tempObj.char1, tempObj.side, tempObj.char2)}
+#                 counter = 0
+#                 tempObj = ''
+#                 radiusList = ''
+#             if 'TRCFMT' in tagAndValue[0]:            
+#                 tempObj = JobClasses.trcFormat(valueSplit[0], valueSplit[1], valueSplit[2], valueSplit[3], valueSplit[4])
+#                 counter = 1
+#                 radiusList = []
+#             elif ';' in tagAndValue[1] and tagAndValue[1].count(';') == 1:
+#                 if tagAndValue[0] in dataValue.keys():
+#                     if not isinstance(dataValue[tagAndValue[0]], dict):
+#                         tempValue = dataValue[tagAndValue[0]]
+#                         dataValue[tagAndValue[0]] = {1 : tempValue}
+#                     else:
+#                         num = len(dataValue[tagAndValue[0]]) + 1
+#                     dataValue[tagAndValue[0]].update({2 : JobClasses.tagRL(tagAndValue[0], valueSplit[0], valueSplit[1])})
+#                 else:    
+#                     dataValue[tagAndValue[0]] = JobClasses.tagRL(tagAndValue[0], valueSplit[0], valueSplit[1])
+#             elif tagAndValue[1].count(';') == 0:
+#                 dataValue[tagAndValue[0]] = JobClasses.tagSingle(tagAndValue[0], tagAndValue[1])
+#     print(dataValue)
+#     return dataValue
 
 
 def convert_add_to_list(values_old, new_values):
@@ -206,6 +206,24 @@ def find_files(path_root_list, name, extention, start_pos, end_pos=None):
                     file_dict['file_name'] = file
                     return file_dict
     return False
+
+
+def read_vca(path, extension, start_date, end_date) -> dict:
+    '''
+    Read all vca files within the given start and end date and return a dict using the job number as key
+    '''
+    file_list = file_handler.listFilesInDirSubDir(path, extension)
+    date_filtered_list = file_handler.listByDate(file_list, start_date, end_date)
+    values_dict = {}
+    for file in date_filtered_list:
+        try:
+            with open(file, 'r', errors='replace') as contents:
+                fileContents = contents.readlines()
+                temp_vca_contents = VCA_to_dict(fileContents)
+                values_dict[temp_vca_contents['JOB']] = temp_vca_contents
+        except Exception as error:
+            logger.error(error)
+    return values_dict
 
 
 def fileList(path, file_extention):

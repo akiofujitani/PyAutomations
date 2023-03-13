@@ -28,7 +28,7 @@ def get_last_date(sheets_name, position, minimum_date='01/01/2020', sheets_id=SP
             raise Exception('No values in sheets')
     except Exception as error:
         logger.error(f'Get last date error {error}')
-        return datetime.datetime.strptime(minimum_date, '%d/%m/%Y')
+        return datetime.datetime.strptime(minimum_date, '%d/%m/%Y').date()
     return return_last_row_date(sheet_loaded)
 
 
@@ -46,7 +46,7 @@ def return_last_row_date(sheet_values):
     except KeyError as error:
         logger.error(f'No values found in table {error}')
         return
-    return datetime.datetime.strptime(date_string, '%d/%m/%Y')
+    return datetime.datetime.strptime(date_string, '%d/%m/%Y').date()
 
 
 def transform_in_sheet_matrix(dict_list):

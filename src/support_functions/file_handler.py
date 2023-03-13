@@ -278,7 +278,7 @@ def file_contents_last_date1(path=str, extension=str, field_name=str):
         raise error
 
 
-def listByDate(filesList, dateStart, dateEnd):
+def listByDate(filesList: list, dateStart: datetime.date, dateEnd: datetime.date) -> list:
     listByDate = []
     for file in filesList:
         fileDate = fileCreationDate(file)

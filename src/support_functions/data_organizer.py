@@ -24,8 +24,7 @@ def filter_tag(job_data, base_name, *args):
     filtered_data = {}
     filtered_data[base_name] = job_data[base_name]
     for arg in args:
-        if arg in job_data.keys():
-            filtered_data[arg] = job_data[arg]
+        filtered_data[arg] = getattr(job_data, arg, '')
     return filtered_data
 
 
@@ -191,38 +190,6 @@ def plain_dict_list_completer(plain_dict=list):
                 temp_dict[key] = values_dict[key]
         updated_plain_dict.append(temp_dict)
     return updated_plain_dict
-
-
-# def plain_dict_list_filler(plain_dict, *args):
-#     default_length = length_counter(plain_dict)
-#     default_keys_list = return_keys(plain_dict, default_length)
-#     for default_key in args:
-#         if default_key not in default_keys_list:
-#             default_keys_list.append(default_key)
-#     updated_plain_dict = []
-#     for line in plain_dict:
-#         temp_dict = {}
-#         if len(line) == default_length:
-#             updated_plain_dict.append(line)
-#         if len(line) < default_length:
-#             for key in default_keys_list:
-#                 if key in line.keys():
-#                     temp_dict[key] = line[key]
-#                 else:
-#                     temp_dict[key] = 'Absent'
-#             updated_plain_dict.append(temp_dict)
-#         if len(line) > default_length:
-#             double_value = ''
-#             for key in line.keys():
-#                 if key in default_keys_list:
-#                     temp_dict[key] = line[key]
-#                 else:
-#                     double_value = double_value + f'{line[key]}'
-#             for key in default_keys_list:
-#                 if key not in line.keys():
-#                     temp_dict[key] = double_value
-#             updated_plain_dict.append(temp_dict)
-#     return updated_plain_dict
 
 
 def retrieve_file_name_date(file_name=str, name_pattern=str, date_format=str):
