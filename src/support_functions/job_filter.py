@@ -1,12 +1,48 @@
 import file_handler, datetime, calendar, data_organizer, logging, os, json_config
 import logger as log
-from vca_handler import VCA_to_dict
+from vca_handler import VCA_to_dict, read_vca, read_vca_by_job, filter_tag
 from ntpath import join
 from dataclasses import dataclass
-
+from os.path import normpath, abspath
 
 logger = logging.getLogger('job_filter')
 
+
+'''
+==================================================================================================================================
+
+        Classes     Classes     Classes     Classes     Classes     Classes     Classes     Classes     Classes     Classes                  
+
+==================================================================================================================================
+'''
+
+@dataclass
+class FilterSettings:
+    path_list : list
+    extension : str
+    tag_filter : dict
+
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        else:
+            self_values = self.__dict__
+            for key in self_values.keys():
+                if not getattr(self, key) == getattr(other, key):
+                    return False
+            return True
+
+
+    @classmethod
+    def check_type_insertion(cls, setting_dict=dict):
+        try:
+            path_list = [normpath(abspath(str(path_item))) for path_item in setting_dict['path_list']]
+            extension = setting_dict['extension']
+            tag_filter = setting_dict['tag_filter']
+            return cls(path_list, extension, tag_filter)
+        except Exception as error:
+            raise error    
 
 '''
 ==================================================================================================================================
@@ -17,21 +53,25 @@ logger = logging.getLogger('job_filter')
 '''
 template = '''
 {
-    "source" : [
+    "path_list" : [
         "//192.168.5.103/lms/HOST_IMPORT/VCA/NOVO_LMS/READ"
     ],
-    "exetension" : "vca",
-    "sheets_id" : "",
-    "sheets_name" : "",
-    "sheets_range" : ""
+    "extension : "vca",
+    "tag_filter" : {
+        "JOB" : "", 
+        "CLIENT" : "",
+        "LNAM" : "",
+        "SPH" : {"R" : "", "L" : ""},
+        "CYL" : {"R" : "", "L" : ""},
+        "AX" : {"R" : "", "L" : ""},
+        "ADD" : {"R" : "", "L" : ""},
+        "MINEDG" : {"R" : "", "L" : ""},
+        "MINCTR" : {"R" : "", "L" : ""},
+        "MBASE" : {"R" : "", "L" : ""},
+        "FTYP" : "" 
+    }
 }
-
 '''
-
-
-
-
-
 
 
 '''
@@ -42,20 +82,6 @@ template = '''
 ==================================================================================================================================
 '''
 
-def read_vca(path: str, extension: str, start_date: datetime.date, end_date: datetime.date) -> dict:
-    file_list = file_handler.listFilesInDirSubDir(path, extension)
-    date_filtered_list = file_handler.listByDate(file_list, start_date, end_date)
-    values_dict = {}
-    for file in date_filtered_list:
-        try:
-            with open(file, 'r', errors='replace') as contents:
-                fileContents = contents.readlines()
-                temp_vca_contents = VCA_to_dict(fileContents)
-                values_dict[temp_vca_contents['JOB']] = temp_vca_contents
-        except Exception as error:
-            print(error)
-    return values_dict
-
 
 def week_date(date_value, days_to_subtract):
     
@@ -65,18 +91,18 @@ def week_date(date_value, days_to_subtract):
     return new_date
 
 
-def values_merger(path_list=list, base_list=list, base_search_tag=str, *args, start_pos=0, end_pos=12):
+def values_merger(path_list: list, name_base_list: list, base_search_tag: str, *args, start_pos: int=0, end_pos: int=12):
     file_list = []
     for path in path_list:
         file_list = file_list + file_handler.listFilesInDirSubDir(path, 'vca')
     merged_list = []
-    for value in base_list:
+    for value in name_base_list:
         merged_values = value
         file_found = file_handler.file_finder(file_list, value[base_search_tag.upper()], start_pos=start_pos, end_pos=end_pos)
         filtered_tags_value = {}
         filtered_tags_value[base_search_tag.upper()] = value[base_search_tag.upper()]
         if file_found:
-            vca_converted = VCAtoDict(file_handler.file_reader(file_found))
+            vca_converted = VCA_to_dict(file_handler.file_reader(file_found))
             filtered_tags_value.update(data_organizer.filter_tag(vca_converted, *args))
             merged_values[base_search_tag.upper()] = data_organizer.tags_dict_to_plain_dict(filtered_tags_value)
         else:
@@ -85,52 +111,56 @@ def values_merger(path_list=list, base_list=list, base_search_tag=str, *args, st
     return merged_list
 
 
+def vca_job_list_filter(path_list: list, extension: str, start_date: datetime.datetime.date, end_date: datetime.datetime.date, **kwargs) -> dict:
+    '''
+    List vca files in path list between two defined dates read vca data and extract values based on key, value (kwargs)
+    '''
+    try:
+        vca_list = {}
+        for path in path_list:
+            vca_list.update(read_vca(path, extension, start_date, end_date))
+        filtered_vca_list = {}
+        for job_number, job_data in vca_list.items():
+            filtered_vca_list[job_number] = filter_tag(job_data, **kwargs)
+        return filtered_vca_list
+    except Exception as error:
+        logger.error(error)
+        raise error
+
+
+'''
+==================================================================================================================================
+
+        Main        Main        Main        Main        Main        Main        Main        Main        Main        Main        
+
+==================================================================================================================================
+'''
+
 
 if __name__ == '__main__':
     logger = logging.getLogger()
     log.logger_setup(logger)
 
-    # date_target = week_date(datetime.datetime.now().date(), 1)
-    while True:
-        try:
-            print('Filter start date (dd/mm/yyyy): ')
-            start_date_string = input()
-            date_start = datetime.datetime.strptime(start_date_string, '%d/%m/%Y').date()
-            if date_start > datetime.datetime.now().date():
-                print('Date cannot be in the future')
-                raise ValueError
-        except ValueError:
-            print('Invalid or incorrect date. Please, enter again.')
-        try:
-            print('Filter end date (dd/mm/yyyy):')
-            end_date_string = input()    
-            date_end = datetime.datetime.strptime(end_date_string, '%d/%m/%Y').date()
-            if date_end > datetime.datetime.now().date() or date_end < date_start:
-                print('Date value not valid')
-                raise ValueError
-            break
-        except ValueError:
-            print('Invalid or incorrect date. Please, enter again.')
-    
-    print()
-    extension = 'vca'
-    # file_path = []
-    # while True:
-    #     print('Insert path press and "Enter" to store')
-    #     path_temp = input()
-    #     if os.path.exists(path_temp):
-    #         file_path.append(path_temp)
-    #         path_temp = ''
-    #         print(file_path)
-    #     if keyboard.is_pressed('enter') and len(file_path) > 0:
-    #         break
+    try:
+        config_data = json_config.load_json_config('C:/PyAutomations_Reports/config_job_filter.json', template)
+        config = FilterSettings.check_type_insertion(config_data)
+    except:
+        logger.critical('Could not load config file')
+        exit()
 
-    file_path = [r'C:\LMS\HOST_EXPORT\VCA\read_app',r'Z:\Backup LMS\LMS Export\Backup\2022']
-    # path_vca_backup = r'Z:\Backup LMS\LMS Export\Backup'
 
-    export_data = {}
-    for path in file_path:
-        export_data.update(read_vca(path, extension, date_start, date_end))
+    date_start = datetime.datetime.now().date() - datetime.timedelta(days=1)
+    date_end =  datetime.datetime.now().date() - datetime.timedelta(days=1)
+
+    logger.info(datetime.datetime.strftime(date_start, '%d/%m%Y'))
+    logger.info(datetime.datetime.strftime(date_end, '%d/%m%Y'))
+
+    filtered_vca_list = read_vca(config.path_list, config.extension, date_start, date_end, **config.tag_filter)
+
+    vca_plain = data_organizer.dict_list_to_plain_dict(filtered_vca_list)
+    float_format = data_organizer.plain_dict_float_format(vca_plain)
+
+    print('Done')
     # export_data = read_vca(path_vca, extension, date_start, date_end)
     # export_data.update(read_vca(path_vca_backup, extension, date_start, date_end))
 

@@ -1,4 +1,5 @@
 import os, logging, file_handler
+from datetime import datetime
 
 logger = logging.getLogger('vca_handler')
 
@@ -43,7 +44,7 @@ logger = logging.getLogger('vca_handler')
 #     return dataValue
 
 
-def convert_add_to_list(values_old, new_values):
+def convert_add_to_list(values_old: any, new_values: any) -> list:
     if not type(values_old) == list:
         return [values_old] + [new_values]
     else:
@@ -128,73 +129,6 @@ def __to_string(key=str, values=any, left='L', right='R') -> str:
     return
 
 
-# def VCAtoDict(VCAFileCOntent):
-#     try:
-#         tempList = []
-#         dataValue = {}
-#         counter = 0
-#         valueSplit = ''
-#         for line in VCAFileCOntent:
-#             line = line.replace('\n', '').replace('\t', '')
-#             if len(line) > 0:
-#                 tagAndValue = line.split('=')
-#                 if ';' in tagAndValue[1]:
-#                     valueSplit = tagAndValue[1].split(';')
-#                 if counter:
-#                     radiusList = radiusList + valueSplit
-#                     counter += 1
-#                 if counter == 37:
-#                     counter = 0
-#                     if 'TRCFMT' in dataValue.keys():
-#                         dataValue['TRCFMT'].update({tempList[3]: tempList})
-#                         dataValue['R'].update({tempList[3]: radiusList})
-#                     else:
-#                         dataValue['TRCFMT'] = {tempList[3] : tempList}
-#                         dataValue['R'] = {tempList[3] : radiusList}
-#                 if 'TRCFMT' in tagAndValue[0]:
-#                     tempList = valueSplit
-#                     counter += 1
-#                     radiusList = []
-#                 elif ';' in tagAndValue[1] and tagAndValue[1].count(';') == 1:
-#                     if tagAndValue[0] in dataValue.keys():
-#                         tempValue = dataValue[tagAndValue[0]]
-#                         if 'R' in dataValue[tagAndValue[0]].keys():
-#                             num = 1
-#                         else:
-#                             num = len(dataValue[tagAndValue[0]])
-#                         dataValue[tagAndValue[0]] = {num : tempValue}
-#                         dataValue[tagAndValue[0]].update({(num + 1) : {'R' : valueSplit[0], 'L' : valueSplit[1]}})
-#                     else:
-#                         dataValue[tagAndValue[0]] = {'R' : valueSplit[0], 'L' : valueSplit[1]}
-#                 elif tagAndValue[1].count(';') == 0:
-#                     if tagAndValue[0] in dataValue.keys():
-#                         tempValue = dataValue[tagAndValue[0]]
-#                         dataValue[tagAndValue[0]] = {1 : tempValue}
-#                         dataValue[tagAndValue[0]].update({2 : tagAndValue[1]})
-#                     else:
-#                         dataValue[tagAndValue[0]] = tagAndValue[1]
-#         print(f'Terminated tag convertion of {dataValue["JOB"]}')
-#         return dataValue
-#     except Exception as error:
-#         print(f'Could not read VCA contents {error}')
-#         raise Exception('VCA reading error')
-
-
-# check and deativate > file_handler.listFilesInDirSubDir is simpler and works almost the same way getting the same input
-def listVCAInDirSubDir(pathRoot, extention):
-    fileList = []
-    for root, dir, files in os.walk(pathRoot):
-        file_dict = {}
-        for file in files:
-            if file.lower().endswith(f'{extention}'):
-                file_dict['root'] = root
-                file_dict['file_name'] = file
-                fileList.append(file_dict)
-        print(root)
-    print(f'Listing for {pathRoot} done')
-    return fileList
-
-
 # check and deativate > file_handler.file_finder is simpler and works almost the same way getting the same input
 def find_files(path_root_list, name, extention, start_pos, end_pos=None):
     for path_root in path_root_list:
@@ -208,11 +142,33 @@ def find_files(path_root_list, name, extention, start_pos, end_pos=None):
     return False
 
 
-def read_vca(path, extension, start_date, end_date) -> dict:
+def filter_tag(job_data: dict, **kwargs) -> dict:
+    '''
+    filter dict data based on tag's list
+    '''
+    filtered_data = {}
+    for key, arg in kwargs.items():
+        retrieved_data = job_data.get(key, arg)
+        logger.debug(f'{key} : {retrieved_data}')
+        if not type(retrieved_data) == type(arg):
+            if 'R' in arg.keys() and 'L' in arg.keys():
+                side = job_data.get('DO', 'R')
+                temp_dict = {}
+                temp_dict[side] = retrieved_data
+                temp_dict['L' if side == 'R' else 'R'] = ''
+                retrieved_data = temp_dict
+            logger.warning('Value type diff')        
+        filtered_data[key] = retrieved_data
+    return filtered_data
+
+
+def read_vca(path_list: list, extension: str, start_date: datetime.date, end_date: datetime.date, **kwargs) -> dict:
     '''
     Read all vca files within the given start and end date and return a dict using the job number as key
     '''
-    file_list = file_handler.listFilesInDirSubDir(path, extension)
+    file_list = []
+    for path in path_list:
+        file_list = file_list + file_handler.listFilesInDirSubDir(path, extension)
     date_filtered_list = file_handler.listByDate(file_list, start_date, end_date)
     values_dict = {}
     for file in date_filtered_list:
@@ -220,11 +176,63 @@ def read_vca(path, extension, start_date, end_date) -> dict:
             with open(file, 'r', errors='replace') as contents:
                 fileContents = contents.readlines()
                 temp_vca_contents = VCA_to_dict(fileContents)
-                values_dict[temp_vca_contents['JOB']] = temp_vca_contents
+                if len(kwargs) > 0:
+                    filtered_vca = filter_tag(temp_vca_contents, **kwargs)
+                    values_dict[temp_vca_contents['JOB']] = filtered_vca
+                else:
+                    values_dict[temp_vca_contents['JOB']] = temp_vca_contents
         except Exception as error:
             logger.error(error)
     return values_dict
 
 
-def fileList(path, file_extention):
-    return [{'file_name' : file, 'root' : path} for file in os.listdir(path) if file.lower().endswith(f'.{file_extention}')]
+def read_vca_by_job(path_list: list, job_number_list: list, extension: str, name_start_pos: int=0, name_end_pos: int | None=None, **kwargs, ) -> dict:
+    '''
+    Find vca by job number list returning a dict values filtered by tags
+    '''
+    try:
+        file_list = []
+        for path in path_list:
+            logger.info(f'Creating file list for {path}')
+            file_list = file_list + file_handler.listFilesInDirSubDir(path, extension)
+        found_dict = {}
+        for job_number in job_number_list:
+            file_found = file_handler.file_finder(file_list, job_number, start_pos=name_start_pos, end_pos=name_end_pos)
+            if file_found:
+                logger.info(f'{job_number} found')
+                vca_converted = VCA_to_dict(file_handler.file_reader(file_found))
+                if len(kwargs) > 0:
+                    filtered_vca = filter_tag(vca_converted, **kwargs)
+                    found_dict[job_number] = filtered_vca
+                else:
+                    found_dict[job_number] = vca_converted
+        logger.info('Returning values')
+        return found_dict
+    except Exception as error:
+        logger.error({error})
+        raise error
+
+
+def key_renamer(name_insertion: str, dict_values: dict) -> dict:
+    new_dict = {}
+    for key, value in dict_values.items():
+        new_dict[f'{name_insertion}_{key}'] = value
+    return new_dict
+
+
+def merge_read_vca(read_vca_1: dict, 
+                   read_vca_2: dict, 
+                   read_vca_1_name: str, 
+                   read_vca_2_name: str, 
+                   vca_2_kwargs: dict) -> dict:
+    '''
+    Merge two vca job dict using their key as match
+    '''
+    merged_dict = {}
+    for key, vca in read_vca_1.items():
+        temp_dict = {}
+        temp_dict.update(key_renamer(read_vca_1_name, vca))
+        temp_dict.update(key_renamer(read_vca_2_name, read_vca_2.get(key, vca_2_kwargs)))
+        merged_dict[key] = temp_dict
+    return merged_dict
+

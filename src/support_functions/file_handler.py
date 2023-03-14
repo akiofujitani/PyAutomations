@@ -106,7 +106,10 @@ def listToCSV(valuesList, filePath) -> None:
     return
 
 
-def file_finder(file_list, file_name, start_pos=0, end_pos=None):
+def file_finder(file_list: list, file_name: str, start_pos: int=0, end_pos: None=None) -> str:
+    '''
+    Search file in list by partial name with start en end position 
+    '''
     logger.info(f'Searching for file {file_name}')
     for file in file_list:
         base_name = os.path.basename(file)

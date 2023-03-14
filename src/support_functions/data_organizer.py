@@ -104,26 +104,40 @@ def jobAndFileDate(filePath, fileList):
     return job_list
 
 
-def dict_list_to_plain_dict(dict_list):
-    logger.info('Converting to simple dict')
-    plain_dict = []
-    for line in dict_list:
+def dict_list_to_plain_dict(dict_list: list):
+    logger.info('Starting conversion to plain dict list')
+    plain_dict_list = []
+    for line in dict_list.values():
         line_dict = {}
-        for key_name in line.keys():
-            if type(line[key_name]) == dict:
-                for key_name_detail in line[key_name]:
-                    if type(line[key_name][key_name_detail]) == dict:
-                        temp_values = ''
-                        for value in line[key_name][key_name_detail]:
-                            temp_values += f';{value}'
-                        temp_values = temp_values.replace(';', '', 1)
-                        line_dict[f'{key_name}_{key_name_detail}'] = temp_values
+        for key, value in line.items():
+            if type(value) == dict:
+                for value_key, value_in_value in value.items():
+                    if type(value_in_value) == dict:
+                        for value_in_value_key, value_in_value_value in value_in_value.items():
+                            if type(value_in_value_value) == list:
+                                temp_value = ';'.join(value_in_value_value)
+                            else:
+                                temp_value = value_in_value_value
+                            line_dict[f'{key}_{value_key}_{value_in_value_key}'] = temp_value
+                    elif type(value_in_value) == list:
+                        line_dict[f'{key}_{value_key}'] = ';'.join(value_in_value)
                     else:
-                        line_dict[f'{key_name}_{key_name_detail}'] = line[key_name][key_name_detail]
+                        line_dict[f'{key}_{value_key}'] = value_in_value
+            elif type(value) == list:
+                try:
+                    line_dict[key] = ';'.join(value)
+                except Exception as error:
+                    logger.warning(error)
+                    temp_value = ''
+                    for list_item in value:
+                        if type(list_item) == dict:
+                            for item_key, item_item in list_item.items():
+                                temp_value = f'{temp_value} {item_key} : {item_item}'
+                    line_dict[key] = temp_value
             else:
-                line_dict[key_name] = line[key_name]
-        plain_dict.append(line_dict)
-    return plain_dict
+                line_dict[f'{key}'] = value
+        plain_dict_list.append(line_dict)
+    return plain_dict_list
 
 
 def tags_dict_to_plain_dict(keys_dict=dict):
@@ -299,7 +313,7 @@ def remove_from_dict(values_dict=dict, *args):
     return updated_dict
 
 
-def add_months_to_date(date=datetime.datetime, num_of_months=int):
+def add_months_to_date(date: datetime.datetime, num_of_months: int) -> datetime.datetime:
     for i in range(num_of_months):
         date = date + datetime.timedelta(days=calendar.monthrange(date.year, date.month)[1])
     return date
