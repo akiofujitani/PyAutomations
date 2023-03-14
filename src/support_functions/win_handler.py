@@ -1,4 +1,4 @@
-import subprocess, pyscreeze, pyautogui, screeninfo, constants, os, logging
+import subprocess, pyscreeze, pyautogui, screeninfo, constants, os, logging, concurrent.futures
 from ntpath import join
 from time import sleep
 from win32 import win32gui
@@ -96,6 +96,14 @@ def image_path_fix(path=str):
         return f'{path}/'
 
 
+def locate_image(image_path: str, confidence: float, region: tuple, minSearchTime=0.5):
+    try:
+        image_pos = pyautogui.locateOnScreen(image_path, minSearchTime=0.5, confidence=confidence, region=region)
+        return image_pos
+    except ImageNotFoundException:
+        raise ImageNotFoundException(f"Can't fine image from {image_path}")
+
+
 def image_search(image_name=str, confidence_value=0.7, region=None, full_path=constants.SCRIPT_DIR, path='images/') -> pyscreeze.Box:
     '''
     Search image base on its name and path
@@ -105,8 +113,11 @@ def image_search(image_name=str, confidence_value=0.7, region=None, full_path=co
     '''
     image_path = os.path.normpath(join(full_path, f'{image_path_fix(path)}{image_name}'))
     try:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            threading_value = executor.submit(locate_image, image_path, confidence_value, region, 0.5)
+            image_pos = threading_value.result()
         # for i in range(3):
-        image_pos = pyautogui.locateOnScreen(image_path, minSearchTime=0.5, confidence=confidence_value, region=region)
+        # image_pos = pyautogui.locateOnScreen(image_path, minSearchTime=0.5, confidence=confidence_value, region=region)
         if not image_pos == None:
             logger.debug(f'{image_name} found at {image_pos.left} x {image_pos.top}')
             return image_pos
@@ -296,11 +307,18 @@ def get_active_windows_title() -> str:
         raise error
 
 
+def temp_fun(test: str):
+    print(test)
+    return test.upper()
+
+
 if __name__ == '__main__':
-    counter = 0
-    while True:
-        logger.info(f'{counter}') 
-        image_search("Teste_Win.png")
-        counter = counter + 1
+    value = 'Teste'
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        temp_value = executor.submit(temp_fun, value)
+        result = temp_value.result()
+        print(result)
+
+
 
         

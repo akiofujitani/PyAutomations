@@ -1,11 +1,10 @@
-import tkinter, logging, json_config
+import tkinter, logging
 from tkinter import messagebox
 from tkinter import ttk
 from tkinter import filedialog
 from dataclasses import dataclass
 from PIL import Image, ImageTk
 from os.path import normpath, exists
-
 logger = logging.getLogger('gui_classes')
 
 
