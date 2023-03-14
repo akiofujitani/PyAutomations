@@ -7,6 +7,15 @@ from win32 import win32gui
 logger = logging.getLogger('win_handler')
 
 
+'''
+==================================================================================================================================
+
+        Classes     Classes     Classes     Classes     Classes     Classes     Classes     Classes     Classes     Classes     
+
+==================================================================================================================================
+'''
+
+
 class BaseException(Exception):
     pass
 
@@ -307,6 +316,7 @@ def get_active_windows_title() -> str:
         raise error
 
 
+<<<<<<< HEAD
 def temp_fun(test: str):
     print(test)
     return test.upper()
@@ -320,5 +330,15 @@ if __name__ == '__main__':
         print(result)
 
 
+=======
+def test_return():
+    print('Running test return')
+    return 'Hello'
+>>>>>>> f5f05348d97f3799787152cbd43efeeb3529fd73
 
-        
+
+if __name__ == '__main__':
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(test_return)
+        return_value = future.result()
+        print(f'{return_value} World')

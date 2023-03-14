@@ -40,8 +40,6 @@ def add_product_codes(codes_list=list, window_title=str, path='images/') -> None
         raise KeyboardInterrupt
 
 
-
-
 '''
 ==================================================================================================================================
 
