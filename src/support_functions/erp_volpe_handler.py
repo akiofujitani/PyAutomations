@@ -224,6 +224,7 @@ def volpe_back_to_main(question=False):
         sleep(0.3)
         active_window = win32gui.GetForegroundWindow()
         active_win_text = win32gui.GetWindowText(active_window)
+        sleep(0.5)
         control = win32gui.FindWindowEx(active_window, None, None, None)
         control_text = ''
         if control:
@@ -402,34 +403,46 @@ def volpe_save_report(file_name, save_path, reference=None, load_report_path='Im
     return
 
 
-def message_box_confirm(check_count=3, override=True):
+def message_box_confirm(check_count: int=3, override: bool=True):
     try:
         for _ in range(check_count):
-            active_window = win32gui.GetActiveWindow()
-            win_title = win32gui.GetWindowText(active_window)
+            win_handler.activate_window('Volpe ')
+            sleep(0.3)
+            win_title = win32gui.GetForegroundWindow()
+            control = win32gui.FindWindowEx(win_title, None, None, None)
+            control_text = ''
+            logger.debug(f'Title {win_title}')
+            if control:
+                control_text = win32gui.GetWindowText(control)
+            sleep(1)
             if 'Volpe' in win_title:
+                logger.debug('"Volpe" return')
                 return
             elif 'AVISO' in win_title:
-                logger.debug('Space pressed')
+                logger.debug('"AVISO" Space pressed')
                 pyautogui.press('space')
+                sleep(0.3)
             elif 'Save As' in win_title:
+                logger.debug('"Save As" Esc pressed')
                 pyautogui.press('esc')
+                sleep(0.3)
             elif 'Confirmar Salvar como' in win_title:
                 if override == True:
+                    logger.debug('"Confirmar Salvar como" File overwritten')
                     pyautogui.press('s')
-                    logger.debug('File overwritten')
                 else:
+                    logger.debug('"Confirmar Salvar como" File save cancel')
                     pyautogui.press('n')
-                    logger.debug('File save cancel')
+
+                sleep(0.3)
             else:
-                control = win32gui.FindWindowEx(active_window, None, None, None)
-                control_text = ''
-                if control:
-                    control_text = win32gui.GetWindowText(control)
-                    if control_text == '&Sim':
-                        pyautogui.press('n')
-                    else:
-                        pyautogui.press('esc')
+                if '&Sim' in control_text:
+                    logger.debug('"Open file" N pressed')
+                    pyautogui.press('n')
+                else:
+                    logger.debug('"Open file" Esc pressed')
+                    pyautogui.press('esc')
+                sleep(0.3)
             sleep(0.5)
     except Exception as error:
         logger.error(f'Message box confirm error due {error}')

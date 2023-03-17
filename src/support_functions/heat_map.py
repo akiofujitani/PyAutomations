@@ -255,7 +255,7 @@ def clean_status_dict(status_dict, sheets_name, search_range):
     Clean and transform dict in matrix like values.
     '''
     last_row_date = data_communication.get_last_date(sheets_name, search_range, '31/05/2022', sheets_id=sheets_id)
-    status_dict_first_date = datetime.datetime.strptime(status_dict[0]['DATE'], '%d/%m/%Y')
+    status_dict_first_date = datetime.datetime.strptime(status_dict[0]['DATE'], '%d/%m/%Y').date()
     date_difference = status_dict_first_date - last_row_date
     if not date_difference.days == 1:
         if date_difference < datetime.timedelta(days=1):
@@ -364,11 +364,11 @@ if __name__ == '__main__':
         status_jobtype = config['heat_map']['status_list'][jobtype]
         sheets_name = config["heat_map"]["sheets_type_name"][f'date_source_{config["heat_map"]["sheets_type_name"][jobtype]}']
         sheets_date_plus_one = data_communication.get_last_date(f'{sheets_name} {config["heat_map"]["sheets_type_name"][jobtype]}', sheets_date_pos, config['heat_map']['minimum_date'], sheets_id=sheets_id) + datetime.timedelta(days=1)
-        end_date = datetime.datetime.now() - datetime.timedelta(days=1)
+        end_date = datetime.datetime.now().date() - datetime.timedelta(days=1)
 
 
         # Defining start and end date
-        if not sheets_date_plus_one.date() == datetime.datetime.now().date():
+        if not sheets_date_plus_one == datetime.datetime.now().date():
             file_date = file_handler.file_list_last_date(path, extension_str, file_name_pattern, '%Y%m%d')
             if file_date == None:
                 start_date = sheets_date_plus_one
@@ -383,7 +383,7 @@ if __name__ == '__main__':
 
             # Running Volpe automation if needed
 
-            if not start_date.date() == datetime.datetime.now().date():
+            if not start_date == datetime.datetime.now().date():
                 error_counter = 0
                 try:
                     erp_volpe_handler.volpe_back_to_main()
@@ -393,7 +393,7 @@ if __name__ == '__main__':
                     counter = 0
                     report_date_start = start_date
                     report_date_end = start_date
-                    while report_date_end < end_date:
+                    while report_date_end <= end_date:
                         try:
                             erp_volpe_handler.volpe_load_report(report_date_start,
                                                 report_date_end, 

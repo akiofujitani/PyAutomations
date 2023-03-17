@@ -204,7 +204,7 @@ if __name__ == '__main__':
         sheets_date_plus_one = data_communication.get_last_date(sheets_name, 
                     sheets_date_pos, 
                     config['heat_map']['minimum_date'], sheets_id=sheets_id) + datetime.timedelta(days=1)
-        end_date = datetime.datetime.now() - datetime.timedelta(days=1)
+        end_date = datetime.datetime.now().date() - datetime.timedelta(days=1)
     except Exception as error:
         logger.error(f'Error loading table {sheets_name}')
         quit()
@@ -227,7 +227,7 @@ if __name__ == '__main__':
 
         # Report extraction automation
 
-        if start_date.date() <= (datetime.datetime.now().date() - datetime.timedelta(days=1)):
+        if start_date <= (datetime.datetime.now().date() - datetime.timedelta(days=1)):
             erp_volpe_handler.volpe_back_to_main()
             volpe_load_tab('Tab_Lab', 'Icon_Prod_Unit.png')
             volpe_open_window('Icon_Detailed_breakages.png', 'Title_Detailed_Breakages.png')

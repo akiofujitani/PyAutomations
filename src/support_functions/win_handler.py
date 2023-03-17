@@ -110,7 +110,7 @@ def locate_image(image_path: str, confidence: float, region: tuple, minSearchTim
         image_pos = pyautogui.locateOnScreen(image_path, minSearchTime=0.5, confidence=confidence, region=region)
         return image_pos
     except ImageNotFoundException:
-        raise ImageNotFoundException(f"Can't fine image from {image_path}")
+        raise None
 
 
 def image_search(image_name=str, confidence_value=0.7, region=None, full_path=constants.SCRIPT_DIR, path='images/') -> pyscreeze.Box:
@@ -125,6 +125,7 @@ def image_search(image_name=str, confidence_value=0.7, region=None, full_path=co
         with concurrent.futures.ThreadPoolExecutor() as executor:
             threading_value = executor.submit(locate_image, image_path, confidence_value, region, 0.5)
             image_pos = threading_value.result()
+            executor.shutdown()
         # for i in range(3):
         # image_pos = pyautogui.locateOnScreen(image_path, minSearchTime=0.5, confidence=confidence_value, region=region)
         if not image_pos == None:
@@ -316,7 +317,6 @@ def get_active_windows_title() -> str:
         raise error
 
 
-<<<<<<< HEAD
 def temp_fun(test: str):
     print(test)
     return test.upper()
@@ -328,17 +328,3 @@ if __name__ == '__main__':
         temp_value = executor.submit(temp_fun, value)
         result = temp_value.result()
         print(result)
-
-
-=======
-def test_return():
-    print('Running test return')
-    return 'Hello'
->>>>>>> f5f05348d97f3799787152cbd43efeeb3529fd73
-
-
-if __name__ == '__main__':
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(test_return)
-        return_value = future.result()
-        print(f'{return_value} World')

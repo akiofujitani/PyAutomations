@@ -234,7 +234,7 @@ def check_create_dir(path):
         raise Exception(error)
 
 
-def file_list_last_date(path=str, extension=str, pattern_removal=str, date_pattern=str):
+def file_list_last_date(path: str, extension: str, pattern_removal: str, date_pattern: str) -> datetime.datetime.date:
     '''
     Retrieves the last defined data in file list.
     This don't retrieves the creattion date, its the date defined in the file name
@@ -247,7 +247,7 @@ def file_list_last_date(path=str, extension=str, pattern_removal=str, date_patte
             date_list.append(datetime.datetime.strptime(file_extension[0].replace(pattern_removal, ''), date_pattern))
             date_list.sort(reverse=True)
         logger.debug(date_list[0])
-        return date_list[0]
+        return date_list[0].date()
     except Exception as error:
         logger.error(error)
         return None
