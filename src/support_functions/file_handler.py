@@ -14,14 +14,14 @@ def file_list(path=str, file_extention=str) -> list:
     return [file for file in os.listdir(path) if file.lower().endswith(f'.{file_extention.lower()}')]
 
 
-def listFilesInDirSubDir(pathRoot=str, extention=str) -> list:
+def listFilesInDirSubDir(pathRoot: str, extention: str='') -> list:
     '''
     List files ended with choosen extension inside all directories inside the path
     '''
     fileList = []
-    for root, dir, files in os.walk(pathRoot):
+    for root, _, files in os.walk(pathRoot):
         for file in files:
-            if file.lower().endswith(f'{extention}'):
+            if file.lower().endswith(extention):
                 fileList.append(os.path.join(root, file))
     logger.info(f'Listing for {pathRoot} done')
     return fileList
@@ -257,19 +257,19 @@ def file_contents_last_date(file_contents=dict, field_name=str, time_format='%d/
     try:
         last_date = sorted(file_contents, key=lambda value : datetime.datetime.strptime(value[field_name], time_format), reverse=True)[0][field_name]
         strip_date = datetime.datetime.strptime(last_date, time_format).date()
-        return datetime.datetime.strptime(strip_date.strftime('%d/%m/%Y'), '%d/%m/%Y')
+        return strip_date
     except Exception as error:
         logger.error('Could not get date from file')
         raise error
 
 
-def file_contents_last_date1(path=str, extension=str, field_name=str):
+def file_contents_last_date1(path: str, extension: str, field_name: str) -> datetime.datetime.date:
     try:
         files_list = file_list(path, extension)
         last_date = ''
         for file in files_list:
             file_contents = CSVtoList(join(path, file))
-            temp_date =  datetime.datetime.strptime(sorted(file_contents, key=lambda value : value[field_name], reverse=True)[0][field_name], '%d/%m/%Y')
+            temp_date =  datetime.datetime.strptime(sorted(file_contents, key=lambda value : value[field_name], reverse=True)[0][field_name], '%d/%m/%Y').date()
             if last_date == '':
                 last_date = temp_date
             if temp_date > last_date:

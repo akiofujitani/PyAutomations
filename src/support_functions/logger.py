@@ -43,9 +43,11 @@ try:
             "stream": "ext://sys.stdout"
         },
         "file_handler": {
-            "class" : "logging.handlers.RotatingFileHandler",
+            "class" : "logger.TimedRotatingFileHandlerCustomNamer",
             "formatter" : "precise",
             "level" : "DEBUG",
+            "when" : "d",
+            "interval" : 1,
             "filename" : "./Log/Log.log"
         },
         "queue_handler" : {
@@ -71,12 +73,15 @@ except Exception as error:
     exit()
 
 
-def logger_setup(logger=logging.Logger | None, log_queue=None | Queue):
-    dictConfig(config)
-    if not log_queue:
-
-        # logger = add_log_queuer(logger, log_queue)
-        logger = add_handler(logger, LogQueuer, log_queue)
+def logger_setup(logger: logging.Logger | None, log_queue: Queue | None=None):
+    try:
+        dictConfig(config)
+        if not log_queue == None:
+            # logger = add_log_queuer(logger, log_queue)
+            logger = add_handler(logger, LogQueuer, log_queue)
+    except Exception as error:
+        print(error)
+        exit()
 
 
 def add_handler(current_logger=logging.Logger, handler_class=logging.Handler, log_queue=None | Queue):

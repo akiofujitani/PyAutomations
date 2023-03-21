@@ -1,8 +1,7 @@
-import datetime, heat_map_classes, win_handler, erp_volpe_handler, pyautogui, keyboard, file_handler, data_communication, json_config, os, logging
+import datetime, heat_map_classes, win_handler, erp_volpe_handler, pyautogui, keyboard, file_handler, data_communication, json_config, os, logging, threading
 import logger as log
 from ntpath import join
 from time import sleep
-import tkinter.messagebox
 
 logger = logging.getLogger('heat_map')
 
@@ -250,7 +249,7 @@ def sum_values_by_status(productivity_dict=dict):
     return productivity_sum
 
 
-def clean_status_dict(status_dict, sheets_name, search_range):
+def clean_status_dict(status_dict, sheets_name, search_range, sheets_id):
     '''
     Clean and transform dict in matrix like values.
     '''
@@ -326,6 +325,150 @@ def complete_date_in_list(status_dict=dict, status_list_by_job_type=list):
 
 
 
+
+
+def main(event: threading.Event, config: dict):
+    extension_str = config['heat_map']['extension']
+    file_name_pattern = config['heat_map']['file_name_pattern']
+    sheets_date_pos = config['heat_map']['sheets_date_pos']
+    sheets_id = config['heat_map']['sheets_id']
+    status_jobtype_sheets_name = config['heat_map']['status_list']['sheets_name']
+    number_of_tries = config['heat_map']['number_of_tries']
+
+    # Selecting by job type
+    # Free form or external (coating)
+
+    for jobtype in config['heat_map']['job_type']:
+        if event.is_set():
+            logger.info('Event set')
+            return
+
+        # Configuration load
+        path = file_handler.check_create_dir(os.path.normpath(config['heat_map']['path_output'][jobtype]))
+        path_done = file_handler.check_create_dir(os.path.normpath(config['heat_map']['path_done'][jobtype]))
+        logger.debug(config['heat_map']['job_type'][jobtype])
+        logger.debug(config['heat_map']['sheets_type_name'][jobtype])
+
+        status_jobtype = config['heat_map']['status_list'][jobtype]
+        sheets_name = config["heat_map"]["sheets_type_name"][f'date_source_{config["heat_map"]["sheets_type_name"][jobtype]}']
+
+        error_counter = 0
+        while error_counter <= number_of_tries:
+            error_counter += 1
+            if event.is_set():
+                logger.info('Event set')
+                return
+            
+            #Date definer
+            sheets_date_plus_one = data_communication.get_last_date(f'{sheets_name} {config["heat_map"]["sheets_type_name"][jobtype]}', sheets_date_pos, config['heat_map']['minimum_date'], sheets_id=sheets_id) + datetime.timedelta(days=1)
+            end_date = datetime.datetime.now().date() - datetime.timedelta(days=1)
+
+            if not sheets_date_plus_one == datetime.datetime.now().date():
+                start_date = sheets_date_plus_one
+                file_date = file_handler.file_list_last_date(path, extension_str, file_name_pattern, '%Y%m%d')
+                if file_date:
+                    start_date = define_start_date(sheets_date_plus_one, file_date)
+
+                logger.debug(f"Start date {datetime.datetime.strftime(start_date, '%d/%m/%Y')}")
+                logger.debug(f"End date {datetime.datetime.strftime(end_date, '%d/%m/%Y')}")
+
+                type_list = config['heat_map']['job_type'][jobtype]
+
+
+                # Running Volpe automation if needed
+
+                if not start_date == datetime.datetime.now().date():
+                    try:
+                        erp_volpe_handler.volpe_back_to_main()
+                        erp_volpe_handler.volpe_load_tab('Tab_lab', 'Icon_Prod_Unit.png')
+                        erp_volpe_handler.volpe_open_window('Icon_Productivity_machine.png', 'Title_Machine_productivity.png')
+                        erp_volpe_handler.type_selector('Machine_productivity.png', 'Images/Machine_productivity', *type_list)
+                        counter = 0
+                        report_date_start = start_date
+                        report_date_end = start_date
+                        while report_date_end <= end_date:
+                            try:
+                                if event.is_set():
+                                    logger.info('Event set')
+                                    return
+                                erp_volpe_handler.volpe_load_report(report_date_start,
+                                                    report_date_end, 
+                                                    'Report_options',
+                                                    'Procced.png',
+                                                    'Date_from.png',
+                                                    'Date_until.png',
+                                                    'Sheet_header.png',
+                                                    date_from_dist=30,
+                                                    date_until_dist=30,
+                                                    load_report_path='Images/Machine_productivity')
+                                machine_productivity_expand_all()
+                                erp_volpe_handler.volpe_save_report(f'{file_name_pattern}{datetime.datetime.strftime(report_date_start, "%Y%m%d")}', path)
+                                logger.info(f'Date {datetime.datetime.strftime(report_date_start, "%d/%m/%Y")} done.')
+                                report_date_start = report_date_start + datetime.timedelta(days=1)
+                                report_date_end = report_date_end + datetime.timedelta(days=1)
+                            except Exception as error:
+                                logger.warning(f'Error {error}')
+                                if counter >= 5:
+                                    raise Exception('Error: Too many tries.')
+                                erp_volpe_handler.volpe_back_to_main()
+                                erp_volpe_handler.volpe_load_tab('Tab_lab', 'Icon_Prod_Unit.png')
+                                erp_volpe_handler.volpe_open_window('Icon_Productivity_machine.png', 'Title_Machine_productivity.png')
+                        # get_productivity(start_date, end_date, type_list, path, file_name_pattern)
+                    except Exception as error:
+                        logger.error('Automation error: {error}')
+                        try:
+                            erp_volpe_handler.volpe_back_to_main()
+                        except Exception as error:
+                            logger.error(error)
+
+
+                # Filtering and organizing values in csv
+                if len(file_handler.file_list(path, extension_str)) > 0:
+                    if event.is_set():
+                        logger.info('Event set')
+                        return
+                    try:
+                        status_list_by_jobtype = data_communication.column_to_list(data_communication.get_values(status_jobtype_sheets_name , status_jobtype, sheets_id=sheets_id))
+                        
+                        productivity_dict = convert_productivity(path, extension_str)
+                        filled_productiviry_dict = fill_values(productivity_dict)
+                        flatten_productivity = sum_values_by_status(filled_productiviry_dict)
+                        status_dict = simple_dict_by_status(flatten_productivity)
+                        completed_list = complete_date_in_list(status_dict, status_list_by_jobtype)
+
+                        # Storing data in sheets of csv file if error
+                        count_status = 0
+                        status_list_by_jobtype = data_communication.column_to_list(data_communication.get_values(status_jobtype_sheets_name , status_jobtype, sheets_id=sheets_id))
+                        for status in completed_list.keys():
+                            if status in status_list_by_jobtype:
+                                count_status = count_status + 1
+                                logger.info(f'{status} started')
+                                range_value = 'A:Z'
+                                range_name = f'{status} {config["heat_map"]["sheets_type_name"][jobtype]}'
+                                try:
+                                    status_dict_matrix = clean_status_dict(completed_list[status], range_name, range_value, sheets_id)
+                                    if len(status_dict_matrix) > 0:
+                                        data_communication.data_append_values(range_name, range_value, status_dict_matrix, sheets_id=sheets_id)
+                                    for item in completed_list[status]:
+                                        values = list(item.values())
+                                        logger.debug(values)
+                                except Exception as error:
+                                    logger.warning(f'Could not store values for {status}')
+                                    file_name = f'{count_status:02d}_{status}'
+                                    file_handler.listToCSV(completed_list[status], join(path_done, f'{file_name.replace("/", ".") if "/" in file_name else file_name}.csv'))
+                                    logger.error(f'{status} saved to CSV due {error}')
+                                logger.debug(f'{status} done')
+                        done_file_move(path, path_done, extension_str)
+                        logger.info('Done')
+                    except Exception as error:
+                        logger.error(f'Error {error} ocurred')
+
+
+def quit_func():
+    logger.info('Quit pressed')
+    event.set()
+    return
+
 '''
 ==================================================================================================================
 
@@ -345,120 +488,19 @@ if __name__ == '__main__':
         logger.critical('Could not load config file')
         exit()
 
-
-    extension_str = config['heat_map']['extension']
-    file_name_pattern = config['heat_map']['file_name_pattern']
-    sheets_date_pos = config['heat_map']['sheets_date_pos']
-    sheets_id = config['heat_map']['sheets_id']
-    status_jobtype_sheets_name = config['heat_map']['status_list']['sheets_name']
-
-    # Selecting by job type
-    # Free form or external (coating)
-
-    for jobtype in config['heat_map']['job_type']:
-        path = file_handler.check_create_dir(os.path.normpath(config['heat_map']['path_output'][jobtype]))
-        path_done = file_handler.check_create_dir(os.path.normpath(config['heat_map']['path_done'][jobtype]))
-        logger.debug(config['heat_map']['job_type'][jobtype])
-        logger.debug(config['heat_map']['sheets_type_name'][jobtype])
-
-        status_jobtype = config['heat_map']['status_list'][jobtype]
-        sheets_name = config["heat_map"]["sheets_type_name"][f'date_source_{config["heat_map"]["sheets_type_name"][jobtype]}']
-        sheets_date_plus_one = data_communication.get_last_date(f'{sheets_name} {config["heat_map"]["sheets_type_name"][jobtype]}', sheets_date_pos, config['heat_map']['minimum_date'], sheets_id=sheets_id) + datetime.timedelta(days=1)
-        end_date = datetime.datetime.now().date() - datetime.timedelta(days=1)
+    event = threading.Event()
+    keyboard.add_hotkey('space', quit_func)
 
 
-        # Defining start and end date
-        if not sheets_date_plus_one == datetime.datetime.now().date():
-            file_date = file_handler.file_list_last_date(path, extension_str, file_name_pattern, '%Y%m%d')
-            if file_date == None:
-                start_date = sheets_date_plus_one
-            else:
-                start_date = define_start_date(sheets_date_plus_one, file_date)
+    for _ in range(3):
+        if event.is_set():
+            break
+        thread = threading.Thread(target=main, args=(event, config, ), name='heat_map')
+        thread.start()
+        thread.join()
 
-            logger.debug(datetime.datetime.strftime(start_date, '%d/%m/%Y'))
-            logger.debug(datetime.datetime.strftime(end_date, '%d/%m/%Y'))
-
-            type_list = config['heat_map']['job_type'][jobtype]
+    logger.debug('Done')
 
 
-            # Running Volpe automation if needed
-
-            if not start_date == datetime.datetime.now().date():
-                error_counter = 0
-                try:
-                    erp_volpe_handler.volpe_back_to_main()
-                    erp_volpe_handler.volpe_load_tab('Tab_lab', 'Icon_Prod_Unit.png')
-                    erp_volpe_handler.volpe_open_window('Icon_Productivity_machine.png', 'Title_Machine_productivity.png')
-                    erp_volpe_handler.type_selector('Machine_productivity.png', 'Images/Machine_productivity', *type_list)
-                    counter = 0
-                    report_date_start = start_date
-                    report_date_end = start_date
-                    while report_date_end <= end_date:
-                        try:
-                            erp_volpe_handler.volpe_load_report(report_date_start,
-                                                report_date_end, 
-                                                'Report_options',
-                                                'Procced.png',
-                                                'Date_from.png',
-                                                'Date_until.png',
-                                                'Sheet_header.png',
-                                                date_from_dist=30,
-                                                date_until_dist=30,
-                                                load_report_path='Images/Machine_productivity')
-                            machine_productivity_expand_all()
-                            erp_volpe_handler.volpe_save_report(f'{file_name_pattern}{datetime.datetime.strftime(report_date_start, "%Y%m%d")}', path)
-                            logger.info(f'Date {datetime.datetime.strftime(report_date_start, "%d/%m/%Y")} done.')
-                            report_date_start = report_date_start + datetime.timedelta(days=1)
-                            report_date_end = report_date_end + datetime.timedelta(days=1)
-                        except Exception as error:
-                            logger.warning(f'Error {error}')
-                            if counter >= 5:
-                                raise Exception('Error: Too many tries.')
-                            erp_volpe_handler.volpe_back_to_main()
-                            erp_volpe_handler.volpe_load_tab('Tab_lab', 'Icon_Prod_Unit.png')
-                            erp_volpe_handler.volpe_open_window('Icon_Productivity_machine.png', 'Title_Machine_productivity.png')
-                    # get_productivity(start_date, end_date, type_list, path, file_name_pattern)
-                except Exception as error:
-                    logger.error('Automation error: {error}')
-                    erp_volpe_handler.volpe_back_to_main()
-
-
-                # Filtering and organizing values in csv
-                try:
-                    status_list_by_jobtype = data_communication.column_to_list(data_communication.get_values(status_jobtype_sheets_name , status_jobtype, sheets_id=sheets_id))
-                    
-                    productivity_dict = convert_productivity(path, extension_str)
-                    filled_productiviry_dict = fill_values(productivity_dict)
-                    flatten_productivity = sum_values_by_status(filled_productiviry_dict)
-                    status_dict = simple_dict_by_status(flatten_productivity)
-                    completed_list = complete_date_in_list(status_dict, status_list_by_jobtype)
-
-                    # Storing data in sheets of csv file if error
-                    count_status = 0
-                    status_list_by_jobtype = data_communication.column_to_list(data_communication.get_values(status_jobtype_sheets_name , status_jobtype, sheets_id=sheets_id))
-                    for status in status_dict.keys():
-                        if status in status_list_by_jobtype:
-                            count_status = count_status + 1
-                            logger.info(f'{status} started')
-                            range_value = 'A:Z'
-                            range_name = f'{status} {config["heat_map"]["sheets_type_name"][jobtype]}'
-                            try:
-                                status_dict_matrix = clean_status_dict(status_dict[status], range_name, range_value)
-                                if len(status_dict_matrix) > 0:
-                                    data_communication.data_append_values(range_name, range_value, status_dict_matrix, sheets_id=sheets_id)
-                                for item in status_dict[status]:
-                                    values = list(item.values())
-                                    logger.debug(values)
-                            except Exception as error:
-                                logger.warning(f'Could not store values for {status}')
-                                file_name = f'{count_status:02d}_{status}'
-                                file_handler.listToCSV(status_dict[status], join(path_done, f'{file_name.replace("/", ".") if "/" in file_name else file_name}.csv'))
-                                logger.error(f'{status} saved to CSV due {error}')
-                            logger.debug(f'{status} done')
-                    done_file_move(path, path_done, extension_str)
-                    logger.info('Done')
-                except Exception as error:
-                    logger.error(f'Error {error} ocurred')
-                except KeyboardInterrupt:
-                    tkinter.messagebox.showinfo('PyAutomation', 'Script interrupted by user.')
+    
 

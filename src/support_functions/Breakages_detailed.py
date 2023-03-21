@@ -1,4 +1,4 @@
-import win_handler, erp_volpe_handler, pyautogui, keyboard, datetime, calendar, file_handler, data_communication, data_organizer, json_config, os, logging
+import win_handler, erp_volpe_handler, pyautogui, keyboard, datetime, calendar, file_handler, data_communication, data_organizer, json_config, os, logging, threading
 import logger as log
 from ntpath import join
 from time import sleep
@@ -171,26 +171,8 @@ def breakage_date_hour(values_dict=dict):
     return updated_list
 
 
-'''
-==================================================================================================================================
-
-        Main    Main    Main    Main    Main    Main    Main    Main    Main    Main    Main    Main    Main    Main    Main    
-
-==================================================================================================================================
-'''
-
-
-if __name__ == '__main__':
-    logger = logging.getLogger()
-    log.logger_setup(logger)
-    
-        # volpe_back_to_main()
-    try:
-        config = json_config.load_json_config('C:/PyAutomations_Reports/config_volpe.json')
-    except:
-        logger.critical('Could not load config file')
-        exit()
-
+def breakage_detailed(event: threading.Event, config: dict):
+    # Config load
     path = os.path.normpath(config['breakage']['path'])
     path_done = os.path.normpath(config['breakage']['path_done'])
     extension = config['breakage']['extension']
@@ -199,7 +181,7 @@ if __name__ == '__main__':
     sheets_date_pos = config['breakage']['sheets_date_pos']
     sheets_id = config['breakage']['sheets_id']
 
-
+    # Date configuration
     try:
         sheets_date_plus_one = data_communication.get_last_date(sheets_name, 
                     sheets_date_pos, 
@@ -207,8 +189,12 @@ if __name__ == '__main__':
         end_date = datetime.datetime.now().date() - datetime.timedelta(days=1)
     except Exception as error:
         logger.error(f'Error loading table {sheets_name}')
-        quit()
+        event.set()
+        return
 
+    if event.is_set():
+        logger.info('Event set')
+        return
 
     # Defining start and end date
     if not sheets_date_plus_one == datetime.datetime.now().date():
@@ -227,13 +213,16 @@ if __name__ == '__main__':
 
         # Report extraction automation
 
-        if start_date <= (datetime.datetime.now().date() - datetime.timedelta(days=1)):
-            erp_volpe_handler.volpe_back_to_main()
-            volpe_load_tab('Tab_Lab', 'Icon_Prod_Unit.png')
-            volpe_open_window('Icon_Detailed_breakages.png', 'Title_Detailed_Breakages.png')
+        if not start_date == datetime.datetime.now().date() and not start_date.weekday() == 6:
+            # erp_volpe_handler.volpe_back_to_main()
+            # volpe_load_tab('Tab_Lab', 'Icon_Prod_Unit.png')
+            # volpe_open_window('Icon_Detailed_breakages.png', 'Title_Detailed_Breakages.png')
 
+            if event.is_set():
+                logger.info('Event set')
+                return
             report_date_end = start_date
-            while report_date_end < end_date:
+            while report_date_end <= end_date:
                 if end_date > data_organizer.add_months_to_date(start_date, 1):
                     report_start_date = start_date
                     report_date_end = datetime.datetime(start_date.year, start_date.month, calendar.monthrange(start_date.year, start_date.month)[1])
@@ -241,6 +230,9 @@ if __name__ == '__main__':
                 else:
                     report_start_date = start_date
                     report_date_end = end_date
+                if event.is_set():
+                    logger.info('Event set')
+                    return
                 volpe_load_report(report_start_date, report_date_end, 'Report_options', 'until.png', 'until.png', 'Sheet_Header.png', date_from_pos='Back', load_report_path='Images/Detailed_Breakages')
                 volpe_save_report(f'{file_name_pattern}{datetime.datetime.strftime(report_start_date, "%Y%m%d")}', path)
 
@@ -248,8 +240,6 @@ if __name__ == '__main__':
         try:
             file_list = file_handler.file_list(path, extension)
             if len(file_list) > 0:
-                breakage_list = []
-                motive_list = []
                 for file in file_list:
                     partial_list = file_handler.CSVtoList(join(path, file))
                     updated_list = remove_from_dict(partial_list, *config['breakage']['remove_fields'])
@@ -258,6 +248,52 @@ if __name__ == '__main__':
                     data_communication.data_append_values(sheets_name ,'A:Z', sheet, sheets_id=sheets_id)
                     file_handler.file_move_copy(path, path_done, file, False)
                     logger.info(f'{file} done')
+                    if event.is_set():
+                        logger.info('Event set')
+                        return
             logger.info("Done")
+            event.set()
         except Exception as error:
             logger.error(f'Error in data processing {error}')
+
+
+def quit_func():
+    logger.info('Quit pressed')
+    event.set()
+    return
+
+
+def main(event: threading.Event, config: dict):
+    if event.is_set():
+        return
+    breakage_detailed(event, config)
+    return
+
+'''
+==================================================================================================================================
+
+        Main    Main    Main    Main    Main    Main    Main    Main    Main    Main    Main    Main    Main    Main    Main    
+
+==================================================================================================================================
+'''
+
+
+if __name__ == '__main__':
+    logger = logging.getLogger()
+    log.logger_setup(logger)
+    
+    try:
+        config = json_config.load_json_config('C:/PyAutomations_Reports/config_volpe.json')
+    except:
+        logger.critical('Could not load config file')
+        exit()
+
+    event = threading.Event()
+    keyboard.add_hotkey('space', quit_func)    
+
+    for _ in range(3):
+        main(event, config)
+        if event.is_set():
+            break
+
+    logger.info('Done')

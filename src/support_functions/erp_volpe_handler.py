@@ -220,7 +220,11 @@ def volpe_open_window(icon_name, window_name, path='Images', maximize=True):
 
 def volpe_back_to_main(question=False):
     for _ in range(5):
-        volpe_window = win_handler.activate_window('Volpe ')
+        try:
+            volpe_window = win_handler.activate_window('Volpe ')
+        except Exception as error:
+            logger.error(f'volpe_back_to_main {error}')
+            raise error
         sleep(0.3)
         active_window = win32gui.GetForegroundWindow()
         active_win_text = win32gui.GetWindowText(active_window)
@@ -403,18 +407,16 @@ def volpe_save_report(file_name, save_path, reference=None, load_report_path='Im
     return
 
 
-def message_box_confirm(check_count: int=3, override: bool=True):
-    try:
-        for _ in range(check_count):
-            win_handler.activate_window('Volpe ')
-            sleep(0.3)
-            win_title = win32gui.GetForegroundWindow()
-            control = win32gui.FindWindowEx(win_title, None, None, None)
+def message_box_confirm(check_count: int=5, override: bool=True):
+    for _ in range(check_count):
+        try:
+            active_window = win32gui.GetForegroundWindow()
+            win_title = win32gui.GetWindowText(active_window)
+            control = win32gui.FindWindowEx(active_window, None, None, None)
             control_text = ''
             logger.debug(f'Title {win_title}')
             if control:
                 control_text = win32gui.GetWindowText(control)
-            sleep(1)
             if 'Volpe' in win_title:
                 logger.debug('"Volpe" return')
                 return
@@ -443,10 +445,10 @@ def message_box_confirm(check_count: int=3, override: bool=True):
                     logger.debug('"Open file" Esc pressed')
                     pyautogui.press('esc')
                 sleep(0.3)
-            sleep(0.5)
-    except Exception as error:
-        logger.error(f'Message box confirm error due {error}')
-        raise error
+            win_handler.activate_window('Volpe ')
+            sleep(1.5)
+        except Exception as error:
+            logger.error(f'Message box confirm error due {error}')
     return
 
 
@@ -555,7 +557,12 @@ def delete_from_table(column_pos=pyscreeze.Box, delete_value=str, deactivate_mid
 if __name__ == '__main__':
     logger = logging.getLogger()
     log.logger_setup(logger)
-    try:
-        volpe_back_to_main()
-    except Exception as error:
-        logger.critical(error)
+    
+    win_handler.activate_window('Volpe ')
+    sleep(1.5)
+
+    active_window = win32gui.GetForegroundWindow()
+    win_title = win32gui.GetWindowText(active_window)
+    control = win32gui.FindWindowEx(win_title, None, None, None)
+    control_text = ''
+    logger.debug(f'Title {win_title}')

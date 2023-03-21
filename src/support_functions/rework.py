@@ -1,4 +1,4 @@
-import erp_volpe_handler, datetime, calendar, file_handler, data_communication, data_organizer, json_config, os, logging
+import erp_volpe_handler, datetime, calendar, file_handler, data_communication, data_organizer, json_config, os, logging, threading, keyboard
 import logger as log 
 from ntpath import join
 from copy import deepcopy
@@ -49,7 +49,7 @@ def remove_from_dict(values_dict=dict, *args):
     return updated_dict
 
 
-def get_rework_list_template(table_sheet=str, position=str, column_number=int):
+def get_rework_list_template(table_sheet: str, position: str, column_number: int, sheets_id: str):
     try:
         rework_sheet = data_communication.get_values(table_sheet, position, sheets_id=sheets_id)
         rework_list = []
@@ -64,7 +64,7 @@ def get_rework_list_template(table_sheet=str, position=str, column_number=int):
         logger.error(f'Could not load values from {table_sheet}\n{error}') 
 
 
-def check_update_values_list(values_list=list, table_sheet=str, position=str, column_number=int):
+def check_update_values_list(values_list: list, table_sheet: str, position: str, column_number: int, sheets_id: str):
     try:
         rework_breakage_matrix = data_communication.get_values(table_sheet, position, sheets_id=sheets_id)
         rework_breakage_list = [line[column_number] for line in rework_breakage_matrix['values']]
@@ -101,25 +101,7 @@ def convert_rework_list(rework_list, template):
     return rework_organized
 
 
-'''
-==================================================================================================================================
-
-        Main        Main        Main        Main        Main        Main        Main        Main        Main        Main        
-
-==================================================================================================================================
-'''
-
-
-if __name__ == '__main__':
-    logger = logging.getLogger()
-    log.logger_setup(logger)
-    # volpe_back_to_main()
-    try:
-        config = json_config.load_json_config('C:/PyAutomations_Reports/config_volpe.json')
-    except:
-        logger.critical('Could not load config file')
-        exit()
-
+def rework_automation(event: threading.Event, config: dict):
     path = os.path.normpath(config['rework']['path'])
     path_done = os.path.normpath(config['rework']['path_done'])
     extension = config['rework']['extension']
@@ -129,22 +111,26 @@ if __name__ == '__main__':
 
     try:
         sheets_date_plus_one = data_communication.get_last_date(sheets_name, 'A:A', config['heat_map']['minimum_date'], sheets_id=sheets_id) + datetime.timedelta(days=1)
-        end_date = datetime.datetime.now() - datetime.timedelta(days=1)
+        end_date = datetime.datetime.now().date() - datetime.timedelta(days=1)
     except Exception as error:
         logger.critical(f'Error loading table {sheets_name}')
-        quit()
+        return
 
 
+    if event.is_set():
+        logger.info('Event set')
+        return
     # Defining start and end date
     file_date = file_handler.file_list_last_date(path, extension, file_name_pattern, '%Y%m%d')
     if file_date == None:
         start_date = sheets_date_plus_one
     else:
         start_date = data_organizer.define_start_date(sheets_date_plus_one, file_date)
-    if not start_date.date() == datetime.datetime.now().date():
-        logger.info(datetime.datetime.strftime(start_date, '%d/%m/%Y'))
-        logger.info(datetime.datetime.strftime(end_date, '%d/%m/%Y'))
 
+    logger.info(datetime.datetime.strftime(start_date, '%d/%m/%Y'))
+    logger.info(datetime.datetime.strftime(end_date, '%d/%m/%Y'))
+
+    if not start_date == datetime.datetime.now().date():
         # Report extraction automation
         try:
             erp_volpe_handler.volpe_back_to_main()
@@ -152,10 +138,14 @@ if __name__ == '__main__':
             erp_volpe_handler.volpe_open_window('Icon_Rework_Motive.png', 'Title_Rework_Motive.png')
             logger.info('Volpe rework started')
 
+            if event.is_set():
+                logger.info('Event set')
+                return
+
             counter = 0
             report_date_start = start_date
             report_date_end = start_date
-            while report_date_end < end_date:
+            while report_date_end <= end_date:
                 try:
                     erp_volpe_handler.volpe_load_report(report_date_start, 
                                 report_date_end, 
@@ -167,6 +157,9 @@ if __name__ == '__main__':
                                 date_from_dist=50, 
                                 date_until_dist=35,
                                 load_report_path='Images/Rework_motives')
+                    if event.is_set():
+                        logger.info('Event set')
+                        return
                     erp_volpe_handler.volpe_save_report(f'REWORK_{datetime.datetime.strftime(report_date_start, "%Y%m%d")}', path)
                     logger.info(f'Date {datetime.datetime.strftime(report_date_start, "%d/%m/%Y")} done.')
                     report_date_start = report_date_start + datetime.timedelta(days=1)
@@ -179,29 +172,89 @@ if __name__ == '__main__':
                     erp_volpe_handler.volpe_load_tab('Tab_Lab', 'Icon_Prod_Unit.png')
                     erp_volpe_handler.volpe_open_window('Icon_Rework_Motive.png', 'Title_Rework_Motive.png')
                     counter = counter + 1
+                if event.is_set():
+                    logger.info('Event set')
+                    return
         except Exception as error:
             logger.critical(f'General error: {error}')
             exit()
 
         # Data processing
 
-    if not file_date == sheets_date_plus_one or not file_date:
-        file_list = file_handler.file_list(path, extension)
-        rework_list = []
-        motive_list = set()
-        for file in file_list:
-            partial_list = file_handler.CSVtoList(join(path, file))
-            file_date = data_organizer.retrieve_file_name_date(file, 'REWORK_', '%Y%m%d')
-            rework_list.append({'DATE' : file_date, 'REWORK' : partial_list})
-            for line in partial_list:
-                motive_list.add(line['MOTIVO RETRABALHO'])
-            file_handler.file_move_copy(path, path_done, file, False)
-            logger.info(f'{file} done')
-        
-        check_update_values_list(list(motive_list), 'Rework_Data', 'A:A', 0)
-        rework_dict = get_rework_list_template('Rework_Data', 'C:C', 0)
-        rework_organized = convert_rework_list(rework_list, rework_dict)
+    file_list = file_handler.file_list(path, extension)
+    if len(file_list) > 0:
+        try:
+            rework_list = []
+            motive_list = set()
+            if event.is_set():
+                logger.info('Event set')
+                return
+            for file in file_list:
+                partial_list = file_handler.CSVtoList(join(path, file))
+                file_date = data_organizer.retrieve_file_name_date(file, 'REWORK_', '%Y%m%d')
+                rework_list.append({'DATE' : file_date, 'REWORK' : partial_list})
+                for line in partial_list:
+                    motive_list.add(line['MOTIVO RETRABALHO'])
+                logger.info(f'{file} done')
+            
+            check_update_values_list(list(motive_list), 'Rework_Data', 'A:A', 0, sheets_id)
+            rework_dict = get_rework_list_template('Rework_Data', 'C:C', 0, sheets_id)
+            rework_organized = convert_rework_list(rework_list, rework_dict)
 
-        logger.debug('Sending to database')
-        result = data_communication.data_append_values('REWORK' , 'A:Z', data_communication.transform_in_sheet_matrix(rework_organized), sheets_id=sheets_id)
-        logger.info("Done")
+            if event.is_set():
+                logger.info('Event set')
+                return
+            logger.debug('Sending to database')
+            result = data_communication.data_append_values('REWORK' , 'A:Z', data_communication.transform_in_sheet_matrix(rework_organized), sheets_id=sheets_id)
+
+            for file in file_list:
+                file_handler.file_move_copy(path, path_done, file, False)
+
+            logger.info(f"Done {result}")    
+        except Exception as error:
+            logger.error(error)
+            event.set()
+            return
+
+
+def main(event: threading.Event, config: dict):
+    rework_automation(event, config)
+    return
+
+
+def quit_func():
+    logger.info('Quit pressed')
+    event.set()
+    return
+
+
+'''
+==================================================================================================================================
+
+        Main        Main        Main        Main        Main        Main        Main        Main        Main        Main        
+
+==================================================================================================================================
+'''
+
+
+if __name__ == '__main__':
+    logger = logging.getLogger()
+    log.logger_setup(logger)
+
+    try:
+        config = json_config.load_json_config('C:/PyAutomations_Reports/config_volpe.json')
+    except:
+        logger.critical('Could not load config file')
+        exit()
+
+    event = threading.Event()
+    keyboard.add_hotkey('esc', quit_func)
+
+    for _ in range(3):
+        main(event, config)
+        if event.is_set():
+            break
+
+    logger.info('Done')
+
+    

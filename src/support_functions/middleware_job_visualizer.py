@@ -74,5 +74,6 @@ if __name__ == '__main__':
     log_queue = Queue()
     logger = logging.getLogger()
     log.logger_setup(logger, log_queue)
+    
     window = Main_App(log_queue)
     window.mainloop()

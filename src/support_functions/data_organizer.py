@@ -107,7 +107,7 @@ def jobAndFileDate(filePath, fileList):
 def dict_list_to_plain_dict(dict_list: list):
     logger.info('Starting conversion to plain dict list')
     plain_dict_list = []
-    for line in dict_list.values():
+    for line in dict_list:
         line_dict = {}
         for key, value in line.items():
             if type(value) == dict:
@@ -274,7 +274,11 @@ def value_type_definer(value):
         return value
 
 
-def filter_by_values(data_list, field_name, *args):
+def filter_by_values(data_list: list, field_name: str, *args) -> list:
+    '''
+    Filter list dictionary by values in field name
+    Ex: return values with field_name = "NAME" with values ["Jonh", "Michael", "Rachel"]
+    '''
     filtered_list = []
     for data in data_list:
         if data[field_name] in args:
