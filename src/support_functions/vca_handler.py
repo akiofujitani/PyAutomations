@@ -71,20 +71,21 @@ def VCA_to_dict(VCA_file_contents):
                             data_value[tag_and_value[0]] = convert_add_to_list(data_value[tag_and_value[0]], {'R' : values_splited[0], 'L' : values_splited[1]})
                         else:
                             data_value[tag_and_value[0]] = {'R' : values_splited[0], 'L' : values_splited[1]}
-                    if tag_and_value[0] == 'TRCFMT':
+                    if tag_and_value[0] == 'TRCFMT' or tag_and_value[0] == 'CRIBFMT':
                         counter = round(int(values_splited[1]) / 10)
                         temp_values = {}
-                        temp_values['TRCFMT'] = values_splited
+                        tag_name = tag_and_value[0]
+                        temp_values[tag_name] = values_splited
                         radius_list = []
                     if tag_and_value[0] == 'R':
                         radius_list = radius_list + values_splited
                         counter -= 1
                         if counter == 0:
                             temp_values['R'] = radius_list
-                            if 'TRCFMT' in data_value.keys():
-                                data_value['TRCFMT'].update({temp_values['TRCFMT'][3] : temp_values})
+                            if tag_name in data_value.keys():
+                                data_value[tag_name].update({temp_values[tag_name][3] : temp_values})
                             else:
-                                data_value['TRCFMT'] = {temp_values['TRCFMT'][3] : temp_values}
+                                data_value[tag_name] = {temp_values[tag_name][3] : temp_values}
         logger.info('VCA contents converted')
         return data_value
     except Exception as error:
