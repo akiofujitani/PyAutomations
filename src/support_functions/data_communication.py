@@ -17,7 +17,7 @@ SPREADSHEET_ID = sheets_values['sheets_id']
 creds = sheets_API.load_creds()
 
 
-def get_last_date(sheets_name, position, minimum_date='01/01/2020', sheets_id=SPREADSHEET_ID):
+def get_last_date(sheets_name: str, position: str, minimum_date: str='01/01/2020', sheets_id: str=SPREADSHEET_ID) -> datetime.datetime.date:
     '''
     Get last valid date on selected sheets based on its first column values
     '''

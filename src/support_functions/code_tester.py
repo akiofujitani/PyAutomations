@@ -197,15 +197,10 @@ Emergency stop
 
 # List
 
-import file_handler, os
+test = False
 
 
-file_path = os.path.normpath('//192.168.5.8/Arquivo/LMS/HOST_EXPORT/2023')
-print(file_path)
-file_list_1 = file_handler.listFilesInDirSubDir(file_path)
-print(len(file_list_1))
-
-
+if test:
+    print('False')
 
 print('Done')
-print()

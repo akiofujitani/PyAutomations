@@ -22,6 +22,7 @@ def listFilesInDirSubDir(pathRoot: str, extention: str='') -> list:
     for root, _, files in os.walk(pathRoot):
         for file in files:
             if file.lower().endswith(extention):
+                logger.debug(f'file {file}')
                 fileList.append(os.path.join(root, file))
     logger.info(f'Listing for {pathRoot} done')
     return fileList
@@ -112,11 +113,14 @@ def file_finder(file_list: list, file_name: str, start_pos: int=0, end_pos: None
     '''
     logger.info(f'Searching for file {file_name}')
     for file in file_list:
-        base_name = os.path.basename(file)
-        cropped_name = base_name[start_pos:end_pos]
-        if file_name in cropped_name:
-            logger.info(f'{file_name} found')
-            return file
+        try:
+            base_name = os.path.basename(file)
+            cropped_name = base_name[start_pos:end_pos]
+            if file_name in cropped_name:
+                logger.info(f'{file_name} found')
+                return file
+        except Exception as error:
+            logger.error(f'Error searching {file} due {error}')
     return False
 
 
@@ -292,8 +296,49 @@ def listByDate(filesList: list, dateStart: datetime.date, dateEnd: datetime.date
 
 
 def fileCreationDate(file):
-    strSplit = time.ctime(os.path.getmtime(file)).split(' ')
-    for item in strSplit:
-        if len(item) == 0:
-            strSplit.remove(item)
-    return datetime.datetime.strptime(f'{strSplit[4]}/{strSplit[1]}/{strSplit[2]}', '%Y/%b/%d').date()
+    return datetime.datetime.fromtimestamp(os.path.getctime(file)).date()
+
+
+# def fileCreationDate(file):
+#     strSplit = time.ctime(os.path.getmtime(file)).split(' ')
+#     for item in strSplit:
+#         if len(item) == 0:
+#             strSplit.remove(item)
+#     return datetime.datetime.strptime(f'{strSplit[4]}/{strSplit[1]}/{strSplit[2]}', '%Y/%b/%d').date()
+
+
+def listFilesInDirSubDirWithDate(pathRoot: str, extention: str='') -> list:
+    '''
+    List files ended with choosen extension inside all directories inside the path
+    '''
+    fileList = []
+    for root, _, files in os.walk(pathRoot):
+        for file in files:
+            if file.lower().endswith(extention):
+                file_path = os.path.join(root, file)
+                file_date = fileCreationDate(file_path)
+                logger.debug(f'file {file_path} {file_date}')
+                fileList.append({'FILE' : file_path, 'DATE' : file_date})
+    logger.info(f'Listing for {pathRoot} done')
+    return fileList
+
+
+
+def listFilesInDirSubDirByDate(pathRoot: str, extention: str='') -> dict:
+    '''
+    List files ended with choosen extension inside all directories inside the path
+    '''
+    file_dict_date = {}
+    for root, _, files in os.walk(pathRoot):
+        for file in files:
+            if file.lower().endswith(extention):
+                file_path = os.path.join(root, file)
+                file_date = datetime.datetime.strftime(fileCreationDate(file_path), '%Y/%m/%d')
+                logger.debug(f'file {file_path} {file_date}')
+                dict_value = file_dict_date.get(file_date, None)
+                if dict_value == None:
+                    file_dict_date[file_date] = [file_path]
+                else:
+                    file_dict_date[file_date].append(file_path)          
+    logger.info(f'Listing for {pathRoot} done')
+    return file_dict_date

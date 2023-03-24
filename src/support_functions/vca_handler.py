@@ -162,20 +162,20 @@ def filter_tag(job_data: dict, **kwargs) -> dict:
     return filtered_data
 
 
-def read_vca(path_list: list, extension: str, start_date: datetime.date, end_date: datetime.date, **kwargs) -> dict:
+def read_vca(file_list: list, start_date: datetime.date, end_date: datetime.date, **kwargs) -> dict:
     '''
     Read all vca files within the given start and end date and return a dict using the job number as key
     '''
-    file_list = []
-    for path in path_list:
-        file_list = file_list + file_handler.listFilesInDirSubDir(path, extension)
     date_filtered_list = file_handler.listByDate(file_list, start_date, end_date)
     values_dict = {}
     for file in date_filtered_list:
         try:
+            logger.debug(f'Tring to open file {file}')
             with open(file, 'r', errors='replace') as contents:
                 fileContents = contents.readlines()
                 temp_vca_contents = VCA_to_dict(fileContents)
+
+                logger.debug('Filtering tags')
                 if len(kwargs) > 0:
                     filtered_vca = filter_tag(temp_vca_contents, **kwargs)
                     values_dict[temp_vca_contents['JOB']] = filtered_vca
@@ -186,21 +186,19 @@ def read_vca(path_list: list, extension: str, start_date: datetime.date, end_dat
     return values_dict
 
 
-def read_vca_by_job(path_list: list, job_number_list: list, extension: str, name_start_pos: int=0, name_end_pos: int | None=None, **kwargs, ) -> dict:
+def read_vca_by_job(file_list: list, job_number_list: list, name_start_pos: int=0, name_end_pos: int | None=None, **kwargs) -> dict:
     '''
     Find vca by job number list returning a dict values filtered by tags
     '''
     try:
-        file_list = []
-        for path in path_list:
-            logger.info(f'Creating file list for {path}')
-            file_list = file_list + file_handler.listFilesInDirSubDir(path, extension)
         found_dict = {}
         for job_number in job_number_list:
             file_found = file_handler.file_finder(file_list, job_number, start_pos=name_start_pos, end_pos=name_end_pos)
             if file_found:
                 logger.info(f'{job_number} found')
                 vca_converted = VCA_to_dict(file_handler.file_reader(file_found))
+
+                logger.debug('Filtering tags')
                 if len(kwargs) > 0:
                     filtered_vca = filter_tag(vca_converted, **kwargs)
                     found_dict[job_number] = filtered_vca
@@ -209,7 +207,7 @@ def read_vca_by_job(path_list: list, job_number_list: list, extension: str, name
         logger.info('Returning values')
         return found_dict
     except Exception as error:
-        logger.error({error})
+        logger.error(f'read_vca_by_job {error}')
         raise error
 
 
