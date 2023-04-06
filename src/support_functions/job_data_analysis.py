@@ -176,11 +176,12 @@ if __name__ == '__main__':
             logger.info(datetime.datetime.strftime(date_value, '%d/%m/%Y'))           
             vca_import = vca_handler.read_vca(import_files, date_value, date_value, **config.import_tag)
             vca_export = vca_handler.read_vca_by_job(export_list, vca_import.keys(), 0, 12, **config.export_tag)
-            vca_import_export = vca_handler.merge_read_vca(vca_import, vca_export, 'IMP', 'EXP', config.export_tag)
-            plain_dict = data_organizer.plain_dict_float_format(data_organizer.dict_list_to_plain_dict(vca_import_export))
-            plain_dict_with_date = add_date(plain_dict, date_value)
-            values_in_sheet = data_communication.transform_in_sheet_matrix(plain_dict_with_date)
-            data_communication.data_append_values(config.sheets_name, config.sheets_range, values_in_sheet, config.sheets_id)
+            if len(vca_import) > 0:
+                vca_import_export = vca_handler.merge_read_vca(vca_import, vca_export, 'IMP', 'EXP', config.export_tag)
+                plain_dict = data_organizer.plain_dict_float_format(data_organizer.dict_list_to_plain_dict(vca_import_export.values()))
+                plain_dict_with_date = add_date(plain_dict, date_value)
+                values_in_sheet = data_communication.transform_in_sheet_matrix(plain_dict_with_date)
+                data_communication.data_append_values(config.sheets_name, config.sheets_range, values_in_sheet, config.sheets_id)
             date_value = date_value + datetime.timedelta(days=1)
         except Exception as error:
             logger.critical(error)

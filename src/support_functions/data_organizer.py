@@ -216,8 +216,7 @@ def define_start_date(date_1, date_2):
         return date_1
     start_date = date_1 - date_diff
     if start_date == date_1 or start_date == date_2:
-        plus_date = datetime.timedelta(days=1)
-        return start_date + plus_date
+        return start_date + datetime.timedelta(days=1)
     return start_date
 
 

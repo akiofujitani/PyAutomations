@@ -4,46 +4,6 @@ from datetime import datetime
 logger = logging.getLogger('vca_handler')
 
 
-# def VCAtoObject(VCAFileContent):
-#     dataValue = {}
-#     counter = 0
-#     for line in VCAFileContent:
-#         line = line.replace('\n', '')
-#         if len(line) > 0:
-#             tagAndValue = line.split('=')
-#             if ';' in tagAndValue[1]:
-#                 valueSplit = tagAndValue[1].split(';')
-#             if counter:
-#                 radiusList = radiusList + valueSplit
-#                 counter += 1
-#             if counter == 37:
-#                 if 'TRCFMT' in dataValue.keys():
-#                     dataValue['TRCFMT'].update({tempObj.side : JobClasses.frameShape(radiusList, (f'TRCFMT_{tempObj.side}'), tempObj.initAngle, tempObj.endAngle, tempObj.char1, tempObj.side, tempObj.char2)})
-#                 else:
-#                     dataValue['TRCFMT'] = {tempObj.side : JobClasses.frameShape(radiusList, (f'TRCFMT_{tempObj.side}'), tempObj.initAngle, tempObj.endAngle, tempObj.char1, tempObj.side, tempObj.char2)}
-#                 counter = 0
-#                 tempObj = ''
-#                 radiusList = ''
-#             if 'TRCFMT' in tagAndValue[0]:            
-#                 tempObj = JobClasses.trcFormat(valueSplit[0], valueSplit[1], valueSplit[2], valueSplit[3], valueSplit[4])
-#                 counter = 1
-#                 radiusList = []
-#             elif ';' in tagAndValue[1] and tagAndValue[1].count(';') == 1:
-#                 if tagAndValue[0] in dataValue.keys():
-#                     if not isinstance(dataValue[tagAndValue[0]], dict):
-#                         tempValue = dataValue[tagAndValue[0]]
-#                         dataValue[tagAndValue[0]] = {1 : tempValue}
-#                     else:
-#                         num = len(dataValue[tagAndValue[0]]) + 1
-#                     dataValue[tagAndValue[0]].update({2 : JobClasses.tagRL(tagAndValue[0], valueSplit[0], valueSplit[1])})
-#                 else:    
-#                     dataValue[tagAndValue[0]] = JobClasses.tagRL(tagAndValue[0], valueSplit[0], valueSplit[1])
-#             elif tagAndValue[1].count(';') == 0:
-#                 dataValue[tagAndValue[0]] = JobClasses.tagSingle(tagAndValue[0], tagAndValue[1])
-#     print(dataValue)
-#     return dataValue
-
-
 def convert_add_to_list(values_old: any, new_values: any) -> list:
     if not type(values_old) == list:
         return [values_old] + [new_values]
@@ -72,7 +32,7 @@ def VCA_to_dict(VCA_file_contents):
                         else:
                             data_value[tag_and_value[0]] = {'R' : values_splited[0], 'L' : values_splited[1]}
                     if tag_and_value[0] == 'TRCFMT' or tag_and_value[0] == 'CRIBFMT':
-                        counter = round(int(values_splited[1]) / 10)
+                        counter = round(int(values_splited[1]) / 15 if int(values_splited[1]) == 1000 else 10)
                         temp_values = {}
                         tag_name = tag_and_value[0]
                         temp_values[tag_name] = values_splited

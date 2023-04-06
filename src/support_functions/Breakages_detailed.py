@@ -202,7 +202,7 @@ def breakage_detailed(event: threading.Event, config: dict):
         file_date = None
         if len(file_list) > 0:
             for file in file_list:
-                file_date = file_handler.file_contents_last_date(file_handler.CSVtoList(join(path, file)), 'DT.PERDA', time_format='%d/%m/%Y %H:%M:%S') + datetime.timedelta(days=1)
+                file_date = file_handler.file_contents_last_date(file_handler.CSVtoList(join(path, file)), 'DT.PERDA', time_format='%d/%m/%Y %H:%M:%S')
         if file_date == None:
             start_date = sheets_date_plus_one
         else:
@@ -213,16 +213,16 @@ def breakage_detailed(event: threading.Event, config: dict):
 
         # Report extraction automation
 
-        if not start_date == datetime.datetime.now().date() and not start_date.weekday() == 6:
-            # erp_volpe_handler.volpe_back_to_main()
-            # volpe_load_tab('Tab_Lab', 'Icon_Prod_Unit.png')
-            # volpe_open_window('Icon_Detailed_breakages.png', 'Title_Detailed_Breakages.png')
+        if not start_date == datetime.datetime.now().date():
+            erp_volpe_handler.volpe_back_to_main()
+            volpe_load_tab('Tab_Lab', 'Icon_Prod_Unit.png')
+            volpe_open_window('Icon_Detailed_breakages.png', 'Title_Detailed_Breakages.png')
 
             if event.is_set():
                 logger.info('Event set')
                 return
             report_date_end = start_date
-            while report_date_end <= end_date:
+            while report_date_end < datetime.datetime.now().date():
                 if end_date > data_organizer.add_months_to_date(start_date, 1):
                     report_start_date = start_date
                     report_date_end = datetime.datetime(start_date.year, start_date.month, calendar.monthrange(start_date.year, start_date.month)[1])
@@ -237,24 +237,24 @@ def breakage_detailed(event: threading.Event, config: dict):
                 volpe_save_report(f'{file_name_pattern}{datetime.datetime.strftime(report_start_date, "%Y%m%d")}', path)
 
         # Data processing
-        try:
-            file_list = file_handler.file_list(path, extension)
-            if len(file_list) > 0:
-                for file in file_list:
-                    partial_list = file_handler.CSVtoList(join(path, file))
-                    updated_list = remove_from_dict(partial_list, *config['breakage']['remove_fields'])
-                    ready_list = sorted(breakage_date_hour(updated_list), key=lambda value : datetime.datetime.strptime(value['DT.PERDA'], '%d/%m/%Y'))
-                    sheet = data_communication.transform_in_sheet_matrix(ready_list)
-                    data_communication.data_append_values(sheets_name ,'A:Z', sheet, sheets_id=sheets_id)
-                    file_handler.file_move_copy(path, path_done, file, False)
-                    logger.info(f'{file} done')
-                    if event.is_set():
-                        logger.info('Event set')
-                        return
-            logger.info("Done")
-            event.set()
-        except Exception as error:
-            logger.error(f'Error in data processing {error}')
+    try:
+        file_list = file_handler.file_list(path, extension)
+        if len(file_list) > 0:
+            for file in file_list:
+                partial_list = file_handler.CSVtoList(join(path, file))
+                updated_list = remove_from_dict(partial_list, *config['breakage']['remove_fields'])
+                ready_list = sorted(breakage_date_hour(updated_list), key=lambda value : datetime.datetime.strptime(value['DT.PERDA'], '%d/%m/%Y'))
+                sheet = data_communication.transform_in_sheet_matrix(ready_list)
+                data_communication.data_append_values(sheets_name ,'A:Z', sheet, sheets_id=sheets_id)
+                file_handler.file_move_copy(path, path_done, file, False)
+                logger.info(f'{file} done')
+                if event.is_set():
+                    logger.info('Event set')
+                    return
+        logger.info("Done")
+        event.set()
+    except Exception as error:
+        logger.error(f'Error in data processing {error}')
 
 
 def quit_func():

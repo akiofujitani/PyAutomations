@@ -197,10 +197,17 @@ Emergency stop
 
 # List
 
-test = False
+import win32print
+import subprocess
+from os.path import normpath
 
+current_printer = win32print.GetDefaultPrinter()
+pdf_reader = normpath('./FoxitReader.exe')
 
-if test:
-    print('False')
-
-print('Done')
+try:
+    pdf_file = normpath('./Crystal Reports - 2425235.pdf')
+    cmd = f'"{pdf_reader}" -t "{pdf_file}" "{current_printer}"'
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+except Exception as error:
+    print(error)
+print('Script done')
