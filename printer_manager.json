@@ -1,0 +1,13 @@
+{
+    "source_path": "C:/PyAutomations_Reports/Print",
+    "done_path" : "",
+    "print_program" : "./FoxitReader.exe",
+    "print_command" : "-t",
+    "extension" : "pdf",
+    "printer_list": [
+        "Microsoft Print to PDF",
+        "OneNote (Desktop)"
+    ],
+    "wait_time": 5,
+    "print_interval": 3
+}
