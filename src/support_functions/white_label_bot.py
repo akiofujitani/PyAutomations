@@ -196,9 +196,9 @@ def create_white_label_description(event, white_label, shorten_list, swap_list, 
         code_value = ''
         last_code_value = 'old'
         header_pos = win_handler.image_search('Product_sheet_header.png', path='Images/Registry')
-        descr_pos = win_handler.image_search('Header_descr.png', path='Images/Registry')
-        code_pos = win_handler.image_search('Header_code.png', path='Images/Registry')
-        type_pos = win_handler.image_search('Header_type.png', path='Images/Registry')
+        descr_pos = win_handler.image_search('Header_descr.png', confidence_value=0.8, path='Images/Registry')
+        code_pos = win_handler.image_search('Header_code.png', confidence_value=0.8, path='Images/Registry')
+        type_pos = win_handler.image_search('Header_type.png', confidence_value=0.8, path='Images/Registry')
         try:
             selected_pos = win_handler.image_search('Volpe_Table_selected.png', region=(erp_volpe_handler.region_definer(header_pos.left - 15, header_pos.top, 200)))
         except Exception as error:
