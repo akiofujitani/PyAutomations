@@ -1,0 +1,52 @@
+{
+    "job_type" : {
+    "free_form": ["PR-BONIFICAÇÃO",
+        "PR-GARANTIA ANTECIPADA",
+        "PR-GARANTIA INTERNA",
+        "PR-GARANTIA N ANTECIPADA",
+        "PR-PRESCRIÇÃO",
+        "PR-SEGUNDO PAR",
+        "PR-VENDA FUTURA"
+        ],
+    "coating" : [
+        "TR-AR(BONIFICACAO)",
+        "TR-AR(GARANTIA)",
+        "TR-NAO INDUSTRIALIZADO",
+        "TR-SERVIÇO(TRATAMENTO)"
+        ],
+    "edging" : ["LP COM MONTAGEM",
+        "LP COM MONTAGEM BONIFIC",
+        "LP COM MONTAGEM NAO ANTEC",
+        "LP MONTAGEM INTERNO"
+    ]
+    },
+    "status_list" : {
+        "sheets_name" : "Production_Data",
+        "free_form" : "A2:A",
+        "coating" : "B2:B",
+        "edging" : "C2:C"
+    },
+    "sheets_type_name" : {
+        "free_form" : "FF",
+        "coating" : "TR",
+        "edging" : "ED",
+        "date_source_FF" :  "EM PRODUCAO",
+        "date_source_TR" : "ENTRADA DE TRATAMENTO",
+        "date_source_ED" : "ENTRADA MONTAGEM"
+    },
+    "minimum_date" : "31/05/2022",
+    "path_output" : {
+        "free_form" : "C:/Users/Calculo/OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA/Documentos/Development/SupportFunctions/heatmap_FF",
+        "coating" : "C:/Users/Calculo/OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA/Documentos/Development/SupportFunctions/heatmap_TR",
+        "edging" : "C:/Users/Calculo/OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA/Documentos/Development/SupportFunctions/heatmap_ED"
+    },
+    "path_done" : {
+        "free_form" : "C:/Users/Calculo/OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA/Documentos/Development/SupportFunctions/heatmap_done_FF",
+        "coating" : "C:/Users/Calculo/OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA/Documentos/Development/SupportFunctions/heatmap_done_TR",
+        "edging" : "C:/Users/Calculo/OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA/Documentos/Development/SupportFunctions/heatmap_ED"
+    },
+    "extension" : "txt",
+    "file_name_pattern" : "MACHINE_PRODUCTIVITY_",
+    "sheets_id" : "1aqLuNRknJc6ewS7Cehq-8j1kbCPnEftuTrsUelGhpTQ",
+    "sheets_date_pos" : "A:A"
+}

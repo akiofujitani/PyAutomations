@@ -328,29 +328,29 @@ def complete_date_in_list(status_dict=dict, status_list_by_job_type=list):
 
 
 def main(event: threading.Event, config: dict):
-    extension_str = config['heat_map']['extension']
-    file_name_pattern = config['heat_map']['file_name_pattern']
-    sheets_date_pos = config['heat_map']['sheets_date_pos']
-    sheets_id = config['heat_map']['sheets_id']
-    status_jobtype_sheets_name = config['heat_map']['status_list']['sheets_name']
-    number_of_tries = config['heat_map']['number_of_tries']
+    extension_str = config['extension']
+    file_name_pattern = config['file_name_pattern']
+    sheets_date_pos = config['sheets_date_pos']
+    sheets_id = config['sheets_id']
+    status_jobtype_sheets_name = config['status_list']['sheets_name']
+    number_of_tries = int(config['number_of_tries'])
 
     # Selecting by job type
     # Free form or external (coating)
 
-    for jobtype in config['heat_map']['job_type']:
+    for jobtype in config['job_type']:
         if event.is_set():
             logger.info('Event set')
             return
 
         # Configuration load
-        path = file_handler.check_create_dir(os.path.normpath(config['heat_map']['path_output'][jobtype]))
-        path_done = file_handler.check_create_dir(os.path.normpath(config['heat_map']['path_done'][jobtype]))
-        logger.debug(config['heat_map']['job_type'][jobtype])
-        logger.debug(config['heat_map']['sheets_type_name'][jobtype])
+        path = file_handler.check_create_dir(os.path.normpath(config['path_output'][jobtype]))
+        path_done = file_handler.check_create_dir(os.path.normpath(config['path_done'][jobtype]))
+        logger.debug(config['job_type'][jobtype])
+        logger.debug(config['sheets_type_name'][jobtype])
 
-        status_jobtype = config['heat_map']['status_list'][jobtype]
-        sheets_name = config["heat_map"]["sheets_type_name"][f'date_source_{config["heat_map"]["sheets_type_name"][jobtype]}']
+        status_jobtype = config['status_list'][jobtype]
+        sheets_name = config["sheets_type_name"][f'date_source_{config["sheets_type_name"][jobtype]}']
 
         error_counter = 0
         while error_counter <= number_of_tries:
@@ -360,7 +360,7 @@ def main(event: threading.Event, config: dict):
                 return
             
             #Date definer
-            sheets_date_plus_one = data_communication.get_last_date(f'{sheets_name} {config["heat_map"]["sheets_type_name"][jobtype]}', sheets_date_pos, config['heat_map']['minimum_date'], sheets_id=sheets_id) + datetime.timedelta(days=1)
+            sheets_date_plus_one = data_communication.get_last_date(f'{sheets_name} {config["sheets_type_name"][jobtype]}', sheets_date_pos, config['minimum_date'], sheets_id=sheets_id) + datetime.timedelta(days=1)
             end_date = datetime.datetime.now().date() - datetime.timedelta(days=1)
 
             if not sheets_date_plus_one == datetime.datetime.now().date():
@@ -372,7 +372,7 @@ def main(event: threading.Event, config: dict):
                 logger.debug(f"Start date {datetime.datetime.strftime(start_date, '%d/%m/%Y')}")
                 logger.debug(f"End date {datetime.datetime.strftime(end_date, '%d/%m/%Y')}")
 
-                type_list = config['heat_map']['job_type'][jobtype]
+                type_list = config['job_type'][jobtype]
 
 
                 # Running Volpe automation if needed
@@ -444,7 +444,7 @@ def main(event: threading.Event, config: dict):
                                 count_status = count_status + 1
                                 logger.info(f'{status} started')
                                 range_value = 'A:Z'
-                                range_name = f'{status} {config["heat_map"]["sheets_type_name"][jobtype]}'
+                                range_name = f'{status} {config["sheets_type_name"][jobtype]}'
                                 try:
                                     status_dict_matrix = clean_status_dict(completed_list[status], range_name, range_value, sheets_id)
                                     if len(status_dict_matrix) > 0:
@@ -483,7 +483,7 @@ if __name__ == '__main__':
     log.logger_setup(logger)
 
     try:
-        config = json_config.load_json_config('C:/PyAutomations_Reports/config_volpe.json')
+        config = json_config.load_json_config('C:/PyAutomations_Reports/heat_map.json')
     except:
         logger.critical('Could not load config file')
         exit()

@@ -32,6 +32,7 @@ template = '''
     "tags_list" : {
         "JOB" : "",
         "_ENTRYDATE" : "",
+        "_ENTRYTIME" : "",
         "CLIENT" : "",
         "LNAM" : {"R" : "", "L" : ""},
         "LDNAM" : {"R" : "", "L" : ""},
@@ -151,7 +152,7 @@ def production_details(event: threading.Event, config: dict) -> None:
         while date_end < end_date:
             if end_date > data_organizer.add_months_to_date(start_date, 1):
                 date_start = start_date
-                date_end = datetime.datetime(start_date.year, start_date.month, calendar.monthrange(start_date.year, start_date.month)[1])
+                date_end = datetime.datetime(start_date.year, start_date.month, calendar.monthrange(start_date.year, start_date.month)[1]).date()
                 start_date = date_end + datetime.timedelta(days=1)
             else:
                 date_start = start_date
@@ -220,7 +221,7 @@ if __name__ == '__main__':
         exit()
     
     event = threading.Event()
-    keyboard.add_hotkey('esc', quit_func)
+    keyboard.add_hotkey('ctrl+alt+p', quit_func)
 
     for _ in range(3):
         main(event, config)

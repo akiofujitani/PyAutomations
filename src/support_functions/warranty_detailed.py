@@ -32,6 +32,7 @@ logger = logging.getLogger('warranty_detailed')
 
 
 '''
+
 template = '''
 {
 "remove_fields" : [
@@ -62,6 +63,7 @@ template = '''
 "file_name_pattern" : "WARRANTY_",
 "filter_tags" : {
     "_ENTRYDATE" : "",
+    "CLIENT" : "",
     "LNAM" : {"R" : "", "L" : ""},
     "LDNAM" : {"R" : "", "L" : ""},
     "LDDRSPH" : {"R" : "", "L" : ""},

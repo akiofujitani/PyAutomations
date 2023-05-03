@@ -222,7 +222,7 @@ def breakage_detailed(event: threading.Event, config: dict):
                 logger.info('Event set')
                 return
             report_date_end = start_date
-            while report_date_end < datetime.datetime.now().date():
+            while report_date_end < datetime.datetime.now().date() - datetime.timedelta(days=1):
                 if end_date > data_organizer.add_months_to_date(start_date, 1):
                     report_start_date = start_date
                     report_date_end = datetime.datetime(start_date.year, start_date.month, calendar.monthrange(start_date.year, start_date.month)[1])
@@ -233,7 +233,14 @@ def breakage_detailed(event: threading.Event, config: dict):
                 if event.is_set():
                     logger.info('Event set')
                     return
-                volpe_load_report(report_start_date, report_date_end, 'Report_options', 'until.png', 'until.png', 'Sheet_Header.png', date_from_pos='Back', load_report_path='Images/Detailed_Breakages')
+                volpe_load_report(report_start_date, 
+                                  report_date_end, 
+                                  'Report_options', 
+                                  'until.png', 
+                                  'until.png', 
+                                  'Sheet_Header.png', 
+                                  date_from_pos='Back', 
+                                  load_report_path='Images/Detailed_Breakages')
                 volpe_save_report(f'{file_name_pattern}{datetime.datetime.strftime(report_start_date, "%Y%m%d")}', path)
 
         # Data processing

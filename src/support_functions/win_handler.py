@@ -142,7 +142,7 @@ def image_search(image_name=str, confidence_value=0.7, region=None, full_path=co
         error_string = f'ImageNotFound: {image_name}'
         raise Exception(error_string)
     except Exception as error:
-        raise Exception(f'Image_search exception {error.__class}')
+        raise Exception(f'Image_search exception {error}')
     except KeyboardInterrupt as error:
         raise error
 
@@ -165,6 +165,7 @@ def icon_click(icon_name=str, confidence_value=0.8, region_value=None, path='Ima
         raise error
     except KeyboardInterrupt as error:
         raise error
+
 
 def tab_select(tab_name=str, confidence_value=0.9999999, confidence_reduction_step=0.0000003):
     '''

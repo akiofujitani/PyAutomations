@@ -227,7 +227,9 @@ def convert_number_to_letter(column_int):
 
 
 if __name__ == '__main__':
-    logger = log.logger(logging.getLogger())
+    logger = logging.getLogger()
+    log.logger_setup(logger)
+    
     try:
         config = json_config.load_json_config('config_volpe.json')
     except:

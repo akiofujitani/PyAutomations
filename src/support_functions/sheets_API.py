@@ -1,5 +1,6 @@
 from shutil import ExecError
 import google.auth, os, json_config, logging
+import logger as log
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.auth.transport.requests import Request
@@ -23,23 +24,27 @@ def load_creds() -> google.oauth2.credentials.Credentials:
     # time.
     if os.path.exists('token.json'):        
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    # If there are no (valid) credentials available, let the user log in.
+    # If there are no (valid) credentials available, let the user log in.   
     if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            try:
+        try:
+            if creds.expired and creds.refresh_token:
                 creds.refresh(Request())
-            except Exception as error:
-                logger.debug(error)
-                os.remove('token.json')
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    'client_key.json', SCOPES)
-                creds = flow.run_local_server(port=0)
-                # Save the credentials for the next run
-                with open('token.json', 'w') as token:
-                    token.write(creds.to_json())
+        except Exception as error:
+            logger.debug(error)
+            creds = create_token('client_key.json', SCOPES)
     logger.debug(type(creds))
     return creds
 
+
+def create_token(client_key: str, SCOPES: list):
+    flow = InstalledAppFlow.from_client_secrets_file(
+        client_key, SCOPES)
+    creds = flow.run_local_server(port=0)
+    if os.path.exists('token.json'):
+        os.remove('token.json')
+    with open('token.json', 'w') as token:
+        token.write(creds.to_json())
+    return creds
 
 def get_values(creds, spreadsheet_id, range_name) -> dict:
     """
@@ -235,7 +240,8 @@ def create(creds, title):
 
 
 if __name__ == '__main__':
-
+    logger = logging.getLogger()
+    log.logger_setup(logger)
 
     # The ID and range of a sample spreadsheet.
     SPREADSHEET_ID = '1kpZuId58YFUqHqNPftbkRYbz0AW39F5IDjNHuNFgcC8'
