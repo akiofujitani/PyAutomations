@@ -15,30 +15,37 @@ logger = logging.getLogger('heat_map')
 '''
 
 
-def expand_all(sheet_pos):
+def expand_all(event: threading.Event, sheet_pos):
     '''
     Workaround to "Expand all" absense in Volpe machine productivity window
     Automation expands from botton to top (easier way) all values within "+" sign
     '''
     line_text = ''
-    for _ in range(10):
-        keyboard.press_and_release('Page Down')
-        logger.debug('page down')
-        sleep(0.2)
-    while 'Total' not in line_text:
-        selected_pos = win_handler.image_search('Volpe_Table_selected.png', region=(erp_volpe_handler.region_definer(sheet_pos.left - 15, sheet_pos.top)))
-        line_text = erp_volpe_handler.get_text_square(selected_pos.left + selected_pos.width, selected_pos.top, sheet_pos.width, selected_pos.height + 2)
-        if '+' in line_text:
-            pyautogui.doubleClick(selected_pos.left + 15, selected_pos.top + 6)
-        elif '+' in erp_volpe_handler.ctrl_d(selected_pos.left + 15, selected_pos.top + 4):
-            pyautogui.doubleClick(selected_pos.left + 15, selected_pos.top + 6)
-        sleep(0.3)
-        keyboard.press_and_release('Up')
-        sleep(0.5)
+    try:
+        total = win_handler.image_search('Sheet_Total.png', path='Images/Machine_productivity')
+    except Exception as error:
+        logger.debug(f'Error "Total" search: {error}')
+    if total:
+        for _ in range(10):
+            keyboard.press_and_release('Page Down')
+            logger.debug('page down')
+            sleep(0.2)
+        while 'Total' not in line_text:
+            if event.is_set():
+                return
+            selected_pos = win_handler.image_search('Volpe_Table_selected.png', region=(erp_volpe_handler.region_definer(sheet_pos.left - 15, sheet_pos.top)))
+            line_text = erp_volpe_handler.get_text_square(selected_pos.left + selected_pos.width, selected_pos.top, sheet_pos.width, selected_pos.height + 2)
+            if '+' in line_text:
+                pyautogui.doubleClick(selected_pos.left + 15, selected_pos.top + 6)
+            elif '+' in erp_volpe_handler.ctrl_d(selected_pos.left + 15, selected_pos.top + 4):
+                pyautogui.doubleClick(selected_pos.left + 15, selected_pos.top + 6)
+            sleep(0.3)
+            keyboard.press_and_release('Up')
+            sleep(0.5)
     return
 
 
-def machine_productivity_expand_all():
+def machine_productivity_expand_all(event: threading.Event):
     '''
     Workaround to "Expand all" absense in Volpe machine productivity window
     Automation expands values one by one
@@ -50,8 +57,8 @@ def machine_productivity_expand_all():
         win_handler.click_field(selected_pos, 'Front')
         sleep(0.5)
         try:
-            expand_all(sheet_pos)
-            expand_all(sheet_pos)
+            expand_all(event, sheet_pos)
+            expand_all(event, sheet_pos)
         except Exception as error:
             if 'ImageNotFound: Volpe_Table_selected.png' not in error[0]:
                 raise Exception('Error expanding table')
@@ -401,7 +408,7 @@ def main(event: threading.Event, config: dict):
                                                     date_from_dist=30,
                                                     date_until_dist=30,
                                                     load_report_path='Images/Machine_productivity')
-                                machine_productivity_expand_all()
+                                machine_productivity_expand_all(event)
                                 erp_volpe_handler.volpe_save_report(f'{file_name_pattern}{datetime.datetime.strftime(report_date_start, "%Y%m%d")}', path)
                                 logger.info(f'Date {datetime.datetime.strftime(report_date_start, "%d/%m/%Y")} done.')
                                 report_date_start = report_date_start + datetime.timedelta(days=1)

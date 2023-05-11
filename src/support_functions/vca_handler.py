@@ -46,6 +46,11 @@ def VCA_to_dict(VCA_file_contents):
                                 data_value[tag_name].update({temp_values[tag_name][3] : temp_values})
                             else:
                                 data_value[tag_name] = {temp_values[tag_name][3] : temp_values}
+                    if not tag_and_value[0] == 'R' and len(values_splited) > 2:
+                        if tag_and_value[0] in data_value.keys():
+                            data_value[tag_and_value[0]] = convert_add_to_list(data_value[tag_and_value[0]], values_splited)
+                        else:
+                            data_value[tag_and_value[0]] = values_splited                        
         logger.info('VCA contents converted')
         return data_value
     except Exception as error:
