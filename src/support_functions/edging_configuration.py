@@ -62,6 +62,11 @@ def load_product_code(code):
         sleep(0.5)
         pyautogui.write(code)
         sleep(0.3)
+        pyautogui.press('tab')
+        sleep(0.3)
+        '''
+        
+        '''
         win_handler.icon_click('Button_Consult.png', path='Images/Edging_Config/')
         return
     except Exception as error:
