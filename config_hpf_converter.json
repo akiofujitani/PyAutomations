@@ -1,0 +1,16 @@
+{
+    "source": "./Test_in",
+    "destin": "./Test_out",
+    "extension": "hpf",
+    "file_header": "#File converted by HPF Converter",
+    "properties": {
+        "ID": "",
+        "NAME": "",
+        "DOTSIZE": 150,
+        "CAPHEIGHT": "",
+        "CHARWIDTH": "",
+        "CELLWIDTH": "",
+        "LINEFEED": "",
+        "HEIGHT_CM": ""
+    }
+}

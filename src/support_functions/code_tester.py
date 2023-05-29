@@ -197,9 +197,6 @@ Emergency stop
 
 # List
 
-import requests
+value = 'test'
 
-link = "http://192.168.5.253/general/status.html"
-f = requests.get(link)
-print(f.text)
-
+value.join()
