@@ -53,7 +53,7 @@ template = '''
         "FRNT" : {"R" : "", "L" : ""}
     },
     "sheets_name" : "PRODUCTION",
-    "sheets_date_pos" : "B:B",
+    "sheets_date_pos" : "B2:B",
     "sheets_id" : "1QHozuTGKXeqeB1RQ3Zt927d6_ovpON1llOUBGzF35w8",
     "minimum_date" : "01/01/2023",
     "extension" : "vca",
@@ -152,7 +152,8 @@ def production_details(event: threading.Event, config: dict) -> None:
         while date_end < end_date:
             if end_date > data_organizer.add_months_to_date(start_date, 1):
                 date_start = start_date
-                date_end = datetime.datetime(start_date.year, start_date.month, calendar.monthrange(start_date.year, start_date.month)[1]).date()
+                # date_end = datetime.datetime(start_date.year, start_date.month, calendar.monthrange(start_date.year, start_date.month)[1]).date()
+                date_end = data_organizer.add_months_to_date(start_date, 1)
                 start_date = date_end + datetime.timedelta(days=1)
             else:
                 date_start = start_date
@@ -229,32 +230,3 @@ if __name__ == '__main__':
             break
 
     logger.info('Production Details Done')
-
-
-    # date_from_to_str = f'{date_start.strftime("%Y%m%d")}_{date_end.strftime("%Y%m%d")}'
-    # filtered_name = f'Filtered_list_{date_from_to_str}'
-    # file_handler.listToCSV(float_updated_dict, join(r'C:\Users\Calculo\OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA\Documentos\Development\JobFilterPy', f'{filtered_name}.csv'))
-
-    # advance_filtered = data_organizer.filter_tag_by_values(filtered_data, [{'Tag' : 'SPH', 'Operator' : '>=', 'Value' : 10},
-    #                                     {'Tag' : 'SPH', 'Operator' : '<=', 'Value' : -12}, 
-    #                                     {'Tag' : 'INSPRPRVM', 'Operator' : '>=', 'Value' : 6}, 
-    #                                     {'Tag' : 'CYL', 'Operator' : '<=', 'Value' : -6}, 
-    #                                     {'Tag': 'LDNAM', 'Operator' : '=', 'Value' : 'SingleVision2NC_LP'},
-    #                                     {'Tag': 'LDNAM', 'Operator' : '=', 'Value' : 'DigitalBifocalRS28R'},
-    #                                     {'Tag': 'LDNAM', 'Operator' : '=', 'Value' : 'AlphaH65_LP'},
-    #                                     {'Tag': 'LDNAM', 'Operator' : '=', 'Value' : '3117'},
-    #                                     {'Tag': 'LDNAM', 'Operator' : '=', 'Value' : '01/08/'},
-    #                                     {'Tag': 'LNAM', 'Operator' : '=', 'Value' : '4166'},
-    #                                     {'Tag': 'LNAM', 'Operator' : '=', 'Value' : '4144'},
-    #                                     {'Tag': 'LNAM', 'Operator' : '=', 'Value' : '4180'},
-    #                                     {'Tag': '_CUSTOMER', 'Operator' : 'contains', 'Value' : 'POLY'},
-    #                                     {'Tag': '_CUSTOMER', 'Operator' : 'contains', 'Value' : 'ITA Ot'},
-    #                                     {'Tag': '_CUSTOMER', 'Operator' : 'contains', 'Value' : 'NATAL LENT'}])
-
-    # plain_dict = data_organizer.dict_list_to_plain_dict(advance_filtered)
-    # filled_plain_dict = data_organizer.plain_dict_list_filler(plain_dict)
-    # float_updated_dict = data_organizer.plain_dict_float_format(filled_plain_dict)
-
-    # advance_name = f'Advance_filter_{date_from_to_str}'
-    # file_handler.listToCSV(float_updated_dict, join(r'C:\Users\Calculo\OneDrive - RENOVATE COM.DE MAT.E PROD OPTICOS LTDA\Documentos\Development\JobFilterPy', f'{advance_name}.csv'))
-

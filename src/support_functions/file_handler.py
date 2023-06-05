@@ -35,7 +35,7 @@ def fileListFullPath(path, file_extention) -> list:
     if not os.path.exists(path):
         os.mkdir(path)
         logger.info(f'Directory {path} created')    
-    return [os.path.join(path, file) for file in os.listdir(path) if file.lower().endswith(f'.{file_extention.lower()}')]
+    return [os.path.normpath(os.path.join(path, file)) for file in os.listdir(path) if file.lower().endswith(f'.{file_extention.lower()}')]
 
 
 def __csv_reader(file_path, case_upper, delimeter_char, encoding='utf-8'):
@@ -135,6 +135,12 @@ def file_reader(file_path):
 
 
 def file_writer(file_path=str, file_name=str, string_values=str) -> None:
+    '''
+    Write string contents to specified path and file name
+    file_path: path of file
+    file_name: file_name with extension
+    string_values: values to be written in string format
+    '''
     if not os.path.exists(file_path):
         os.mkdir(file_path)
         logger.info(f'Directory {file_path} created')
@@ -290,6 +296,7 @@ def listByDate(filesList: list, dateStart: datetime.date, dateEnd: datetime.date
     for file in filesList:
         fileDate = fileCreationDate(file)
         if fileDate >= dateStart and fileDate <= dateEnd if dateEnd else dateStart:
+            logger.debug(f'File {file}')
             listByDate.append(file)
     logger.info(f'Listing by date {dateStart} / {dateEnd} done')
     return listByDate

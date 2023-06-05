@@ -11,14 +11,17 @@ def convert_add_to_list(values_old: any, new_values: any) -> list:
         return values_old + [new_values]
 
 
-def VCA_to_dict(VCA_file_contents):
+def VCA_to_dict(VCA_file_contents: str) -> dict:
+    '''
+    Get VCA contentis in string and transforms it in dictionary using the tags as keys
+    '''
     data_value = {}
     try:
         for line in VCA_file_contents:
             line = line.replace('\n', '').replace('\t', '')
             if len(line) > 0:
                 tag_and_value = line.split('=')
-                logger.debug(tag_and_value[0])
+                logger.debug(f'{tag_and_value[0]} {tag_and_value[1]}')
                 if ';' not in tag_and_value[1]:
                     if tag_and_value[0] in data_value.keys():
                         data_value[tag_and_value[0]] = convert_add_to_list(data_value[tag_and_value[0]], tag_and_value[1])
@@ -32,7 +35,7 @@ def VCA_to_dict(VCA_file_contents):
                         else:
                             data_value[tag_and_value[0]] = {'R' : values_splited[0], 'L' : values_splited[1]}
                     if tag_and_value[0] == 'TRCFMT' or tag_and_value[0] == 'CRIBFMT':
-                        counter = round(int(values_splited[1]) / 15 if int(values_splited[1]) == 1000 else 10)
+                        counter = round(int(values_splited[1]) / (15 if int(values_splited[1]) == 1000 else 10))
                         temp_values = {}
                         tag_name = tag_and_value[0]
                         temp_values[tag_name] = values_splited
@@ -46,7 +49,7 @@ def VCA_to_dict(VCA_file_contents):
                                 data_value[tag_name].update({temp_values[tag_name][3] : temp_values})
                             else:
                                 data_value[tag_name] = {temp_values[tag_name][3] : temp_values}
-                    if not tag_and_value[0] == 'R' and len(values_splited) > 2:
+                    if not tag_and_value[0] == 'R' and not tag_and_value[0] == 'TRCFMT' and not tag_and_value[0] == 'CRIBFMT' and len(values_splited) > 2:
                         if tag_and_value[0] in data_value.keys():
                             data_value[tag_and_value[0]] = convert_add_to_list(data_value[tag_and_value[0]], values_splited)
                         else:
@@ -65,13 +68,16 @@ def dict_do_VCA(job_data=dict):
     return vca_contents
 
 
-def __divide_list_chunks(values_list=list, chunk_size=10):
+def __divide_list_chunks(values_list: list, chunk_size: int=10) -> list:
     values_list = list(values_list)
     new_list = [values_list[i:i + chunk_size] for i in range(0, len(values_list), chunk_size)]
     return new_list
 
 
-def __to_string(key=str, values=any, left='L', right='R') -> str:
+def __to_string(key: str, values: any, left: str='L', right : str='R') -> str:
+    '''
+    Transform VCA dictionary values in string
+    '''
     string_line = ''
     if type(values) == str:
         string_line = f'{key}={values}\n'

@@ -197,6 +197,6 @@ Emergency stop
 
 # List
 
-value = 'test'
+value = 'test\n'
 
-value.join()
+print(value[:len(value) - 1])

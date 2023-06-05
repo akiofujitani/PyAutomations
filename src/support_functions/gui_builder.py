@@ -1,4 +1,4 @@
-import tkinter, logging
+import tkinter, logging, json_config
 from tkinter import messagebox
 from tkinter import ttk
 from tkinter import filedialog
@@ -380,25 +380,6 @@ class Config_Frame(tkinter.Frame):
 
     def __click_radio_bool(self, variable):
         logger.debug(variable.get())
-
-
-    # Return updated config values in list form
-    # def return_config_updated(self) -> dict:
-    #     new_config = []
-    #     for i in range(len(self.labels)):
-    #         match self.entry_type[i]:
-    #             case 'str':
-    #                 new_config.append(str(self.entry_list[self.labels[i]].get()))
-    #             case 'int':
-    #                 new_config.append(int(self.entry_list[self.labels[i]].get()))
-    #             case 'path':
-    #                 new_config.append(normpath(self.entry_list[self.labels[i]].get()))
-    #             case 'boolean':
-    #                 new_config.append(eval(str(self.entry_list[self.labels[i]].get())))
-    #             case 'treeview':
-    #                 treeview_entry = self.entry_list[self.labels[i]]
-    #                 new_config.append([treeview_entry.item(value)['values'] for value in treeview_entry.get_children()])
-    #     return new_config
 
 
     # Return updated config values in dict form

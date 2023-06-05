@@ -1,7 +1,7 @@
 import file_handler, logging, json_config
 import logger as log
 from dataclasses import dataclass
-
+from os.path import basename
 
 logger = logging.getLogger('hpf_converter')
 
@@ -119,13 +119,17 @@ def hpf_reader(file_contents: str) -> dict:
     return hpf_values
         
 
-def hpf_builder(name: str, id: int, hpf_contents: dict, config: Configuration) -> bool:
+def hpf_builder(name: str, id: int, hpf_contents: dict, config: Configuration) -> str:
+    '''
+    Convert hpf dictionary in string to be saved as file
+    '''
     hpf_data = ''
     for key, value in hpf_contents.items():
         logger.debug(key)
         if key == 'HEADER':
             hpf_data = f'{config.file_header}\n\n'
         elif key == 'Properties':
+            value_keys = []
             hpf_data += f'[{key}]\n'
             for list_value in value:
                 list_key = list(list_value.keys())[0]
@@ -136,28 +140,31 @@ def hpf_builder(name: str, id: int, hpf_contents: dict, config: Configuration) -
                 elif list_key == 'NAME':
                     hpf_data += f'NAME={name}\n'
                 else:
-                    if config.properties[list_key]:
-                        hpf_data += f'{list_key}={config.properties[list_key]}\n'
-                    else:
-                        hpf_data += f'{list_key}={list_value_v}\n'
+                    if list_key in config.properties.keys():
+                        if config.properties.get(list_key, ''):
+                            hpf_data += f'{list_key}={config.properties[list_key]}\n'
+                        else:
+                            hpf_data += f'{list_key}={list_value_v}\n'
+                value_keys.append(list_key)
+            for key in config.properties.keys():
+                if key not in value_keys:
+                    hpf_data += f'{key}={config.properties.get(key, "")}\n'
+
             hpf_data += '\n'
         elif 'Char' in key:
-            last_key = ''
+            hpf_data += f'[Char48]\n'
             for list_value in value:
                 list_key = list(list_value.keys())[0]
                 list_value_v = list(list_value.values())[0]
-                if last_key == 'PD' and list_key == 'PD':
-                    hpf_data += ','.join(list_value_v)
-                else:
-                    hpf_data += f'{list_key}{",".join(list_value_v)}'
-                last_key = list_key
-
-    pass
+                hpf_line = f'{list_key}{",".join(list_value_v)};'
+                logger.debug(hpf_line)
+                hpf_data += f'{hpf_line}\n'
+            hpf_data += '\n'
+        else:
+            logger.debug(key)
+            pass
+    return hpf_data
     
-
-
-
-
 
 '''
 ==================================================================================================================================
@@ -187,7 +194,7 @@ if __name__ == '__main__':
             for file in file_list:
                 file_contents = file_handler.file_reader(file)
                 hpf_values = hpf_reader(file_contents)
-                hpf_builder('Test', 42, hpf_values, config)
-                print(hpf_values)
+                hpf_string = hpf_builder(basename(file), 42, hpf_values, config)
+                file_handler.file_writer(config.destin, basename(file), hpf_string)
     except Exception as error:
         logger.error(f'Error reading files {error}')
