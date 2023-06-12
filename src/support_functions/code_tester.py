@@ -197,6 +197,27 @@ Emergency stop
 
 # List
 
-value = 'test\n'
+from pypdf import PdfReader, PdfWriter
+from os.path import join, normpath, basename
+from file_handler import fileListFullPath
 
-print(value[:len(value) - 1])
+
+path = r'C:\Users\fausto.akio\Documents\Development\PyAutomations\pdf_in'
+destin = r'C:\Users\fausto.akio\Documents\Development\PyAutomations\pdf_out'
+extension = 'pdf'
+
+pdf_list = fileListFullPath(path, extension)
+
+for pdf_file in pdf_list:
+    pdf_reader = PdfReader(pdf_file)
+
+    pdf_writer = PdfWriter()
+
+    for page in pdf_reader.pages:
+        pdf_writer.add_page(page)
+    for page in pdf_writer.pages:
+        page.compress_content_streams()
+
+    # pdf_writer.add_metadata(pdf_reader.metadata)
+    with open(normpath(join(destin, basename(pdf_file))), 'wb') as new_file:
+        pdf_writer.write(new_file)
