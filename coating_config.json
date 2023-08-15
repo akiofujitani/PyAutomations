@@ -1,5 +1,9 @@
 {        
     "sheets_id" : "1JBWphl6w6r8f5cdU3Kh3sgC55jhKpCZjh7FEJc5waAY",
+    "number_tries" : 3,
+    "file_name_pattern" : "Product_coating_",
+    "report_path" : "C:/PyAutomations/Coating",
+    "report_path_done" : "C:/PyAutomations/Coating/Done",
     "product_codes" : {
         "sheets_name" : "PRODUCT_CODES",
         "sheets_pos" : "A2:D"
@@ -16,6 +20,10 @@
         "sheets_name" : "COATING",
         "sheets_pos" : "A2:H"        
     },
+    "coating_special" : {
+        "sheets_name" : "COATING_SPECIAL",
+        "sheets_pos" : "A2:F"        
+    },
     "tint_list" : {
         "sheets_name" : "TINT_LIST",
         "sheets_pos" : "A2:C"         
@@ -23,11 +31,5 @@
     "index_tint_and_tintcoat" : {
         "sheets_name" : "INDEX_TINT_AND_TINTCOAT",
         "sheets_pos" : "A2:D"         
-    },
-    "parameters" : {
-        "number_tries" : 3,
-        "file_name_pattern" : "Product_coating_",
-        "report_path" : "C:/PyAutomations/Coating",
-        "report_path_done" : "C:/PyAutomations/Coating/Done"
     }
 }
