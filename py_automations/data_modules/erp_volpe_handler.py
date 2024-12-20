@@ -502,13 +502,16 @@ def delete_from_table(column_pos=pyscreeze.Box, delete_value=str, deactivate_mid
         keyboard.press_and_release('delete')
         sleep(0.7)
         win_title = win_handler.get_active_windows_title()
+        sleep(0.5)
         if 'DELETAR' in win_title:
             pyautogui.press('s')
             sleep(0.5)
             return
-        elif 'AVISO' in win_handler:
-            pyautogui.press('space')
-            raise Exception(f'Delete value wrong or not in list {delete_value}')
+        if 'AVISO' in win_title:
+            logger.warning(f'Could not find {delete_value} value.')
+            keyboard.press_and_release('space')
+            sleep(0.5)
+            return
         else:
             raise Exception(f'Error in {delete_value} exclusion')
     except Exception as error:

@@ -53,7 +53,6 @@ template = '''
 "path_export" : [
     "//192.168.5.103/LMS/HOST_EXPORT/VCA/read_app", 
     "//192.168.5.8/Arquivo/LMS/HOST_EXPORT/2023",
-    "//192.168.5.8/Arquivo/LMS/HOST_EXPORT/2022"
     ],
 "sheets_name" : "Warranty_Detailed",
 "sheets_name_date" : "Warranty_Data",
@@ -78,6 +77,8 @@ template = '''
     "OCHT" : {"R" : "", "L" : ""}, 
     "INSPRPRVA" : {"R" : "", "L" : ""}, 
     "INSPRPRVM" : {"R" : "", "L" : ""}, 
+    "PRVA" : {"R" : "", "L" : ""},
+    "PRVM" : {"R" : "", "L" : ""},
     "_CUSTOMER" : "", 
     "_XCALC" : {"R" : "", "L" : ""}
     },

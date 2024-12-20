@@ -94,7 +94,9 @@ template = '''
         "OTHK" : {"R" : "", "L" : ""},
         "THNP" : {"R" : "", "L" : ""},
         "INSPRPRVA" : {"R" : "", "L" : ""},
-        "INSPRPRVM" : {"R" : "", "L" : ""}
+        "INSPRPRVM" : {"R" : "", "L" : ""},
+        "PRVA" : {"R" : "", "L" : ""},
+        "PRVM" : {"R" : "", "L" : ""}
     },
     "extension" : "vca",
     "sheets_id" : "1PgHZmrIOkttinhAa7ZLbNJTk-1y1ds9iOf0j_W4fCy4",
@@ -151,7 +153,7 @@ if __name__ == '__main__':
     # Get last uploaded date
 
     try:
-        sheets_date_plus_one = data_communication.get_last_date(config.sheets_name, 'A2:A', '28/02/2023', sheets_id=config.sheets_id) + datetime.timedelta(days=1)
+        sheets_date_plus_one = data_communication.get_last_date(config.sheets_name, 'A2:A', '20/10/2024', sheets_id=config.sheets_id)
     except Exception as error:
         logger.critical(f'Error loading table {config.sheets_name}')
         quit()

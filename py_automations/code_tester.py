@@ -221,3 +221,17 @@ Emergency stop
     # # pdf_writer.add_metadata(pdf_reader.metadata)
     # with open(normpath(join(destin, basename(pdf_file))), 'wb') as new_file:
     #     pdf_writer.write(new_file)
+
+import math
+
+
+x = 3
+y = 5
+
+hip = math.sqrt(x ** 2 + y ** 2)
+sin = y / hip
+print(sin)
+
+print(math.degrees(math.atan(y / x)))
+
+

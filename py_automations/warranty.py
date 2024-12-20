@@ -100,7 +100,7 @@ def warranty(event: threading.Event, config: dict):
 
     try:
         sheets_date_plus_one = data_communication.get_last_date(sheets_name, sheets_date_pos, config['minimun_date'], sheets_id)
-        sheets_date_plus_one= sheets_date_plus_one + datetime.timedelta(days=1)
+        sheets_date_plus_one = sheets_date_plus_one + datetime.timedelta(days=1)
         end_date = datetime.datetime.now().date() - datetime.timedelta(days=1)
     except Exception as error:
         logger.error(f'Error loading table {sheets_name} due {error}')
@@ -134,8 +134,8 @@ def warranty(event: threading.Event, config: dict):
             return
             
         # Report extraction automation
-
-        if start_date < end_date:
+        weekday_value = start_date.isoweekday()
+        if start_date < end_date and not weekday_value == 6 and not weekday_value == 7:
             erp_volpe_handler.volpe_back_to_main()
             erp_volpe_handler.volpe_load_tab('Tab_Lab', 'Icon_Prod_Unit.png')
             erp_volpe_handler.volpe_open_window('Icon_Warranty_control.png', 'Title_Warranty_Control.png')

@@ -74,8 +74,8 @@ template = '''
     "printer_list" : [
         "Microsoft Print to PDF"
     ],
-    "wait_time" : 10,
-    "print_interval" : 3
+    "wait_time" : "10",
+    "print_interval" : "3"
 }
 
 '''
@@ -158,14 +158,14 @@ def resource_path(relavite_path: str):
 
 
 if __name__ == '__main__':
-    logger = logging.getLogger()
-    log_builder.logger_setup(logger)
-
     try:
+        logger = logging.getLogger()
+        log_builder.logger_setup(logger)
         config_dict = json_config.load_json_config('printer_manager.json', template)
         config = Configuration_Values.check_type_insertion(config_dict)
     except Exception as error:
         logger.critical(f'Config error: {error}')
+        sleep(5)
         exit()
     
     logger.debug('Config loaded')
@@ -180,6 +180,7 @@ if __name__ == '__main__':
             try:
                 file_list = file_handler.file_list(config.source_path, config.extension)
                 if file_list:
+                    file_done_list = []
                     for file in file_list:
                         if file not in file_done_list:
                             job_in_printers = get_jobs_in_printers(config.printer_list)

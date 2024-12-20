@@ -191,6 +191,20 @@ def description_validator(product_description, base_description):
     return False
 
 
+def check_done_list(customer_code: str, white_label_name: str, done_list: list[dict]) -> bool:
+    customer_code = int(customer_code)
+    done_customer_list = set(int(done['CUSTOMER_CODE']) for done in done_list)
+    if not customer_code in done_customer_list:
+        return False
+    white_label_names = set(done['WHITE_LABEL'] for done in done_list)
+    if not white_label_name in white_label_names:
+        return False
+    for done_details in done_list:
+        if customer_code == int(done_details.get('CUSTOMER_CODE')) and white_label_name == done_details.get('WHITE_LABEL'):
+            return True
+    return False            
+
+
 def create_white_label_description(event, white_label, shorten_list, swap_list, done_list, sheets_id, done_list_name, done_list_pos):
     try:
         code_value = ''
@@ -216,7 +230,7 @@ def create_white_label_description(event, white_label, shorten_list, swap_list, 
             white_label_name = converted_descr.replace(white_label['BASE'].strip(), white_label['DESCRIPTION'].strip())
             logger.debug(f'{white_label_name} - {converted_descr}')
             sleep(0.3)
-            if base_type == white_label['TYPE'] and white_label_name not in done_list:
+            if base_type == white_label['TYPE'] and not check_done_list(white_label['CODE'], white_label_name, done_list):
                 open_white_label_descr()
                 insert_white_label_values(white_label_name,
                                         white_label['CODE'], 
@@ -273,6 +287,7 @@ def main(event=threading.Event, config=Configuration):
 
     # Start automation
     try:
+        sleep(5)
         erp_volpe_handler.volpe_back_to_main()
         erp_volpe_handler.volpe_load_tab('Tab_Reg', 'Icon_Logins_web.png')
         erp_volpe_handler.volpe_open_window('Icon_Products.png', 'Products.png', path='Images/Registry')
@@ -296,7 +311,7 @@ def main(event=threading.Event, config=Configuration):
                 white_label_status = create_white_label_description(event, white_label, 
                                                                     shorten_list, 
                                                                     swap_list, 
-                                                                    [white_label['WHITE_LABEL'] for white_label in white_label_done_list], 
+                                                                    white_label_done_list, 
                                                                     config.sheets_id,
                                                                     config.done_list_name, 
                                                                     config.done_list_pos)
